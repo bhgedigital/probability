@@ -111,7 +111,7 @@ class BGP_model():
             print('Estimating the noise variance using EMMCMC')
             try:
                 num_warmup_iters = mcmc_samples//2
-                em_iters = num_warmup_iters
+                em_iters = mcmc_samples//3
                 loc_samples, varm_samples, beta_samples, acceptance_rate, loss_history,_ = self.model.EM_with_MCMC(initial_state, num_warmup_iters,
                                                                                             em_iters, mcmc_samples, num_leapfrog_steps,learning_rate = 0.01)
             except Exception as e:

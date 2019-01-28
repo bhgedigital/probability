@@ -201,7 +201,7 @@ class BayesianGP():
 		self.rv_varm = tfd.Gamma(concentration = 1.0, rate = 1.0,  name = 'rv_varm')
 
 		# prior on the noise variance
-		self.rv_noise = tfd.Uniform(low = 1e-6, high = 0.1, name = 'rv_noise')
+		self.rv_noise = tfd.LogNormal(loc = -6.9, scale = 1.5, name = 'rv_noise')
 
 		#-- value for the  variance of the Gaussian noise (when kept fixed)
 		self.noise=  np.float32(noise_level)
@@ -398,7 +398,7 @@ class BayesianGP():
 		#   noise_history := array containing values of the noise variance computed in the M-step
 
 		# defining unconstrained version for the noise level
-		unc_noise = tf.Variable(tf.log(tf.exp(self.noise)- 1), name = 'unc_noise')
+		unc_noise = tf.Variable(tf.log(tf.exp(1e-3)- 1), name = 'unc_noise')
 
 		# Setting up the step_size and targeted acceptance rate for the MCMC part
 		step_size = tf.Variable(0.01, name = 'step_size')
@@ -486,7 +486,7 @@ class BayesianGP():
 																kernel=tfp.mcmc.TransformedTransitionKernel(
 																	inner_kernel=tfp.mcmc.HamiltonianMonteCarlo(
 			    																target_log_prob_fn=unnormalized_posterior_log_prob,
-																				step_size= step_size,
+																				step_size= 0.8*step_size,
 																				num_leapfrog_steps=num_leapfrog_steps),
 																	bijector=unconstraining_bijectors))
 
