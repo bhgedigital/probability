@@ -15,6 +15,8 @@
 # Description:
 #   Optimizers.
 
+# [internal] load python3.bzl
+
 package(
     default_visibility = [
         "//tensorflow_probability:__subpackages__",
@@ -31,6 +33,8 @@ py_library(
     srcs_version = "PY2AND3",
     deps = [
         ":bfgs",
+        ":differential_evolution",
+        ":lbfgs",
         ":nelder_mead",
         ":sgld",
         ":variational_sgd",
@@ -100,6 +104,29 @@ py_test(
 )
 
 py_library(
+    name = "lbfgs",
+    srcs = ["lbfgs.py"],
+    srcs_version = "PY2AND3",
+    deps = [
+        ":bfgs_utils",
+        # tensorflow dep,
+    ],
+)
+
+py_test(
+    name = "lbfgs_test",
+    size = "medium",
+    timeout = "long",
+    srcs = ["lbfgs_test.py"],
+    shard_count = 5,
+    deps = [
+        # numpy dep,
+        # tensorflow dep,
+        "//tensorflow_probability",
+    ],
+)
+
+py_library(
     name = "bfgs_utils",
     srcs = ["bfgs_utils.py"],
     srcs_version = "PY2AND3",
@@ -121,6 +148,27 @@ py_test(
     name = "nelder_mead_test",
     size = "medium",
     srcs = ["nelder_mead_test.py"],
+    deps = [
+        # numpy dep,
+        # tensorflow dep,
+        "//tensorflow_probability",
+    ],
+)
+
+py_library(
+    name = "differential_evolution",
+    srcs = ["differential_evolution.py"],
+    srcs_version = "PY2AND3",
+    deps = [
+        # numpy dep,
+        # tensorflow dep,
+    ],
+)
+
+py_test(
+    name = "differential_evolution_test",
+    size = "medium",
+    srcs = ["differential_evolution_test.py"],
     deps = [
         # numpy dep,
         # tensorflow dep,

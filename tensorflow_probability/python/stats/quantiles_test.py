@@ -214,16 +214,18 @@ class PercentileTestWithLinearInterpolation(
     # 49.123... will not
     q = tf.constant(np.array([50, 49.123456789]))  # Percentiles, in [0, 100]
 
-    analytic_pct = dist.quantile(q / 100.)  # divide by 10 to make quantile.
-    sample_pct = tfp.stats.percentile(
-        x, q, interpolation='linear', preserve_gradients=False)
+    with tf.GradientTape(persistent=True) as tape:
+      tape.watch(q)
+      analytic_pct = dist.quantile(q / 100.)  # divide by 10 to make quantile.
+      sample_pct = tfp.stats.percentile(
+          x, q, interpolation='linear', preserve_gradients=False)
 
     analytic_pct, d_analytic_pct_dq, sample_pct, d_sample_pct_dq = (
         self.evaluate([
             analytic_pct,
-            tf.gradients(analytic_pct, q)[0],
+            tape.gradient(analytic_pct, q),
             sample_pct,
-            tf.gradients(sample_pct, q)[0],
+            tape.gradient(sample_pct, q),
         ]))
 
     self.assertAllClose(analytic_pct, sample_pct, atol=0.05)
@@ -252,17 +254,18 @@ class PercentileTestWithLinearInterpolation(
     # 50th quantile will lie exactly on a data point.
     # 49.123... will not
     q = tf.constant(np.array([50, 49.123456789]))  # Percentiles, in [0, 100]
-
-    analytic_pct = dist.quantile(q / 100.)  # divide by 10 to make quantile.
-    sample_pct = tfp.stats.percentile(
-        x, q, interpolation='linear', preserve_gradients=True)
+    with tf.GradientTape(persistent=True) as tape:
+      tape.watch(q)
+      analytic_pct = dist.quantile(q / 100.)  # divide by 10 to make quantile.
+      sample_pct = tfp.stats.percentile(
+          x, q, interpolation='linear', preserve_gradients=True)
 
     analytic_pct, d_analytic_pct_dq, sample_pct, d_sample_pct_dq = (
         self.evaluate([
             analytic_pct,
-            tf.gradients(analytic_pct, q)[0],
+            tape.gradient(analytic_pct, q),
             sample_pct,
-            tf.gradients(sample_pct, q)[0],
+            tape.gradient(sample_pct, q),
         ]))
 
     self.assertAllClose(analytic_pct, sample_pct, atol=0.05)
@@ -333,6 +336,7 @@ class PercentileTestWithNearestInterpolation(tf.test.TestCase):
       tfp.stats.percentile(x, q=[[0.5]])
 
   def test_2d_q_raises_dynamic(self):
+    if tf.executing_eagerly(): return
     x = [1., 5., 3., 2., 4.]
     q_ph = tf.placeholder_with_default(input=[[0.5]], shape=None)
     pct = tfp.stats.percentile(x, q=q_ph, validate_args=True,
@@ -349,6 +353,28 @@ class PercentileTestWithNearestInterpolation(tf.test.TestCase):
     minval = tfp.stats.percentile(x, q=0, validate_args=True,
                                   interpolation=self._interpolation)
     self.assertAllEqual(0, self.evaluate(minval))
+
+
+@tfe.run_all_tests_in_graph_and_eager_modes
+class QuantilesTest(tf.test.TestCase):
+  """Test for quantiles. Most functionality tested implicitly via percentile."""
+
+  def test_quartiles_of_vector(self):
+    x = tf.linspace(0., 1000., 10000)
+    cut_points = tfp.stats.quantiles(x, num_quantiles=4)
+    self.assertAllEqual((5,), cut_points.shape)
+    cut_points_ = self.evaluate(cut_points)
+    self.assertAllClose([0., 250., 500., 750., 1000.], cut_points_, rtol=0.002)
+
+  def test_deciles_of_rank_3_tensor(self):
+    x = rng.rand(3, 100000, 2)
+    cut_points = tfp.stats.quantiles(x, num_quantiles=10, axis=1)
+    self.assertAllEqual((11, 3, 2), cut_points.shape)
+    cut_points_ = self.evaluate(cut_points)
+
+    # cut_points_[:, i, j] should all be about the same.
+    self.assertAllClose(np.linspace(0, 1, 11), cut_points_[:, 0, 0], atol=0.03)
+    self.assertAllClose(np.linspace(0, 1, 11), cut_points_[:, 1, 1], atol=0.03)
 
 
 if __name__ == '__main__':

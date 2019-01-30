@@ -173,10 +173,10 @@ class _ConvVariational(tf.keras.layers.Layer):
       channel_axis = 1
     else:
       channel_axis = -1
-    if input_shape[channel_axis].value is None:
+    input_dim = tf.dimension_value(input_shape[channel_axis])
+    if input_dim is None:
       raise ValueError('The channel dimension of the inputs '
                        'should be defined. Found `None`.')
-    input_dim = input_shape[channel_axis].value
     kernel_shape = self.kernel_size + (input_dim, self.filters)
 
     # If self.dtype is None, build weights using the default dtype.
@@ -539,6 +539,17 @@ class Conv1DReparameterization(_ConvReparameterization):
   (`q(W|x)`), prior (`p(W)`), and divergence for both the `kernel` and `bias`
   distributions.
 
+  Upon being built, this layer adds losses (accessible via the `losses`
+  property) representing the divergences of `kernel` and/or `bias` surrogate
+  posteriors and their respective priors. When doing minibatch stochastic
+  optimization, make sure to scale this loss such that it is applied just once
+  per epoch (e.g. if `kl` is the sum of `losses` for each element of the batch,
+  you should pass `kl / num_examples_per_epoch` to your optimizer).
+
+  You can access the `kernel` and/or `bias` posterior and prior distributions
+  after the layer is built via the `kernel_posterior`, `kernel_prior`,
+  `bias_posterior` and `bias_prior` properties.
+
   #### Examples
 
   We illustrate a Bayesian neural network with [variational inference](
@@ -666,6 +677,17 @@ class Conv2DReparameterization(_ConvReparameterization):
   The arguments permit separate specification of the surrogate posterior
   (`q(W|x)`), prior (`p(W)`), and divergence for both the `kernel` and `bias`
   distributions.
+
+  Upon being built, this layer adds losses (accessible via the `losses`
+  property) representing the divergences of `kernel` and/or `bias` surrogate
+  posteriors and their respective priors. When doing minibatch stochastic
+  optimization, make sure to scale this loss such that it is applied just once
+  per epoch (e.g. if `kl` is the sum of `losses` for each element of the batch,
+  you should pass `kl / num_examples_per_epoch` to your optimizer).
+
+  You can access the `kernel` and/or `bias` posterior and prior distributions
+  after the layer is built via the `kernel_posterior`, `kernel_prior`,
+  `bias_posterior` and `bias_prior` properties.
 
   #### Examples
 
@@ -803,6 +825,13 @@ class Conv3DReparameterization(_ConvReparameterization):
   The arguments permit separate specification of the surrogate posterior
   (`q(W|x)`), prior (`p(W)`), and divergence for both the `kernel` and `bias`
   distributions.
+
+  Upon being built, this layer adds losses (accessible via the `losses`
+  property) representing the divergences of `kernel` and/or `bias` surrogate
+  posteriors and their respective priors. When doing minibatch stochastic
+  optimization, make sure to scale this loss such that it is applied just once
+  per epoch (e.g. if `kl` is the sum of `losses` for each element of the batch,
+  you should pass `kl / num_examples_per_epoch` to your optimizer).
 
   #### Examples
 
@@ -1045,9 +1074,11 @@ class _ConvFlipout(_ConvVariational):
         inputs, self.kernel_posterior.distribution.loc)
 
     input_shape = tf.shape(inputs)
-    output_shape = tf.shape(outputs)
     batch_shape = tf.expand_dims(input_shape[0], 0)
-    channels = input_shape[-1]
+    if self.data_format == 'channels_first':
+      channels = input_shape[1]
+    else:
+      channels = input_shape[-1]
 
     seed_stream = tfd.SeedStream(self.seed, salt='ConvFlipout')
 
@@ -1061,16 +1092,15 @@ class _ConvFlipout(_ConvVariational):
                    tf.expand_dims(self.filters, 0)], 0),
         dtype=inputs.dtype,
         seed=seed_stream())
-    for _ in range(self.rank):
-      sign_input = tf.expand_dims(sign_input, 1)  # 2D ex: (B, 1, 1, C)
-      sign_output = tf.expand_dims(sign_output, 1)
 
-    sign_input = tf.tile(  # tile for element-wise op broadcasting
-        sign_input,
-        [1] + [input_shape[i + 1] for i in range(self.rank)] + [1])
-    sign_output = tf.tile(
-        sign_output,
-        [1] + [output_shape[i + 1] for i in range(self.rank)] + [1])
+    if self.data_format == 'channels_first':
+      for _ in range(self.rank):
+        sign_input = tf.expand_dims(sign_input, -1)  # 2D ex: (B, C, 1, 1)
+        sign_output = tf.expand_dims(sign_output, -1)
+    else:
+      for _ in range(self.rank):
+        sign_input = tf.expand_dims(sign_input, 1)  # 2D ex: (B, 1, 1, C)
+        sign_output = tf.expand_dims(sign_output, 1)
 
     perturbed_inputs = self._convolution_op(
         inputs * sign_input, self.kernel_posterior_affine_tensor) * sign_output
@@ -1119,6 +1149,13 @@ class Conv1DFlipout(_ConvFlipout):
   The arguments permit separate specification of the surrogate posterior
   (`q(W|x)`), prior (`p(W)`), and divergence for both the `kernel` and `bias`
   distributions.
+
+  Upon being built, this layer adds losses (accessible via the `losses`
+  property) representing the divergences of `kernel` and/or `bias` surrogate
+  posteriors and their respective priors. When doing minibatch stochastic
+  optimization, make sure to scale this loss such that it is applied just once
+  per epoch (e.g. if `kl` is the sum of `losses` for each element of the batch,
+  you should pass `kl / num_examples_per_epoch` to your optimizer).
 
   #### Examples
 
@@ -1254,6 +1291,13 @@ class Conv2DFlipout(_ConvFlipout):
   The arguments permit separate specification of the surrogate posterior
   (`q(W|x)`), prior (`p(W)`), and divergence for both the `kernel` and `bias`
   distributions.
+
+  Upon being built, this layer adds losses (accessible via the `losses`
+  property) representing the divergences of `kernel` and/or `bias` surrogate
+  posteriors and their respective priors. When doing minibatch stochastic
+  optimization, make sure to scale this loss such that it is applied just once
+  per epoch (e.g. if `kl` is the sum of `losses` for each element of the batch,
+  you should pass `kl / num_examples_per_epoch` to your optimizer).
 
   #### Examples
 
@@ -1398,6 +1442,13 @@ class Conv3DFlipout(_ConvFlipout):
   The arguments permit separate specification of the surrogate posterior
   (`q(W|x)`), prior (`p(W)`), and divergence for both the `kernel` and `bias`
   distributions.
+
+  Upon being built, this layer adds losses (accessible via the `losses`
+  property) representing the divergences of `kernel` and/or `bias` surrogate
+  posteriors and their respective priors. When doing minibatch stochastic
+  optimization, make sure to scale this loss such that it is applied just once
+  per epoch (e.g. if `kl` is the sum of `losses` for each element of the batch,
+  you should pass `kl / num_examples_per_epoch` to your optimizer).
 
   #### Examples
 

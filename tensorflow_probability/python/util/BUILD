@@ -15,6 +15,8 @@
 # Description:
 #   TensorFlow Probability utility functions.
 
+# [internal] load python3.bzl
+
 package(
     default_visibility = [
         "//tensorflow_probability:__subpackages__",
@@ -74,6 +76,7 @@ py_test(
     name = "variables_test",
     size = "small",
     srcs = ["variables_test.py"],
+    tags = ["notf2"],
     deps = [
         # numpy dep,
         # tensorflow dep,

@@ -167,7 +167,7 @@ class RealNVP(conditional_bijector.ConditionalBijector):
 
   def _cache_input_depth(self, x):
     if self._input_depth is None:
-      self._input_depth = x.shape.with_rank_at_least(1)[-1].value
+      self._input_depth = tf.dimension_value(x.shape.with_rank_at_least(1)[-1])
       if self._input_depth is None:
         raise NotImplementedError(
             "Rightmost dimension must be known prior to graph execution.")
@@ -276,6 +276,11 @@ def real_nvp_default_template(hidden_layers,
         raise NotImplementedError(
             "Conditioning not implemented in the default template.")
 
+      if x.shape.rank == 1:
+        x = x[tf.newaxis, ...]
+        reshape_output = lambda x: x[0]
+      else:
+        reshape_output = lambda x: x
       for units in hidden_layers:
         x = tf.layers.dense(
             inputs=x,
@@ -290,8 +295,8 @@ def real_nvp_default_template(hidden_layers,
           *args,  # pylint: disable=keyword-arg-before-vararg
           **kwargs)
       if shift_only:
-        return x, None
+        return reshape_output(x), None
       shift, log_scale = tf.split(x, 2, axis=-1)
-      return shift, log_scale
+      return reshape_output(shift), reshape_output(log_scale)
 
     return tf.make_template("real_nvp_default_template", _fn)

@@ -15,6 +15,8 @@
 # Description:
 #   MCMC methods, diagnostics, and related utilities.
 
+# [internal] load python3.bzl
+
 package(
     default_visibility = [
         "//tensorflow_probability:__subpackages__",
@@ -175,7 +177,7 @@ py_library(
 
 py_test(
     name = "random_walk_metropolis_test",
-    size = "small",
+    size = "medium",
     srcs = ["random_walk_metropolis_test.py"],
     deps = [
         # numpy dep,
@@ -355,6 +357,40 @@ py_test(
     srcs = ["eight_schools_hmc_graph_test.py"],
     deps = [
         ":eight_schools_hmc",
+        # tensorflow dep,
+        "//tensorflow_probability",
+    ],
+)
+
+py_library(
+    name = "text_messages_hmc",
+    srcs = ["text_messages_hmc.py"],
+    deps = [
+        # numpy dep,
+        # tensorflow dep,
+        "//tensorflow_probability",
+    ],
+)
+
+# bazel run -c opt :text_messages_hmc_eager_test -- --benchmarks=.
+py_test(
+    name = "text_messages_hmc_eager_test",
+    size = "medium",  # Might run > 1 minute.
+    srcs = ["text_messages_hmc_eager_test.py"],
+    deps = [
+        ":text_messages_hmc",
+        # tensorflow dep,
+        "//tensorflow_probability",
+    ],
+)
+
+# bazel run -c opt :text_messages_hmc_graph_test -- --benchmarks=.
+py_test(
+    name = "text_messages_hmc_graph_test",
+    size = "medium",  # Might run > 1 minute.
+    srcs = ["text_messages_hmc_graph_test.py"],
+    deps = [
+        ":text_messages_hmc",
         # tensorflow dep,
         "//tensorflow_probability",
     ],

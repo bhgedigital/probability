@@ -620,7 +620,7 @@ class HMCTest(tf.test.TestCase):
     self.assertAllEqual(dict(target_calls=expected_calls), counter)
 
     states = tf.stack(states, axis=-1)
-    self.assertEqual(num_results, states.shape[0].value)
+    self.assertEqual(num_results, tf.dimension_value(states.shape[0]))
     sample_mean = tf.reduce_mean(states, axis=0)
     x = states - sample_mean
     sample_cov = tf.matmul(x, x, transpose_a=True) / dtype(num_results)
@@ -861,6 +861,7 @@ class HMCAdaptiveStepSize(tf.test.TestCase):
             num_leapfrog_steps=2,
             step_size=step_size,
             step_size_update_fn=tfp.mcmc.make_simple_step_size_update_policy(
+                num_adaptation_steps=None,
                 step_counter=step_counter),
             state_gradients_are_stopped=True,
             seed=_set_seed(252)),
@@ -913,6 +914,7 @@ class HMCAdaptiveStepSize(tf.test.TestCase):
             num_leapfrog_steps=2,
             step_size=step_size,
             step_size_update_fn=tfp.mcmc.make_simple_step_size_update_policy(
+                num_adaptation_steps=None,
                 step_counter=step_counter),
             state_gradients_are_stopped=True,
             seed=_set_seed(252)),
@@ -1064,7 +1066,8 @@ class HMCEMAdaptiveStepSize(tf.test.TestCase):
             target_log_prob_fn=unnormalized_posterior_log_prob,
             num_leapfrog_steps=2,
             step_size=step_size,
-            step_size_update_fn=tfp.mcmc.make_simple_step_size_update_policy(),
+            step_size_update_fn=tfp.mcmc.make_simple_step_size_update_policy(
+                num_adaptation_steps=None),
             state_gradients_are_stopped=True,
             seed=_set_seed(252)),
         parallel_iterations=1)
@@ -1155,7 +1158,8 @@ class HMCEMAdaptiveStepSize(tf.test.TestCase):
             target_log_prob_fn=unnormalized_log_prob,
             num_leapfrog_steps=2,
             step_size=step_size,
-            step_size_update_fn=tfp.mcmc.make_simple_step_size_update_policy(),
+            step_size_update_fn=tfp.mcmc.make_simple_step_size_update_policy(
+                num_adaptation_steps=None),
             seed=_set_seed(252)),
         parallel_iterations=1)
 
@@ -1172,6 +1176,11 @@ class HMCEMAdaptiveStepSize(tf.test.TestCase):
     # Anything in [0.6, 0.9] is sufficient. https://arxiv.org/abs/1411.6669
     self.assertNear(0.75, kernel_results_.is_accepted.mean(), err=0.05)
 
+  @tfe.run_test_in_graph_and_eager_modes
+  def test_reuse_step_counter(self):
+    for _ in range(2):
+      with tf.variable_scope(tf.get_variable_scope(), reuse=tf.AUTO_REUSE):
+        tfp.mcmc.make_simple_step_size_update_policy(num_adaptation_steps=1)
 
 if __name__ == '__main__':
   tf.test.main()

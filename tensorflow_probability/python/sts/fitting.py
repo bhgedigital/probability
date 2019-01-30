@@ -95,7 +95,7 @@ def pad_batch_dimension_for_multiple_chains(observed_time_series,
         chain_batch_shape))
   if chain_batch_shape.shape.ndims == 0:  # expand int `k` to `[k]`.
     chain_batch_shape = chain_batch_shape[tf.newaxis]
-  chain_batch_ndims = chain_batch_shape.shape[0].value
+  chain_batch_ndims = tf.dimension_value(chain_batch_shape.shape[0])
 
   for _ in range(chain_batch_ndims):
     observed_time_series = tf.expand_dims(
@@ -107,11 +107,13 @@ def _build_trainable_posterior(param, initial_loc_fn):
   """Built a transformed-normal variational dist over a parameter's support."""
   loc = tf.get_variable(param.name + '_loc',
                         initializer=lambda: initial_loc_fn(param),
+                        dtype=param.prior.dtype,
                         use_resource=True)
-  scale = tf.nn.softplus(
-      tf.get_variable(param.name + '_scale',
-                      initializer=lambda: -4 * tf.ones_like(loc),
-                      use_resource=True))
+  scale = tf.nn.softplus(tf.get_variable(
+      param.name + '_scale',
+      initializer=lambda: -4 * tf.ones_like(initial_loc_fn(param)),
+      dtype=param.prior.dtype,
+      use_resource=True))
 
   q = tfd.Normal(loc=loc, scale=scale)
 

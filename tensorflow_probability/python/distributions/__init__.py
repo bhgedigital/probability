@@ -26,6 +26,7 @@ from tensorflow_probability.python.distributions.beta import Beta
 from tensorflow_probability.python.distributions.binomial import Binomial
 from tensorflow_probability.python.distributions.categorical import Categorical
 from tensorflow_probability.python.distributions.cauchy import Cauchy
+from tensorflow_probability.python.distributions.chi import Chi
 from tensorflow_probability.python.distributions.chi2 import Chi2
 from tensorflow_probability.python.distributions.chi2 import Chi2WithAbsDf
 from tensorflow_probability.python.distributions.conditional_distribution import ConditionalDistribution
@@ -45,6 +46,7 @@ from tensorflow_probability.python.distributions.gumbel import Gumbel
 from tensorflow_probability.python.distributions.half_cauchy import HalfCauchy
 from tensorflow_probability.python.distributions.half_normal import HalfNormal
 from tensorflow_probability.python.distributions.hidden_markov_model import HiddenMarkovModel
+from tensorflow_probability.python.distributions.horseshoe import Horseshoe
 from tensorflow_probability.python.distributions.independent import Independent
 from tensorflow_probability.python.distributions.internal.moving_stats import assign_log_moving_mean_exp
 from tensorflow_probability.python.distributions.internal.moving_stats import assign_moving_mean_variance
@@ -140,6 +142,7 @@ __all__ = [
     'Binomial',
     'BetaWithSoftplusConcentration',
     'Categorical',
+    'Chi',
     'Chi2',
     'Chi2WithAbsDf',
     'Deterministic',
@@ -158,6 +161,7 @@ __all__ = [
     'HalfCauchy',
     'HalfNormal',
     'HiddenMarkovModel',
+    'Horseshoe',
     'Independent',
     'InverseGamma',
     'InverseGammaWithSoftplusConcentrationRate',

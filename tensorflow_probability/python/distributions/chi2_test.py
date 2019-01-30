@@ -20,6 +20,7 @@ from __future__ import print_function
 
 # Dependency imports
 import numpy as np
+from scipy import special
 from scipy import stats
 import tensorflow as tf
 import tensorflow_probability as tfp
@@ -87,6 +88,34 @@ class Chi2Test(tf.test.TestCase):
     self.assertAllClose(
         self.evaluate(tf.floor(tf.abs(df_v))), self.evaluate(chi2.df))
 
+  def testChi2Chi2KL(self):
+    a_df = np.arange(1.0, 10.0)
+    b_df = np.arange(1.0, 10.0)
+
+    # This reshape is intended to expand the number of test cases.
+    a_df = a_df.reshape((len(a_df), 1))
+    b_df = b_df.reshape((1, len(b_df)))
+
+    a = tfd.Chi2(df=a_df)
+    b = tfd.Chi2(df=b_df)
+
+    # Consistent with
+    # http://www.mast.queensu.ca/~communications/Papers/gil-msc11.pdf, page 110
+    true_kl = (special.gammaln(b_df / 2.0) - special.gammaln(a_df / 2.0) +
+               (a_df - b_df) / 2.0 * special.digamma(a_df / 2.0))
+
+    kl = tfd.kl_divergence(a, b)
+
+    x = a.sample(int(1e5), seed=0)
+    kl_sample = tf.reduce_mean(a.log_prob(x) - b.log_prob(x), axis=0)
+
+    kl_, kl_sample_ = self.evaluate([kl, kl_sample])
+    self.assertAllClose(true_kl, kl_, atol=0., rtol=5e-13)
+    self.assertAllClose(true_kl, kl_sample_, atol=0., rtol=5e-2)
+
+    zero_kl = tfd.kl_divergence(a, a)
+    true_zero_kl_, zero_kl_ = self.evaluate([tf.zeros_like(zero_kl), zero_kl])
+    self.assertAllEqual(true_zero_kl_, zero_kl_)
 
 if __name__ == "__main__":
   tf.test.main()

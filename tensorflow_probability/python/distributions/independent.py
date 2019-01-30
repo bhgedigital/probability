@@ -151,10 +151,9 @@ class Independent(distribution_lib.Distribution):
   def _batch_shape_tensor(self):
     with tf.control_dependencies(self._runtime_assertions):
       batch_shape = self.distribution.batch_shape_tensor()
-      batch_ndims = (
-          batch_shape.shape[0].value
-          if batch_shape.shape.with_rank_at_least(1)[0].value else
-          tf.shape(batch_shape)[0])
+      batch_ndims = tf.dimension_value(batch_shape.shape[0])
+      if batch_ndims is None:
+        batch_ndims = tf.shape(batch_shape)[0]
       return batch_shape[:batch_ndims - self.reinterpreted_batch_ndims]
 
   def _batch_shape(self):
@@ -169,9 +168,9 @@ class Independent(distribution_lib.Distribution):
     with tf.control_dependencies(self._runtime_assertions):
       batch_shape = self.distribution.batch_shape_tensor()
       batch_ndims = (
-          batch_shape.shape[0].value
-          if batch_shape.shape.with_rank_at_least(1)[0].value else
-          tf.shape(batch_shape)[0])
+          tf.dimension_value(batch_shape.shape[0])  # pylint: disable=g-long-ternary
+          if tf.dimension_value(batch_shape.shape.with_rank_at_least(1)[0])
+          else tf.shape(batch_shape)[0])
       return tf.concat(
           [
               batch_shape[batch_ndims - self.reinterpreted_batch_ndims:],
@@ -181,11 +180,16 @@ class Independent(distribution_lib.Distribution):
 
   def _event_shape(self):
     batch_shape = self.distribution.batch_shape
-    if (self._static_reinterpreted_batch_ndims is None
-        or batch_shape.ndims is None):
+    if self._static_reinterpreted_batch_ndims is None:
       return tf.TensorShape(None)
-    d = batch_shape.ndims - self._static_reinterpreted_batch_ndims
-    return batch_shape[d:].concatenate(self.distribution.event_shape)
+
+    if batch_shape.ndims is not None:
+      reinterpreted_batch_shape = batch_shape[
+          batch_shape.ndims - self._static_reinterpreted_batch_ndims:]
+    else:
+      reinterpreted_batch_shape = tf.TensorShape(
+          [None] * int(self._static_reinterpreted_batch_ndims))
+    return reinterpreted_batch_shape.concatenate(self.distribution.event_shape)
 
   def _sample_n(self, n, seed):
     with tf.control_dependencies(self._runtime_assertions):
@@ -193,31 +197,11 @@ class Independent(distribution_lib.Distribution):
 
   def _log_prob(self, x):
     with tf.control_dependencies(self._runtime_assertions):
-      # We directly call the underlying _log_prob to avoid the fallback logic in
-      # Distribution.log_prob [which falls back to log(Distribution._prob)].
-      # Said fallback logic will also be wrapped around calls to this method.
-      return self._reduce(tf.reduce_sum, self.distribution._log_prob(x))  # pylint:disable=protected-access
-
-  def _prob(self, x):
-    with tf.control_dependencies(self._runtime_assertions):
-      # We directly call the underlying _prob to avoid the fallback logic in
-      # Distribution.prob [which falls back to exp(Distribution._log_prob)].
-      # Said fallback logic will also be wrapped around calls to this method.
-      return self._reduce(tf.reduce_prod, self.distribution._prob(x))  # pylint:disable=protected-access
+      return self._reduce(tf.reduce_sum, self.distribution.log_prob(x))
 
   def _log_cdf(self, x):
     with tf.control_dependencies(self._runtime_assertions):
-      # We directly call the underlying _log_cdf to avoid the fallback logic in
-      # Distribution.log_cdf [which falls back to log(Distribution._cdf)].
-      # Said fallback logic will also be wrapped around calls to this method.
-      return self._reduce(tf.reduce_sum, self.distribution._log_cdf(x))  # pylint:disable=protected-access
-
-  def _cdf(self, x):
-    with tf.control_dependencies(self._runtime_assertions):
-      # We directly call the underlying _cdf to avoid the fallback logic in
-      # Distribution.cdf [which falls back to exp(Distribution._log_cdf)].
-      # Said fallback logic will also be wrapped around calls to this method.
-      return self._reduce(tf.reduce_prod, self.distribution._cdf(x))  # pylint:disable=protected-access
+      return self._reduce(tf.reduce_sum, self.distribution.log_cdf(x))
 
   def _entropy(self):
     with tf.control_dependencies(self._runtime_assertions):
@@ -253,9 +237,10 @@ class Independent(distribution_lib.Distribution):
     elif validate_args:
       batch_shape = distribution.batch_shape_tensor()
       batch_ndims = (
-          batch_shape.shape[0].value
-          if batch_shape.shape.with_rank_at_least(1)[0].value is not None else
-          tf.shape(batch_shape)[0])
+          tf.dimension_value(batch_shape.shape[0])  # pylint: disable=g-long-ternary
+          if (tf.dimension_value(batch_shape.shape.with_rank_at_least(1)[0])
+              is not None)
+          else tf.shape(batch_shape)[0])
       assertions.append(
           tf.assert_less_equal(
               reinterpreted_batch_ndims,

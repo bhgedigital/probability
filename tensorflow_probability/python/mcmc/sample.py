@@ -34,7 +34,9 @@ __all__ = [
 
 # Cause all warnings to always be triggered.
 # Not having this means subsequent calls wont trigger the warning.
-warnings.simplefilter("always")
+warnings.filterwarnings("always",
+                        module="tensorflow_probability.*sample",
+                        append=True)  # Don't override user-set filters.
 
 
 def sample_chain(
@@ -102,7 +104,7 @@ def sample_chain(
   ##### Sample from a diagonal-variance Gaussian.
 
   ```python
-  import tensorflow tf
+  import tensorflow as tf
   import tensorflow_probability as tfp
   tfd = tfp.distributions
 
@@ -144,7 +146,7 @@ def sample_chain(
   where `F` denotes factors.
 
   ```python
-  import tensorflow tf
+  import tensorflow as tf
   import tensorflow_probability as tfp
   tfd = tfp.distributions
 

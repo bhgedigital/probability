@@ -44,7 +44,7 @@ class GaussianProcess(mvn_linear_operator.MultivariateNormalLinearOperator):
   space. In such cases, the GP may be thought of as a distribution over
   (real- or complex-valued) functions defined over the index set.
 
-  Just as Gaussian distriubtions are fully specified by their first and second
+  Just as Gaussian distributions are fully specified by their first and second
   moments, a Gaussian process can be completely specified by a mean and
   covariance function. Let `S` denote the index set and `K` the space in which
   each indexed random variable takes its values (again, often R or C). The mean
@@ -169,19 +169,19 @@ class GaussianProcess(mvn_linear_operator.MultivariateNormalLinearOperator):
       amplitude=tf.get_variable('amplitude', np.float32),
       length_scale=tf.get_variable('length_scale', np.float32))
 
-  gp = tfp.GaussianProcess(kernel, observed_index_points)
+  gp = tfd.GaussianProcess(kernel, observed_index_points)
   neg_log_likelihood = -gp.log_prob(observed_values)
 
-  optimize = tf.train.AdamOptimize().minimize(neg_log_likelihood)
+  optimize = tf.train.AdamOptimizer().minimize(neg_log_likelihood)
 
   with tf.Session() as sess:
     sess.run(tf.global_variables_initializer())
 
     for i in range(1000):
-      _, nll_ = sess.run([optimize, nll])
+      _, neg_log_likelihood_ = sess.run([optimize, neg_log_likelihood])
       if i % 100 == 0:
-        print("Step {}: NLL = {}".format(i, nll_))
-    print("Final NLL = {}".format(nll_))
+        print("Step {}: NLL = {}".format(i, neg_log_likelihood_))
+    print("Final NLL = {}".format(neg_log_likelihood_))
   ```
 
   """

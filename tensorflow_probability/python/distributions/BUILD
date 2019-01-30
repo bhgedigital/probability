@@ -16,6 +16,8 @@
 #   Contains ops for statistical distributions (with pdf, cdf, sample, etc...).
 #   APIs here are meant to evolve over time.
 
+# [internal] load python3.bzl
+
 licenses(["notice"])  # Apache 2.0
 
 package(
@@ -37,6 +39,7 @@ py_library(
         ":binomial",
         ":categorical",
         ":cauchy",
+        ":chi",
         ":chi2",
         ":conditional_distribution",
         ":conditional_transformed_distribution",
@@ -54,6 +57,7 @@ py_library(
         ":half_cauchy",
         ":half_normal",
         ":hidden_markov_model",
+        ":horseshoe",
         ":independent",
         ":inverse_gamma",
         ":inverse_gaussian",
@@ -186,6 +190,21 @@ py_library(
         # tensorflow dep,
         "//tensorflow_probability/python/internal:dtype_util",
         "//tensorflow_probability/python/internal:reparameterization",
+    ],
+)
+
+py_library(
+    name = "chi",
+    srcs = ["chi.py"],
+    deps = [
+        ":chi2",
+        ":kullback_leibler",
+        ":transformed_distribution",
+        # numpy dep,
+        # tensorflow dep,
+        "//tensorflow_probability/python/bijectors:invert",
+        "//tensorflow_probability/python/bijectors:square",
+        "//tensorflow_probability/python/internal:dtype_util",
     ],
 )
 
@@ -386,8 +405,22 @@ py_library(
     name = "hidden_markov_model",
     srcs = ["hidden_markov_model.py"],
     deps = [
+        ":categorical",
+        ":distribution",
         # numpy dep,
         # tensorflow dep,
+    ],
+)
+
+py_library(
+    name = "horseshoe",
+    srcs = ["horseshoe.py"],
+    deps = [
+        ":distribution",
+        # numpy dep,
+        # tensorflow dep,
+        "//tensorflow_probability/python/internal:dtype_util",
+        "//tensorflow_probability/python/internal:reparameterization",
     ],
 )
 
@@ -1093,6 +1126,17 @@ py_test(
 )
 
 py_test(
+    name = "chi_test",
+    srcs = ["chi_test.py"],
+    deps = [
+        # numpy dep,
+        # scipy dep,
+        # tensorflow dep,
+        "//tensorflow_probability",
+    ],
+)
+
+py_test(
     name = "chi2_test",
     srcs = ["chi2_test.py"],
     deps = [
@@ -1184,6 +1228,7 @@ py_test(
         ":exponential",
         # numpy dep,
         # tensorflow dep,
+        "//tensorflow_probability",
     ],
 )
 
@@ -1285,13 +1330,25 @@ py_test(
 
 py_test(
     name = "hidden_markov_model_test",
-    size = "small",
+    size = "medium",
     srcs = ["hidden_markov_model_test.py"],
     deps = [
         # numpy dep,
         # tensorflow dep,
         "//tensorflow_probability",
         "//tensorflow_probability/python/internal:test_util",
+    ],
+)
+
+py_test(
+    name = "horseshoe_test",
+    size = "medium",
+    srcs = ["horseshoe_test.py"],
+    deps = [
+        # numpy dep,
+        # tensorflow dep,
+        "//tensorflow_probability",
+        "//tensorflow_probability/python/internal:test_case",
     ],
 )
 
@@ -1371,6 +1428,7 @@ py_test(
     name = "linear_gaussian_ssm_test",
     size = "large",
     srcs = ["linear_gaussian_ssm_test.py"],
+    shard_count = 4,
     deps = [
         ":linear_gaussian_ssm",
         # numpy dep,
@@ -1531,6 +1589,7 @@ py_test(
         ":normal",
         # numpy dep,
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:test_case",
     ],
 )
 
@@ -1759,6 +1818,7 @@ py_test(
         ":uniform",
         # numpy dep,
         # tensorflow dep,
+        "//tensorflow_probability",
     ],
 )
 

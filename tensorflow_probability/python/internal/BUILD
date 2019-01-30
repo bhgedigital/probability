@@ -15,10 +15,13 @@
 # Description:
 #   Internal utilities for TensorFlow probability.
 
+# [internal] load python3.bzl
+
 licenses(["notice"])  # Apache 2.0
 
 package(
     default_visibility = [
+        "//energy/plasma_debugger/util/tfp_internal:__subpackages__",
         "//tensorflow_probability:__subpackages__",
     ],
 )

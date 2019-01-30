@@ -134,9 +134,9 @@ class MixtureSameFamily(distribution.Distribution):
       self._runtime_assertions = []
 
       s = components_distribution.event_shape_tensor()
-      self._event_ndims = (
-          s.shape[0].value if s.shape.with_rank_at_least(1)[0].value is not None
-          else tf.shape(s)[0])
+      self._event_ndims = tf.dimension_value(s.shape[0])
+      if self._event_ndims is None:
+        self._event_ndims = tf.shape(s)[0]
 
       if not mixture_distribution.dtype.is_integer:
         raise ValueError(
@@ -173,8 +173,10 @@ class MixtureSameFamily(distribution.Distribution):
                     "`mixture_distribution.batch_shape` is not "
                     "compatible with `components_distribution.batch_shape`"))]
 
-      km = mixture_distribution.logits.shape.with_rank_at_least(1)[-1].value
-      kc = components_distribution.batch_shape.with_rank_at_least(1)[-1].value
+      km = tf.dimension_value(
+          mixture_distribution.logits.shape.with_rank_at_least(1)[-1])
+      kc = tf.dimension_value(
+          components_distribution.batch_shape.with_rank_at_least(1)[-1])
       if km is not None and kc is not None and km != kc:
         raise ValueError("`mixture_distribution components` ({}) does not "
                          "equal `components_distribution.batch_shape[-1]` "
@@ -238,7 +240,7 @@ class MixtureSameFamily(distribution.Distribution):
           off_value=np.zeros([], dtype=npdt))  # [n, B, k]
       mask = distribution_utils.pad_mixture_dimensions(
           mask, self, self.mixture_distribution,
-          self._event_shape().ndims)                         # [n, B, k, [1]*e]
+          self._event_ndims)                         # [n, B, k, [1]*e]
       return tf.reduce_sum(x * mask, axis=-1 - self._event_ndims)  # [n, B, E]
 
   def _log_prob(self, x):
@@ -253,7 +255,7 @@ class MixtureSameFamily(distribution.Distribution):
     with tf.control_dependencies(self._runtime_assertions):
       probs = distribution_utils.pad_mixture_dimensions(
           self.mixture_distribution.probs, self, self.mixture_distribution,
-          self._event_shape().ndims)                         # [B, k, [1]*e]
+          self._event_ndims)                         # [B, k, [1]*e]
       return tf.reduce_sum(
           probs * self.components_distribution.mean(),
           axis=-1 - self._event_ndims)  # [B, E]
@@ -270,7 +272,7 @@ class MixtureSameFamily(distribution.Distribution):
       # Law of total variance: Var(Y) = E[Var(Y|X)] + Var(E[Y|X])
       probs = distribution_utils.pad_mixture_dimensions(
           self.mixture_distribution.probs, self, self.mixture_distribution,
-          self._event_shape().ndims)                         # [B, k, [1]*e]
+          self._event_ndims)                         # [B, k, [1]*e]
       mean_cond_var = tf.reduce_sum(
           probs * self.components_distribution.variance(),
           axis=-1 - self._event_ndims)  # [B, E]
@@ -282,7 +284,7 @@ class MixtureSameFamily(distribution.Distribution):
 
   def _covariance(self):
     static_event_ndims = self.event_shape.ndims
-    if static_event_ndims != 1:
+    if static_event_ndims is not None and static_event_ndims != 1:
       # Covariance is defined only for vector distributions.
       raise NotImplementedError("covariance is not implemented")
 
@@ -291,9 +293,9 @@ class MixtureSameFamily(distribution.Distribution):
       probs = distribution_utils.pad_mixture_dimensions(
           distribution_utils.pad_mixture_dimensions(
               self.mixture_distribution.probs, self, self.mixture_distribution,
-              self._event_shape().ndims),
+              self._event_ndims),
           self, self.mixture_distribution,
-          self._event_shape().ndims)                         # [B, k, 1, 1]
+          self._event_ndims)                         # [B, k, 1, 1]
       mean_cond_var = tf.reduce_sum(
           probs * self.components_distribution.covariance(),
           axis=-3)  # [B, e, e]

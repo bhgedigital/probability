@@ -118,16 +118,18 @@ def _update_docstring(old_str, append_str):
     return old_str + "\n\n" + append_str
 
 
-def _convert_to_tensor(value, name=None, preferred_dtype=None):
+def _convert_to_tensor(value, name=None, dtype=None, preferred_dtype=None):
   """Converts to tensor avoiding an eager bug that loses float precision."""
   # TODO(b/116672045): Remove this function.
-  if (tf.executing_eagerly() and preferred_dtype is not None and
+  if (tf.executing_eagerly() and
+      preferred_dtype is not None and
+      dtype is None and
       (preferred_dtype.is_integer or preferred_dtype.is_bool)):
     v = tf.convert_to_tensor(value, name=name)
     if v.dtype.is_floating:
       return v
   return tf.convert_to_tensor(
-      value, name=name, preferred_dtype=preferred_dtype)
+      value, name=name, dtype=dtype, preferred_dtype=preferred_dtype)
 
 
 class _DistributionMeta(abc.ABCMeta):
@@ -412,8 +414,7 @@ class Distribution(_BaseDistribution):
     Args:
       value: A dictionary of parameters to assign to the `_parameters` property.
     """
-    if "self" in value:
-      del value["self"]
+    value.pop("self", None)
     self._parameter_dict = value
 
   @classmethod
@@ -687,22 +688,17 @@ class Distribution(_BaseDistribution):
     """
     return self._call_sample_n(sample_shape, seed, name)
 
-  def _log_prob(self, value):
-    raise NotImplementedError("log_prob is not implemented: {}".format(
-        type(self).__name__))
-
   def _call_log_prob(self, value, name, **kwargs):
     """Wrapper around _log_prob."""
     with self._name_scope(name, values=[value]):
       value = _convert_to_tensor(
           value, name="value", preferred_dtype=self.dtype)
-      try:
+      if hasattr(self, "_log_prob"):
         return self._log_prob(value, **kwargs)
-      except NotImplementedError as original_exception:
-        try:
-          return tf.log(self._prob(value, **kwargs))
-        except NotImplementedError:
-          raise original_exception
+      if hasattr(self, "_prob"):
+        return tf.log(self._prob(value, **kwargs))
+      raise NotImplementedError("log_prob is not implemented: {}".format(
+          type(self).__name__))
 
   def log_prob(self, value, name="log_prob"):
     """Log probability density/mass function.
@@ -717,22 +713,17 @@ class Distribution(_BaseDistribution):
     """
     return self._call_log_prob(value, name)
 
-  def _prob(self, value):
-    raise NotImplementedError("prob is not implemented: {}".format(
-        type(self).__name__))
-
   def _call_prob(self, value, name, **kwargs):
     """Wrapper around _prob."""
     with self._name_scope(name, values=[value]):
       value = _convert_to_tensor(
           value, name="value", preferred_dtype=self.dtype)
-      try:
+      if hasattr(self, "_prob"):
         return self._prob(value, **kwargs)
-      except NotImplementedError as original_exception:
-        try:
-          return tf.exp(self._log_prob(value, **kwargs))
-        except NotImplementedError:
-          raise original_exception
+      if hasattr(self, "_log_prob"):
+        return tf.exp(self._log_prob(value, **kwargs))
+      raise NotImplementedError("prob is not implemented: {}".format(
+          type(self).__name__))
 
   def prob(self, value, name="prob"):
     """Probability density/mass function.
@@ -747,22 +738,17 @@ class Distribution(_BaseDistribution):
     """
     return self._call_prob(value, name)
 
-  def _log_cdf(self, value):
-    raise NotImplementedError("log_cdf is not implemented: {}".format(
-        type(self).__name__))
-
   def _call_log_cdf(self, value, name, **kwargs):
     """Wrapper around _log_cdf."""
     with self._name_scope(name, values=[value]):
       value = _convert_to_tensor(
           value, name="value", preferred_dtype=self.dtype)
-      try:
+      if hasattr(self, "_log_cdf"):
         return self._log_cdf(value, **kwargs)
-      except NotImplementedError as original_exception:
-        try:
-          return tf.log(self._cdf(value, **kwargs))
-        except NotImplementedError:
-          raise original_exception
+      if hasattr(self, "_cdf"):
+        return tf.log(self._cdf(value, **kwargs))
+      raise NotImplementedError("log_cdf is not implemented: {}".format(
+          type(self).__name__))
 
   def log_cdf(self, value, name="log_cdf"):
     """Log cumulative distribution function.
@@ -787,22 +773,17 @@ class Distribution(_BaseDistribution):
     """
     return self._call_log_cdf(value, name)
 
-  def _cdf(self, value):
-    raise NotImplementedError("cdf is not implemented: {}".format(
-        type(self).__name__))
-
   def _call_cdf(self, value, name, **kwargs):
     """Wrapper around _cdf."""
     with self._name_scope(name, values=[value]):
       value = _convert_to_tensor(
           value, name="value", preferred_dtype=self.dtype)
-      try:
+      if hasattr(self, "_cdf"):
         return self._cdf(value, **kwargs)
-      except NotImplementedError as original_exception:
-        try:
-          return tf.exp(self._log_cdf(value, **kwargs))
-        except NotImplementedError:
-          raise original_exception
+      if hasattr(self, "_log_cdf"):
+        return tf.exp(self._log_cdf(value, **kwargs))
+      raise NotImplementedError("cdf is not implemented: {}".format(
+          type(self).__name__))
 
   def cdf(self, value, name="cdf"):
     """Cumulative distribution function.
@@ -1076,7 +1057,7 @@ class Distribution(_BaseDistribution):
 
     Denote this distribution (`self`) by `P` and the `other` distribution by
     `Q`. Assuming `P, Q` are absolutely continuous with respect to
-    one another and permit densities `p(x) dr(x)` and `q(x) dr(x)`, (Shanon)
+    one another and permit densities `p(x) dr(x)` and `q(x) dr(x)`, (Shannon)
     cross entropy is defined as:
 
     ```none
@@ -1091,7 +1072,7 @@ class Distribution(_BaseDistribution):
 
     Returns:
       cross_entropy: `self.dtype` `Tensor` with shape `[B1, ..., Bn]`
-        representing `n` different calculations of (Shanon) cross entropy.
+        representing `n` different calculations of (Shannon) cross entropy.
     """
     with self._name_scope(name):
       return self._cross_entropy(other)
@@ -1114,7 +1095,7 @@ class Distribution(_BaseDistribution):
     ```
 
     where `F` denotes the support of the random variable `X ~ p`, `H[., .]`
-    denotes (Shanon) cross entropy, and `H[.]` denotes (Shanon) entropy.
+    denotes (Shannon) cross entropy, and `H[.]` denotes (Shannon) entropy.
 
     Args:
       other: `tfp.distributions.Distribution` instance.
@@ -1129,6 +1110,14 @@ class Distribution(_BaseDistribution):
       return self._kl_divergence(other)
 
   def __str__(self):
+    maybe_batch_shape = ""
+    if self.batch_shape.ndims is not None:
+      maybe_batch_shape = ", batch_shape={}".format(
+          self.batch_shape).replace("None", "?")
+    maybe_event_shape = ""
+    if self.event_shape.ndims is not None:
+      maybe_event_shape = ", event_shape={}".format(
+          self.event_shape).replace("None", "?")
     return ("tfp.distributions.{type_name}("
             "\"{self_name}\""
             "{maybe_batch_shape}"
@@ -1136,12 +1125,8 @@ class Distribution(_BaseDistribution):
             ", dtype={dtype})".format(
                 type_name=type(self).__name__,
                 self_name=self.name,
-                maybe_batch_shape=(", batch_shape={}".format(self.batch_shape)
-                                   if self.batch_shape.ndims is not None
-                                   else ""),
-                maybe_event_shape=(", event_shape={}".format(self.event_shape)
-                                   if self.event_shape.ndims is not None
-                                   else ""),
+                maybe_batch_shape=maybe_batch_shape,
+                maybe_event_shape=maybe_event_shape,
                 dtype=self.dtype.name))
 
   def __repr__(self):
@@ -1152,8 +1137,8 @@ class Distribution(_BaseDistribution):
             " dtype={dtype}>".format(
                 type_name=type(self).__name__,
                 self_name=self.name,
-                batch_shape=self.batch_shape,
-                event_shape=self.event_shape,
+                batch_shape=str(self.batch_shape).replace("None", "?"),
+                event_shape=str(self.event_shape).replace("None", "?"),
                 dtype=self.dtype.name))
 
   @contextlib.contextmanager
@@ -1172,25 +1157,7 @@ class Distribution(_BaseDistribution):
     else:
       prod = np.prod(x_static_val, dtype=x.dtype.as_numpy_dtype())
 
-    ndims = x.shape.ndims  # != sample_ndims
-    if ndims is None:
-      # Maybe expand_dims.
-      ndims = tf.rank(x)
-      expanded_shape = util.pick_vector(
-          tf.equal(ndims, 0),
-          np.array([1], dtype=np.int32), tf.shape(x))
-      x = tf.reshape(x, expanded_shape)
-    elif ndims == 0:
-      # Definitely expand_dims.
-      if x_static_val is not None:
-        x = tf.convert_to_tensor(
-            np.array([x_static_val], dtype=x.dtype.as_numpy_dtype()),
-            name=name)
-      else:
-        x = tf.reshape(x, [1])
-    elif ndims != 1:
-      raise ValueError("Input is neither scalar nor vector.")
-
+    x = util.expand_to_vector(x, tensor_name=name)
     return x, prod
 
   def _set_sample_static_shape(self, x, sample_shape):
@@ -1242,8 +1209,7 @@ class Distribution(_BaseDistribution):
     if static_shape.ndims is not None:
       return static_shape.ndims == 0
     shape = dynamic_shape_fn()
-    if (shape.shape.ndims is not None and
-        shape.shape[0].value is not None):
+    if tf.dimension_value(shape.shape[0]) is not None:
       # If the static_shape is correctly written then we should never execute
       # this branch. We keep it just in case there's some unimagined corner
       # case.
