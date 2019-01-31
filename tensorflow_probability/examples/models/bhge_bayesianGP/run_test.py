@@ -1,27 +1,27 @@
 import numpy as np
-import runBayesianGP
 import matplotlib.pyplot as plt
-
-
-
-
-#-------- test 1---------------------------------------------------------
 import pandas as pd
 
-data = pd.read_csv('../tests/training_data.csv').values
+
+from tensorflow_probability.examples.models.bhge_BayesianGP import BGP_model
+
+#-------- test 1---------------------------------------------------------
+
+
+data = pd.read_csv('./test_Data/training_data.csv').values
 
 Xtr = data[:,:-1]
 Ytr = data[:,-1]
 
 # initialize
-bgp = runBayesianGP.BGP_model(Xtr, Ytr, 'RBF', 1e-3)
+bgp = BGP_model(Xtr, Ytr, 'RBF', 1e-3)
 
 
 
 # perform mcmc sampling
 bgp.run_mcmc(5000,num_leapfrog_steps = 3, estimate_noise = True)
 
-results_path = '../results/test1/'
+results_path = './test_results/test1/'
 
 bgp.plot_loss_function(path = results_path)
 
@@ -51,22 +51,21 @@ plt.close()
 
 #--------------------------------------------------------------------------------
 #------------------------- test 2 -----------------------------------------------
-import pandas as pd
 
-data = pd.read_csv('../tests/training_data2.csv').values
+data = pd.read_csv('./test_Data/training_data2.csv').values
 
 Xtr = data[:,:-1]
 Ytr = data[:,-1]
 
 # initialize
-bgp = runBayesianGP.BGP_model(Xtr, Ytr, 'Matern32', 1e-2)
+bgp = BGP_model(Xtr, Ytr, 'Matern32', 1e-2)
 
 
 
 # perform mcmc sampling
 bgp.run_mcmc(5000,num_leapfrog_steps = 3, estimate_noise = False, warm_up = False, step_size = 0.30)
 
-results_path = '../results/test2/'
+results_path = './test_results/test2/'
 
 # plot the samples from the mcmc sampling
 bgp.plot_chains(labels =['a','b','c','d','e'],  path = results_path)
@@ -95,23 +94,22 @@ plt.close()
 
 #-----------------------------------------------------------------------------
 #------------------- test 3 --------------------------------------------
-import pandas as pd
 
-data = pd.read_csv('../tests/training_data2.csv').values
+data = pd.read_csv('./test_Data/training_data2.csv').values
 
 
 Xtr = data[:,:-1]
 Ytr = data[:,-1]
 
 # initialize
-bgp = runBayesianGP.BGP_model(Xtr, Ytr,'Matern52', 1e-3)
+bgp = BGP_model(Xtr, Ytr,'Matern52', 1e-3)
 
 
 
 # perform mcmc sampling
 bgp.run_mcmc(5000,  num_leapfrog_steps = 3, estimate_noise = False, warm_up = True)
 
-results_path = '../results/test3/'
+results_path = './test_results/test3/'
 
 # plot the samples from the mcmc sampling
 bgp.plot_chains( path = results_path)

@@ -4,4 +4,5 @@ from __future__ import print_function
 
 
 
-from scripts import BayesianGP, BGP_model
+from bayesiangp import BayesianGP
+from bgpmodel import  BGP_model

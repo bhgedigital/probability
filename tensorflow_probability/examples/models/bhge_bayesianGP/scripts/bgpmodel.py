@@ -206,7 +206,7 @@ class BGP_model():
 
         mcmc_samples = len(self.hyperpar_samples['kernel_variance'])
         # Limiting the number of mcmc samples used if necessary
-        if mcmc_samples > 1000:
+        if mcmc_samples > 3000:
             selected = np.random.permutation(mcmc_samples)
             loc_samples = self.hyperpar_samples['gp_constant_mean_function'][selected]
             varm_samples = self.hyperpar_samples['kernel_variance'][selected]
