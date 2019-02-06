@@ -33,6 +33,7 @@ from tensorflow_probability.python import sts
 from tensorflow_probability.python import trainable_distributions
 from tensorflow_probability.python import util
 from tensorflow_probability.python import vi
+from tensorflow_probability.python import models
 
 from tensorflow.python.util.all_util import remove_undocumented
 
@@ -52,6 +53,7 @@ _allowed_symbols = [
     'sts',
     'util',
     'vi',
+    'models',
 ]
 
 remove_undocumented(__name__, _allowed_symbols)

@@ -1,6 +1,10 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import tensorflow as tf
 import numpy as np
-import bayesiangp
+from tensorflow_probability.python.models.bhge_bayesianGP.scripts import bayesiangp
 import os
 import matplotlib.pyplot as plt
 import traceback
@@ -77,7 +81,7 @@ class BGP_model():
                     step_size, beta_next, varm_next, loc_next = self.model.warmup(initial_state,num_warmup_iters, num_leapfrog_steps)
                     initial_state = [beta_next, varm_next, loc_next]
                     print('Sampling in progress.')
-                    loc_samples, varm_samples, beta_samples, acceptance_rate = self.model.mcmc(mcmc_samples, burn_in, initial_state, step_size, num_leapfrog_steps)
+                    loc_samples, varm_samples, beta_samples, acceptance_rate = self.model.mcmc(mcmc_samples, burn_in, initial_state, 0.9*step_size, num_leapfrog_steps)
                     if acceptance_rate < 0.1:
                         warnings.warn("Acceptance rate was low  (less than 0.1)")
                     self.step_size = step_size
@@ -123,68 +127,79 @@ class BGP_model():
             return
 
 
-    def plot_chains(self, path = None, labels = []):
+    def plot_chains(self, labels = [], display = True, save = False, path = None):
         # Function used to plot the chains from the  mcmc sampling
         # Inputs:
+        #   labels:= list containing labels for the input variables. A default list is
+        #       generated if this is not specified
+        #   display := boolean that specifies if the plot is displayed or not
+        #   save  := boolean that specifies if the plot is saved or not
         #   path:= directory where to save the plots. Defaults to current directory
         #       if not specified
-        #  labels:= list containing labels for the input variables. A default list is
-        #       generated if this is not specified
+        #
         if len(self.hyperpar_samples) == 0:
             raise Exception('Execute run_mcmc first.')
         if labels == []:
             labels = ['x' + str(i) for i in range(self.n_inputs)]
         elif  (len(labels) != self.n_inputs) or not(all(isinstance(s, str) for s in labels)):
             raise Exception('Invalid input for labels')
-        if path == None:
-            path = './'
-        if os.path.isdir(path):
-            nplots = self.n_inputs +  2
-            fig, axes = plt.subplots(nplots, 1, figsize=(20, 2.0*nplots),sharex=True)
-            # plotting the samples for the kernel variance
-            axes[0].plot(self.hyperpar_samples['kernel_variance'])
-            title = 'kernel_variance_samples'
-            axes[0].set_title(title)
-            # plotting the samples for the constant mean function of the GP
-            axes[1].plot(self.hyperpar_samples['gp_constant_mean_function'])
-            title = 'gp_constant_mean_function_samples'
-            axes[1].set_title(title)
-            # plotting the samples for the inverse lengthscales
-            for i in range(0,self.n_inputs):
-                axes[i+2].plot(self.hyperpar_samples['kernel_inverse_lengthscales'][:,i])
-                title =  labels[i] + '_inverse_lengthscale_samples'
-                axes[i+2].set_title(title)
-            figpath ='mcmc_chains.png'
-            figpath = os.path.join(path, figpath)
-            plt.savefig(figpath)
+
+        nplots = self.n_inputs +  2
+        fig, axes = plt.subplots(nplots, 1, figsize=(20, 2.0*nplots),sharex=True)
+        # plotting the samples for the kernel variance
+        axes[0].plot(self.hyperpar_samples['kernel_variance'])
+        title = 'kernel_variance_samples'
+        axes[0].set_title(title)
+        # plotting the samples for the constant mean function of the GP
+        axes[1].plot(self.hyperpar_samples['gp_constant_mean_function'])
+        title = 'gp_constant_mean_function_samples'
+        axes[1].set_title(title)
+        # plotting the samples for the inverse lengthscales
+        for i in range(0,self.n_inputs):
+            axes[i+2].plot(self.hyperpar_samples['kernel_inverse_lengthscales'][:,i])
+            title =  labels[i] + '_inverse_lengthscale_samples'
+            axes[i+2].set_title(title)
+        if save:
+            if path == None:
+                path = './'
+            if os.path.isdir(path):
+                figpath ='mcmc_chains.png'
+                figpath = os.path.join(path, figpath)
+                plt.savefig(figpath)
+            else:
+                raise Exception('Invalid directory path ', path)
+        if not(display):
             plt.close()
-        else:
-            raise Exception('Invalid directory path ', path)
         return
 
-    def plot_loss_function(self, path = None):
+    def plot_loss_function(self, display = True, save = False, path = None):
         # Function used to compute the loss function from the M-step executed while estimating
         # the noise variance
         # Inputs:
+        #   display := boolean that specifies if the plot is displayed or not
+        #   save  := boolean that specifies if the plot is saved or not
         #   path:= directory where to save the plots. Defaults to current directory
         #       if not specified
         if path == None:
             path = './'
-        if os.path.isdir(path):
-            if 'loss_function_history' in self.hyperpar_samples.keys():
-                plt.figure(figsize=(12,10))
-                plt.plot(self.hyperpar_samples['loss_function_history'])
-                title = 'loss_function'
-                plt.title(title)
-                figpath = title + '.png'
-                figpath = os.path.join(path, figpath)
-                plt.savefig(figpath)
-                plt.close()
+        plt.figure(figsize=(12,10))
+        plt.plot(self.hyperpar_samples['loss_function_history'])
+        title = 'loss_function'
+        plt.title(title)
+        if save:
+            if os.path.isdir(path):
+                if 'loss_function_history' in self.hyperpar_samples.keys():
+                    figpath = title + '.png'
+                    figpath = os.path.join(path, figpath)
+                    plt.savefig(figpath)
+                else:
+                    raise Exception('Loss function is not available.')
             else:
-                raise Exception('Loss function is not available.')
-        else:
-            raise Exception('Invalid directory path ', path)
+                raise Exception('Invalid directory path ', path)
+        if not(display):
+            plt.close()
         return
+
     def predict(self, Xtest, with_point_samples = False):
         # Computes approximate values of the full posterior mean and variance of the Gaussian process
 		# by using samples of the posterior distribution of the hyperparameters

@@ -4,4 +4,4 @@ from __future__ import print_function
 
 
 
-from scripts import BayesianGP, BGP_model
+from tensorflow_probability.python.models.bhge_bayesianGP.scripts import BayesianGP, BGP_model

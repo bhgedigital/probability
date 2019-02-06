@@ -3,7 +3,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 
-from tensorflow_probability.examples.models.bhge_BayesianGP import BGP_model
+import tensorflow_probability as tfp
+tfm = tfp.models
 
 #-------- test 1---------------------------------------------------------
 
@@ -14,7 +15,7 @@ Xtr = data[:,:-1]
 Ytr = data[:,-1]
 
 # initialize
-bgp = BGP_model(Xtr, Ytr, 'RBF', 1e-3)
+bgp = tfm.BGP_model(Xtr, Ytr, 'RBF', 1e-3)
 
 
 
@@ -23,9 +24,9 @@ bgp.run_mcmc(5000,num_leapfrog_steps = 3, estimate_noise = True)
 
 results_path = './test_results/test1/'
 
-bgp.plot_loss_function(path = results_path)
+bgp.plot_loss_function(display = False, save = True, path = results_path)
 
-bgp.plot_chains( path = results_path)
+bgp.plot_chains(display = False, save = True, path = results_path)
 
 # get predictions on training data
 mean_pos, std_pos, samples = bgp.predict(Xtr, with_point_samples = True)
@@ -58,7 +59,7 @@ Xtr = data[:,:-1]
 Ytr = data[:,-1]
 
 # initialize
-bgp = BGP_model(Xtr, Ytr, 'Matern32', 1e-2)
+bgp = tfm.BGP_model(Xtr, Ytr, 'Matern32', 1e-2)
 
 
 
@@ -68,7 +69,7 @@ bgp.run_mcmc(5000,num_leapfrog_steps = 3, estimate_noise = False, warm_up = Fals
 results_path = './test_results/test2/'
 
 # plot the samples from the mcmc sampling
-bgp.plot_chains(labels =['a','b','c','d','e'],  path = results_path)
+bgp.plot_chains(labels =['u1','u2','u3','u4','u5'], display = False, save = True,  path = results_path)
 
 # get predictions on training data
 mean_pos, std_pos, samples = bgp.predict(Xtr, with_point_samples = True)
@@ -102,7 +103,7 @@ Xtr = data[:,:-1]
 Ytr = data[:,-1]
 
 # initialize
-bgp = BGP_model(Xtr, Ytr,'Matern52', 1e-3)
+bgp = tfm.BGP_model(Xtr, Ytr,'Matern52', 1e-3)
 
 
 
@@ -112,21 +113,8 @@ bgp.run_mcmc(5000,  num_leapfrog_steps = 3, estimate_noise = False, warm_up = Tr
 results_path = './test_results/test3/'
 
 # plot the samples from the mcmc sampling
-bgp.plot_chains( path = results_path)
+bgp.plot_chains(display = False, save = True, path = results_path)
 
 # get predictions on training data
 mean_pos, std_pos = bgp.predict(Xtr)
 
-
-# generating predicted vs actual plot
-# Predicted vs actual
-plt.figure(figsize =(10,10))
-plt.plot(Ytr, Ytr, color = 'red', label ='actual')
-plt.scatter(Ytr, mean_pos, color = 'blue', label = 'predicted')
-plt.vlines(Ytr, lower, upper, color = 'green', label = '95 % confidence region')
-plt.legend()
-figpath = 'predicted_vs_actual.png'
-figpath = results_path + figpath
-plt.savefig(figpath)
-plt.grid()
-plt.close()

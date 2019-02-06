@@ -50,6 +50,7 @@ py_library(
         "//tensorflow_probability/python/trainable_distributions",
         "//tensorflow_probability/python/util",
         "//tensorflow_probability/python/vi",
+        "//tensorflow_probability/python/models",
     ],
 )
 
