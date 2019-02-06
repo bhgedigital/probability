@@ -1,15 +1,18 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import tensorflow as tf
 import numpy as np
-import tensorflow_probability as tfp
 import time
 import functools
 import math
 from tensorflow_probability.python.mcmc import util as mcmc_util
 ds = tf.contrib.distributions
+from tensorflow_probability.python.mcmc import sample_chain, HamiltonianMonteCarlo, TransformedTransitionKernel
+from tensorflow_probability.python import distributions  as tfd
+from  tensorflow_probability.python import bijectors as tfb
 
-
-tfd = tfp.distributions
-tfb = tfp.bijectors
 
 #------------------------------------------------------------------------------
 # This script implements a Gaussian process where the posterior distribution of
@@ -276,8 +279,8 @@ class BayesianGP():
 
 
 		# Initializing the sampler
-		sampler = tfp.mcmc.TransformedTransitionKernel(
-						inner_kernel=tfp.mcmc.HamiltonianMonteCarlo(
+		sampler = TransformedTransitionKernel(
+						inner_kernel= HamiltonianMonteCarlo(
 								target_log_prob_fn=unnormalized_posterior_log_prob,
 								step_size= step_size,
 								num_leapfrog_steps=num_leapfrog_steps),
@@ -348,10 +351,10 @@ class BayesianGP():
 			beta_samples,
 			varm_samples,
 			loc_samples
-		], kernel_results = tfp.mcmc.sample_chain(num_results= mcmc_samples, num_burnin_steps= num_burnin_steps,
+		], kernel_results = sample_chain(num_results= mcmc_samples, num_burnin_steps= num_burnin_steps,
 																current_state=initial_state,
-																kernel=tfp.mcmc.TransformedTransitionKernel(
-																	inner_kernel=tfp.mcmc.HamiltonianMonteCarlo(
+																kernel= TransformedTransitionKernel(
+																	inner_kernel= HamiltonianMonteCarlo(
 			    																target_log_prob_fn=unnormalized_posterior_log_prob,
 																				step_size= step_size,
 																				num_leapfrog_steps=num_leapfrog_steps),
@@ -418,8 +421,8 @@ class BayesianGP():
 		current_state = [beta_cur, varm_cur,loc_cur]
 
 		# Initializing a sampler for warmup:
-		sampler = tfp.mcmc.TransformedTransitionKernel(
-						inner_kernel=tfp.mcmc.HamiltonianMonteCarlo(
+		sampler = TransformedTransitionKernel(
+						inner_kernel= HamiltonianMonteCarlo(
 								target_log_prob_fn=unnormalized_posterior_log_prob,
 								step_size= step_size,
 								num_leapfrog_steps=num_leapfrog_steps),
@@ -452,12 +455,12 @@ class BayesianGP():
 			beta_probs,
 			varm_probs,
 			loc_probs
-		], em_kernel_results = tfp.mcmc.sample_chain(num_results= 10, num_burnin_steps= 10,
+		], em_kernel_results = sample_chain(num_results= 10, num_burnin_steps= 10,
 																current_state=initial_state,
-																kernel=tfp.mcmc.TransformedTransitionKernel(
-																	inner_kernel=tfp.mcmc.HamiltonianMonteCarlo(
+																kernel= TransformedTransitionKernel(
+																	inner_kernel= HamiltonianMonteCarlo(
 			    																target_log_prob_fn=unnormalized_posterior_log_prob,
-																				step_size= step_size,
+																				step_size= 0.9*step_size,
 																				num_leapfrog_steps=num_leapfrog_steps),
 																	bijector=unconstraining_bijectors))
 
@@ -481,12 +484,12 @@ class BayesianGP():
 			beta_samples,
 			varm_samples,
 			loc_samples
-		], sampling_kernel_results = tfp.mcmc.sample_chain(num_results= mcmc_samples, num_burnin_steps= 0,
+		], sampling_kernel_results = sample_chain(num_results= mcmc_samples, num_burnin_steps= mcmc_samples//2,
 																current_state=initial_state,
-																kernel=tfp.mcmc.TransformedTransitionKernel(
-																	inner_kernel=tfp.mcmc.HamiltonianMonteCarlo(
+																kernel= TransformedTransitionKernel(
+																	inner_kernel= HamiltonianMonteCarlo(
 			    																target_log_prob_fn=unnormalized_posterior_log_prob,
-																				step_size= 0.8*step_size,
+																				step_size= 0.9*step_size,
 																				num_leapfrog_steps=num_leapfrog_steps),
 																	bijector=unconstraining_bijectors))
 
