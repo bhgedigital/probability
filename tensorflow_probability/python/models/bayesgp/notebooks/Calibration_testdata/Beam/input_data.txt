@@ -1,0 +1,17 @@
+path=C:\Users\200021724\Documents\GEGRC\BHM\BHM-srcVer2
+#Input info
+x labels= 
+y labels = omega1,omega2,mode1x1,mode1x2,mode1x3,mode1x4,mode2x1,mode2x2,mode2x3,mode2x4
+calibration label= E,h
+test data= obs.dat
+simulation data = sim.dat
+#MCMC info
+nmcmc=5000
+burn in=200
+levels=10
+#Prediction info
+prediction mcmc draws = 1000
+#predict flag = 1
+#prediction filename = Validation.dat
+plot flag = 1
+plot prior = 0

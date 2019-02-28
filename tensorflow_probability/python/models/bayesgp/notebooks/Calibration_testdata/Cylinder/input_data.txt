@@ -1,0 +1,15 @@
+path=C:\Users\200021724\Documents\GEGRC\BHM\BHM-srcVer2
+#Input info
+x labels= theta
+y labels = Cp
+calibration label= ratio 
+test data= obs.dat
+simulation data = sim.dat
+#MCMC info
+nmcmc=5000
+burn in=100
+levels=10
+#Prediction info
+prediction mcmc draws = 1000
+plot flag = 1
+plot prior = 0

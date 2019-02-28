@@ -1,0 +1,23 @@
+path=C:\Users\200021724\Documents\GEGRC\BHM\BHM-srcVer2
+#Input info
+x labels= x
+y labels = Temp
+calibration label= q, T0, h
+t labels = time
+test doe = test_doe.txt
+number test doe points = 
+test output = test-data\test_output_.dat
+simulation data = 
+simulation doe = sim_doe.txt
+number of simulation doe points = 
+simulation output = sim-data\sim_output_.dat
+parallel flag = 0
+#num of processors = 4
+#MCMC info
+nmcmc=5000
+burn in=200
+levels=10
+#Prediction info
+prediction mcmc draws = 500
+predict flag = 0
+plot flag = 1

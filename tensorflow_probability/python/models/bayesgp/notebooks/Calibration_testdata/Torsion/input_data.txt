@@ -1,0 +1,17 @@
+path=C:\Users\200021724\Documents\GEGRC\BHM\BHM-srcVer2
+#Input info
+x labels= ratio
+y labels = AngularFrequency
+calibration label= K1,K2,K3
+test data= obs.dat
+simulation data = sim.dat
+#MCMC info
+nmcmc=5000
+burn in=100
+levels=10
+#Prediction info
+prediction mcmc draws = 1000
+#predict flag = 0
+#prediction filename = Validation.dat
+plot flag = 1
+plot prior = 0
