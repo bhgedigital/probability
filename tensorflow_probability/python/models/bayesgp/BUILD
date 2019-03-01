@@ -7,10 +7,10 @@ package(
 
 
 py_library(
-    name = "bhge_bayesianGP",
+    name = "bayesgp",
     srcs = ["__init__.py"],
     srcs_version = "PY2AND3",
     deps = [
-        "//tensorflow_probability/python/models/bhge_bayesianGP/scripts",
+        "//tensorflow_probability/python/models/bayesgp/scripts",
     ],
 )

@@ -12,6 +12,6 @@ py_library(
     srcs = ["__init__.py"],
     srcs_version = "PY2AND3",
     deps = [
-        "//tensorflow_probability/python/models/bhge_bayesianGP",
+        "//tensorflow_probability/python/models/bayesgp",
     ],
 )
