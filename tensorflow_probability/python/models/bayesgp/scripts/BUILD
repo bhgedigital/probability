@@ -62,7 +62,7 @@ py_library(
 
 py_library(
     name = "calibrationmodel",
-    srcs = ["calibration_model.py"],
+    srcs = ["calibrationmodel.py"],
     srcs_version = "PY2AND3",
     deps = [
         ":calibration",
@@ -83,7 +83,7 @@ py_library(
 
 py_library(
     name = "bgputils",
-    srcs = ["bgp_utils.py"],
+    srcs = ["bgputils.py"],
     srcs_version = "PY2AND3",
     deps = [
         "//tensorflow_probability/python/mcmc",

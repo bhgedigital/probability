@@ -20,26 +20,44 @@ import copy
 
 class Calibration_model():
 
-    def __init__(self, sim_inputs_pars, sim_outputs, exp_inputs, exp_outputs,  kernel_type = 'RBF', noise_level = 1e-3, labels = [], sampling_info  = None):
+    def __init__(self, sim_inputs_pars, sim_outputs, exp_inputs, exp_outputs, model_info  = None,  kernel_type = 'RBF', noise_level = 1e-3, labels = []):
         # Inputs:
         #   sim_inputs_pars := N x D numpy array of simulation inputs and calibration parameter values.
         #           The first columns must correspond to the input variables and the remaining
         #           columns must correspond to the calibration parameters.
-        #  sim_outputs := N-dimensional numpy vector of outputs
+        #   sim_outputs := N-dimensional numpy vector of outputs
         #   exp_inputs := N x D numpy array of experimental input values. The variable columns
         #             must have the same order as the input variable columns of sim_inputs_pars
         #  exp_outputs := N-dimensional numpy vector of outputs
+        #   model_info = dictionary containing
+        #               1) a dictionary containing the hyperparameter samples.
+        #               2) numpy array of samples for the calibration parameters
+        #               3) the value of the noise variance
+        #               4) the type of kernel used
+        #  the dictionary must be generated from a previous run of the model with the same set of inputs and outputs arrays
+        # if model_info is not provided, the kernel_type and noise level can be provided or will be set as default
         # kernel_type := string specifying the type of kernel to be used. Options are
 		#                'RBF', 'Matern12', 'Matern32', 'Matern52'
         # noise_level := variance of the Gaussian noise for the normalized data
         #   labels:= list containing labels for the input variables and the calibration parameters. A default list is
         #       generated if this is not specified
-        # sampling_info = list consisting of
-        #               1) dictionary containing hyperparameter samples
-        #               2) numpy array of samples for the calibration parameters
-        #           The list must be from a previous initialization of the model with the same set of inputs, outputs and settings
 
         # Checking that the Gaussian noise variance is between 0 and 1
+        if model_info:
+            warnings.warn("Retrieving model info from previous run. The set of inputs and outputs arrays must be the same as the previous run.")
+            try:
+                self.hyperpar_samples = copy.deepcopy(model_info['hyp_samples'])
+                self.par_samples = model_info['par_samples'].copy()
+                self.kernel_type = model_info['kernel_type']
+                noise_level = model_info['noise_level']
+            except Exception as e:
+                traceback.print_exc()
+                print('Failed to retrieve model info.')
+        else:
+            self.hyperpar_samples = {}
+            self.kernel_type = kernel_type
+            noise_level = noise_level
+
         if (noise_level > 1) or (noise_level < 0):
             raise Exception('Invalid value for the noise_level: ' + str(noise_level) + '. It should be between 0 and 1.')
 
@@ -68,11 +86,8 @@ class Calibration_model():
         upper_bounds = np.max(sim_in_norm[:,self.n_inputs:], axis = 0).tolist()
 
         # Initialize the model
-        self.model = calibration.Calibration(sim_in_norm, sim_out_norm, exp_in_norm, exp_out_norm, lower_bounds, upper_bounds, kernel_type, noise_level)
-        self.hyperpar_samples = {} # dictionary to store the samples for the posterior distribution
-                                    # of the hyperparameters
-
-
+        self.model = calibration.Calibration(sim_in_norm, sim_out_norm, exp_in_norm, exp_out_norm, lower_bounds, upper_bounds, self.kernel_type, noise_level)
+        
         # Bounds needed for sensitivity analysis
         mins_range = np.min(sim_inputs_pars, axis = 0,  keepdims = True).T
         maxs_range = np.max(sim_inputs_pars, axis = 0,keepdims = True).T
@@ -93,14 +108,6 @@ class Calibration_model():
             self.input_labels = labels[:self.n_inputs]
             self.par_labels = labels[self.n_inputs:]
 
-        if sampling_info:
-            print('Retrieving hyperparameter and calibration parameter samples')
-            self.hyperpar_samples = copy.deepcopy(sampling_info[0])
-            self.par_samples = sampling_info[1].copy()
-        else:
-            self.hyperpar_samples = {}
-            self.par_samples = None
-
         return
 
 
@@ -114,10 +121,12 @@ class Calibration_model():
         # learning_rate := learning rate for optimizer if the noise variance is estimated
         # warm_up := Assuming the noise is kept fixed (i.e estimate_noise == False ), this Boolean  indicates if an adaptive step size is computed during a "warm up" phase
         # step_size := step size to use for the HMC sampler if warm_up == False
-        # Outputs:
-        #       sampling_info = list consisting of
-        #               1) dictionary containing hyperparameter samples as well loss function history (if noise is estimated)
-        #               2) numpy array of samples for the calibration parameters
+        #       model_info = dictionary containing
+        #                      1) dictionary with samples of hyperparameters as well loss function history (if noise is estimated)
+        #                      2) numpy array of calibration parameters
+        #                      2) the value of the noise variance
+        #                      3) the type of kernel used
+        #
         if estimate_noise == False:
             print('Noise variance is fixed.')
             if warm_up:
@@ -127,6 +136,8 @@ class Calibration_model():
                 try:
                     print('Excecuting the warmup.')
                     step_size, next_state = self.model.warmup(num_warmup_iters = num_warmup_iters, num_leapfrog_steps = num_leapfrog_steps)
+                    if step_size  < 1e-4:
+                        warnings.warn("Estimated step size is low. (less than 1e-4)")
                     print('Sampling in progress.')
                     self.par_samples, hyperpar_samples, acceptance_rate = self.model.mcmc(mcmc_samples = mcmc_samples, num_burnin_steps =burn_in,step_size = 0.9*step_size,
                                                                     num_leapfrog_steps = num_leapfrog_steps, initial_state = next_state)
@@ -143,7 +154,6 @@ class Calibration_model():
                                                                     num_leapfrog_steps = num_leapfrog_steps)
                     if acceptance_rate < 0.1:
                         warnings.warn("Acceptance rate was low  (less than 0.1)")
-                    self.step_size = step_size
                 except Exception as e:
                     traceback.print_exc()
                     print('Sampling failed. Increase the noise level or decrease the step size or the number of leap frog steps if necessary.')
@@ -164,8 +174,12 @@ class Calibration_model():
         self.hyperpar_samples['disc_kernel_inverse_lengthscales'] = betad_samples
         self.hyperpar_samples['sim_gp_constant_mean_function'] = loc_samples
 
-        sampling_info = [copy.deepcopy(self.hyperpar_samples), self.par_samples.copy()]
-        return sampling_info
+        model_info = {}
+        model_info['hyp_samples'] = copy.deepcopy(self.hyperpar_samples)
+        model_info['par_samples'] = self.par_samples.copy()
+        model_info['kernel_type'] = self.kernel_type
+        model_info['noise_level'] = self.model.noise
+        return model_info
 
     def plot_chains(self, directory_path1 = None, directory_path2 = None):
         # Function used to plot the chains from the  mcmc sampling and scatter plot
