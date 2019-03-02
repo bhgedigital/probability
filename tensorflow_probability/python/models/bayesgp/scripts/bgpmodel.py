@@ -32,18 +32,37 @@ import copy
 
 class BGP_model():
 
-    def __init__(self, inputs, outputs, kernel_type = 'RBF', noise_level = 1e-3, labels = [], sampling_info = None):
+    def __init__(self, inputs, outputs, model_info = None, kernel_type = 'RBF', noise_level = 1e-3, labels = []):
         # Inputs:
         #   inputs := N x D numpy array of inputs
-        #  outputs := N-dimensional numpy vector of outputs
-        # kernel_type := string specifying the type of kernel to be used. Options are
+        #   outputs := N-dimensional numpy vector of outputs
+        #   model_info = dictionary containing
+        #               1) a dictionary containing the hyperparameter samples.
+        #               2) the value of the noise variance
+        #               3) the type of kernel used
+        #   this dictionary must be generated  from a previous initialization of the model with the same set of inputs and  outputs
+        # if model_info is not provided, the kernel_type and noise level can be provided or will be set as default
+        #    kernel_type := string specifying the type of kernel to be used. Options are
 		#                'RBF', 'Matern12', 'Matern32', 'Matern52'
-        # noise_level := variance of the Gaussian noise for the normalized data
+        #   noise_level := variance of the Gaussian noise for the normalized data
         #   labels:= list containing labels for the input variables. A default list is
-        #       generated if this is not specified
-        # sampling_info = dictionary containing hyperparameter samples. The dictionary must be
-        #     from a previous initialization of the model with the same set of inputs, outputs and settings
-        #
+        #           generated if this is not specified
+
+
+        if model_info:
+            warnings.warn("Retrieving model info from previous run. The inputs and outputs arrays must be the same as the previous run.")
+            try:
+                self.hyperpar_samples = copy.deepcopy(model_info['samples'])
+                self.kernel_type = model_info['kernel_type']
+                noise_level = model_info['noise_level']
+            except Exception as e:
+                traceback.print_exc()
+                print('Failed to retrieve model info.')
+        else:
+            self.hyperpar_samples = {}
+            self.kernel_type = kernel_type
+            noise_level = noise_level
+
         # Checking that the Gaussian noise variance is between 0 and 1
         if (noise_level > 1) or (noise_level < 0):
             raise Exception('Invalid value for the noise_level: ' + str(noise_level) + '. It should be between 0 and 1.')
@@ -62,7 +81,7 @@ class BGP_model():
 
         self.n_inputs = inputs.shape[1]
 
-        self.model = bayesiangp.BayesianGP(Xnorm, Ynorm, kernel_type, noise_level) # initializing internal GP model
+        self.model = bayesiangp.BayesianGP(Xnorm, Ynorm, self.kernel_type, noise_level) # initializing internal GP model
 
         # Bounds needed for sensitivity analysis
         mins_range = np.min(inputs, axis = 0,  keepdims = True).T
@@ -80,12 +99,6 @@ class BGP_model():
         else:
             self.labels = labels
 
-        if sampling_info:
-            print('Retrieving hyperparameter samples')
-            self.hyperpar_samples = copy.deepcopy(sampling_info)
-        else:
-            self.hyperpar_samples = {}
-
         return
 
     def run_mcmc(self, mcmc_samples,num_leapfrog_steps = 3, estimate_noise = False, em_iters = 400, learning_rate = 0.01, warm_up = True, step_size = 0.01):
@@ -98,7 +111,10 @@ class BGP_model():
         # warm_up := Assuming the noise is kept fixed (i.e estimate_noise == False ), this Boolean  indicates if an adaptive step size is computed during a "warm up" phase
         # step_size := step size to use for the HMC sampler if warm_up == False
         # Output:
-        #       sampling_info = dictionary containing samples of hyperparameters as well loss function history (if noise is estimated)
+        #       model_info = dictionary containing
+        #                      1) dictionary with samples of hyperparameters as well loss function history (if noise is estimated)
+        #                      2) the value of the noise variance
+        #                      3) the type of kernel used
         #
         if estimate_noise == False:
             print('Noise variance is fixed.')
@@ -109,6 +125,8 @@ class BGP_model():
                 try:
                     print('Excecuting the warmup.')
                     step_size, next_state = self.model.warmup(num_warmup_iters = num_warmup_iters, num_leapfrog_steps = num_leapfrog_steps)
+                    if step_size  < 1e-4:
+                        warnings.warn("Estimated step size is low. (less than 1e-4)")
                     print('Sampling in progress.')
                     hyperpar_samples, acceptance_rate = self.model.mcmc(mcmc_samples = mcmc_samples, num_burnin_steps =burn_in,step_size = 0.9*step_size,
                                                                     num_leapfrog_steps = num_leapfrog_steps, initial_state = next_state)
@@ -125,7 +143,6 @@ class BGP_model():
                                                                     num_leapfrog_steps = num_leapfrog_steps)
                     if acceptance_rate < 0.1:
                         warnings.warn("Acceptance rate was low  (less than 0.1)")
-                    self.step_size = step_size
                 except Exception as e:
                     traceback.print_exc()
                     print('Sampling failed. Increase the noise level or decrease the step size or the number of leap frog steps if necessary.')
@@ -144,9 +161,12 @@ class BGP_model():
         self.hyperpar_samples['kernel_inverse_lengthscales'] = beta_samples
         self.hyperpar_samples['gp_constant_mean_function'] = loc_samples
 
-        sampling_info = copy.deepcopy(self.hyperpar_samples)
+        model_info = {}
+        model_info['samples'] = copy.deepcopy(self.hyperpar_samples)
+        model_info['kernel_type'] = self.kernel_type
+        model_info['noise_level'] = self.model.noise
 
-        return sampling_info
+        return model_info
 
     def plot_chains(self, directory_path = None):
         # Function used to plot the chains from the  mcmc sampling

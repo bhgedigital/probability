@@ -11,7 +11,8 @@ from tensorflow_probability.python.mcmc import sample_chain, HamiltonianMonteCar
 from tensorflow_probability.python import distributions  as tfd
 from  tensorflow_probability.python import bijectors as tfb
 from tensorflow_probability.python.models.bayesgp.scripts.bgpkernels import *
-from tensorflow_probability.python.models.bayesgp.scripts.bgp_utils import posterior_Gaussian, step_size_simple_update
+from tensorflow_probability.python.models.bayesgp.scripts.bgputils import posterior_Gaussian, step_size_simple_update
+import warnings
 
 
 #------------------------------------------------------------------------------
@@ -403,6 +404,10 @@ class BayesianGP():
 			if (t % display_rate == 0) or ( t == num_warmup_iters -1):
 		  		print("Warm-Up Iteration: {:>3} Acceptance Rate: {:.3f}".format(t, num_accepted / (t + 1)))
 
+		step_size_ = sess.run(step_size)
+		if step_size_  < 1e-4:
+			warnings.warn("Estimated step size is low. (less than 1e-4)")
+
 		print('Collecting samples for the GP hyperparameters.')
 		sess.run(step_size_update2)
 		loc_samples = np.zeros(mcmc_samples)
@@ -429,10 +434,14 @@ class BayesianGP():
 			beta_samples[t,:] = beta_next_
 			num_accepted +=  is_accepted_val
 			if (t % display_rate == 0) or ( t == mcmc_samples -1):
-		  		print("Sampling Iteration: {:>3} Acceptance Rate: {:.3f}".format(t, num_accepted / (t + 1)))
-
+				acceptance_rate = num_accepted / (t + 1)
+				print("Sampling Iteration: {:>3} Acceptance Rate: {:.3f}".format(t,acceptance_rate))
 		self.noise = math.log(math.exp(unc_noise_) + 1)
 		hyperpar_samples = [loc_samples, varm_samples, beta_samples]
+		if acceptance_rate < 0.1:
+			warnings.warn("Acceptance rate was low  (less than 0.1)")
+
+		sess.close()
 
 		return hyperpar_samples, loss_history, noise_history
 
