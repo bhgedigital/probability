@@ -61,15 +61,27 @@ class Calibration_model():
         if (noise_level > 1) or (noise_level < 0):
             raise Exception('Invalid value for the noise_level: ' + str(noise_level) + '. It should be between 0 and 1.')
 
-        self.n_inputs = exp_inputs.shape[1]  # number of input variables
+        if len(sim_inputs_pars.shape) == 1:
+            raise Exception('Array sim_inputs_pars of simulator input and calibration parameter must have at least 2 columns')
+
+        if len(exp_inputs.shape) == 1:
+            self.n_inputs = 1
+            Xexp = exp_inputs[:,None]
+        else:
+            self.n_inputs = exp_inputs.shape[1]
+            Xexp = exp_inputs
+
         self.n_pars = sim_inputs_pars.shape[1] - self.n_inputs  # number of calibration parameters
+
+        if self.n_pars <= 0:
+            raise Exception('Computed number of calibration parameters is less than or equal to 0! Array sim_inputs_pars is supposed to have more columns than array exp_inputs.')
 
 
         # normalizing the data
         mean_sim = np.mean(sim_inputs_pars, axis = 0)
         std_sim = np.std(sim_inputs_pars, axis = 0, keepdims = True)
         sim_in_norm = (sim_inputs_pars - mean_sim)/std_sim
-        exp_in_norm = (exp_inputs - mean_sim[:self.n_inputs])/std_sim[:,:self.n_inputs]
+        exp_in_norm = (Xexp - mean_sim[:self.n_inputs])/std_sim[:,:self.n_inputs]
         self.scaling_input = [mean_sim, std_sim]
 
         # Normalizing the outputs
@@ -87,7 +99,7 @@ class Calibration_model():
 
         # Initialize the model
         self.model = calibration.Calibration(sim_in_norm, sim_out_norm, exp_in_norm, exp_out_norm, lower_bounds, upper_bounds, self.kernel_type, noise_level)
-        
+
         # Bounds needed for sensitivity analysis
         mins_range = np.min(sim_inputs_pars, axis = 0,  keepdims = True).T
         maxs_range = np.max(sim_inputs_pars, axis = 0,keepdims = True).T
@@ -317,7 +329,12 @@ class Calibration_model():
         std_x = std_sim[:,:self.n_inputs]
         mean_y, std_y = self.scaling_output
 
-        Xtest_norm = (Xtest - mean_x)/std_x
+        if len(Xtest.shape) == 1:
+            Xnew = Xtest[:, None]
+        else:
+            Xnew = Xtest
+
+        Xtest_norm = (Xnew - mean_x)/std_x
 
         mcmc_samples = len(self.hyperpar_samples['sim_kernel_variance'])
         # Limiting the number of mcmc samples used if necessary
