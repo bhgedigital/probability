@@ -67,10 +67,17 @@ class BGP_model():
         if (noise_level > 1) or (noise_level < 0):
             raise Exception('Invalid value for the noise_level: ' + str(noise_level) + '. It should be between 0 and 1.')
 
+        if len(inputs.shape) == 1:
+            self.n_inputs = 1
+            X = inputs[:, None]
+        else:
+            self.n_inputs = inputs.shape[1]
+            X = inputs
+
         # normalizing the input
-        mean_x = np.mean(inputs, axis = 0)
-        std_x = np.std(inputs, axis = 0, keepdims = True)
-        Xnorm = (inputs - mean_x)/std_x
+        mean_x = np.mean(X, axis = 0)
+        std_x = np.std(X, axis = 0, keepdims = True)
+        Xnorm = (X - mean_x)/std_x
         self.scaling_input = [mean_x, std_x]
 
         # Normalizing the outputs
@@ -79,13 +86,13 @@ class BGP_model():
         Ynorm = (outputs - mean_y)/std_y
         self.scaling_output = [mean_y, std_y]
 
-        self.n_inputs = inputs.shape[1]
+
 
         self.model = bayesiangp.BayesianGP(Xnorm, Ynorm, self.kernel_type, noise_level) # initializing internal GP model
 
         # Bounds needed for sensitivity analysis
-        mins_range = np.min(inputs, axis = 0,  keepdims = True).T
-        maxs_range = np.max(inputs, axis = 0,keepdims = True).T
+        mins_range = np.min(X, axis = 0,  keepdims = True).T
+        maxs_range = np.max(X, axis = 0,keepdims = True).T
         self.Range = np.concatenate([mins_range, maxs_range], axis = 1)
 
         mins_range = np.min(Xnorm, axis = 0,  keepdims = True).T
@@ -246,7 +253,11 @@ class BGP_model():
         mean_x, std_x = self.scaling_input
         mean_y, std_y = self.scaling_output
 
-        Xtest_norm = (Xtest - mean_x)/std_x
+        if len(Xtest.shape) == 1:
+            Xnew = Xtest[:, None]
+        else:
+            Xnew = Xtest
+        Xtest_norm = (Xnew - mean_x)/std_x
 
         mcmc_samples = len(self.hyperpar_samples['kernel_variance'])
         # Limiting the number of mcmc samples used if necessary
