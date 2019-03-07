@@ -23,7 +23,6 @@ from tensorflow_probability.python.distributions import distribution
 from tensorflow_probability.python.distributions import kullback_leibler
 from tensorflow_probability.python.internal import distribution_util as util
 from tensorflow_probability.python.internal import reparameterization
-from tensorflow.python.framework import tensor_shape
 
 
 class Bernoulli(distribution.Distribution):
@@ -66,7 +65,7 @@ class Bernoulli(distribution.Distribution):
       ValueError: If p and logits are passed, or if neither are passed.
     """
     parameters = dict(locals())
-    with tf.name_scope(name) as name:
+    with tf.compat.v1.name_scope(name) as name:
       self._logits, self._probs = util.get_logits_and_probs(
           logits=logits,
           probs=probs,
@@ -83,7 +82,10 @@ class Bernoulli(distribution.Distribution):
 
   @staticmethod
   def _param_shapes(sample_shape):
-    return {"logits": tf.convert_to_tensor(sample_shape, dtype=tf.int32)}
+    return {"logits": tf.convert_to_tensor(value=sample_shape, dtype=tf.int32)}
+
+  def _params_event_ndims(self):
+    return dict(logits=0, probs=0)
 
   @property
   def logits(self):
@@ -96,7 +98,7 @@ class Bernoulli(distribution.Distribution):
     return self._probs
 
   def _batch_shape_tensor(self):
-    return tf.shape(self._logits)
+    return tf.shape(input=self._logits)
 
   def _batch_shape(self):
     return self._logits.shape
@@ -105,12 +107,11 @@ class Bernoulli(distribution.Distribution):
     return tf.constant([], dtype=tf.int32)
 
   def _event_shape(self):
-    return tensor_shape.scalar()
+    return tf.TensorShape([])
 
   def _sample_n(self, n, seed=None):
     new_shape = tf.concat([[n], self.batch_shape_tensor()], 0)
-    uniform = tf.random_uniform(
-        new_shape, seed=seed, dtype=self.probs.dtype)
+    uniform = tf.random.uniform(new_shape, seed=seed, dtype=self.probs.dtype)
     sample = tf.less(uniform, self.probs)
     return tf.cast(sample, self.dtype)
 
@@ -152,8 +153,8 @@ class Bernoulli(distribution.Distribution):
 
 
 # TODO(b/117098119): Remove tf.distribution references once they're gone.
-@kullback_leibler.RegisterKL(Bernoulli, tf.distributions.Bernoulli)
-@kullback_leibler.RegisterKL(tf.distributions.Bernoulli, Bernoulli)
+@kullback_leibler.RegisterKL(Bernoulli, tf.compat.v1.distributions.Bernoulli)
+@kullback_leibler.RegisterKL(tf.compat.v1.distributions.Bernoulli, Bernoulli)
 @kullback_leibler.RegisterKL(Bernoulli, Bernoulli)
 def _kl_bernoulli_bernoulli(a, b, name=None):
   """Calculate the batched KL divergence KL(a || b) with a and b Bernoulli.
@@ -167,8 +168,8 @@ def _kl_bernoulli_bernoulli(a, b, name=None):
   Returns:
     Batchwise KL(a || b)
   """
-  with tf.name_scope(name, "kl_bernoulli_bernoulli",
-                     values=[a.logits, b.logits]):
+  with tf.compat.v1.name_scope(
+      name, "kl_bernoulli_bernoulli", values=[a.logits, b.logits]):
     delta_probs0 = tf.nn.softplus(-b.logits) - tf.nn.softplus(-a.logits)
     delta_probs1 = tf.nn.softplus(b.logits) - tf.nn.softplus(a.logits)
     return (tf.sigmoid(a.logits) * delta_probs0

@@ -28,7 +28,6 @@ from tensorflow_probability.python.distributions import uniform
 from tensorflow_probability.python.internal import distribution_util
 from tensorflow_probability.python.internal import dtype_util
 from tensorflow_probability.python.internal import reparameterization
-from tensorflow.python.ops import control_flow_ops
 
 __all__ = [
     "Kumaraswamy",
@@ -53,7 +52,7 @@ def _harmonic_number(x):
     z: The analytic continuation of the harmonic number for the input.
   """
   one = tf.ones([], dtype=x.dtype)
-  return tf.digamma(x + one) - tf.digamma(one)
+  return tf.math.digamma(x + one) - tf.math.digamma(one)
 
 
 class Kumaraswamy(transformed_distribution.TransformedDistribution):
@@ -147,13 +146,14 @@ class Kumaraswamy(transformed_distribution.TransformedDistribution):
         more of the statistic's batch members are undefined.
       name: Python `str` name prefixed to Ops created by this class.
     """
-    with tf.name_scope(name, values=[concentration1, concentration0]) as name:
+    with tf.compat.v1.name_scope(
+        name, values=[concentration1, concentration0]) as name:
       dtype = dtype_util.common_dtype([concentration1, concentration0],
                                       tf.float32)
       concentration1 = tf.convert_to_tensor(
-          concentration1, name="concentration1", dtype=dtype)
+          value=concentration1, name="concentration1", dtype=dtype)
       concentration0 = tf.convert_to_tensor(
-          concentration0, name="concentration0", dtype=dtype)
+          value=concentration0, name="concentration0", dtype=dtype)
     super(Kumaraswamy, self).__init__(
         distribution=uniform.Uniform(
             low=tf.zeros([], dtype=concentration1.dtype),
@@ -168,6 +168,9 @@ class Kumaraswamy(transformed_distribution.TransformedDistribution):
         name=name)
     self._reparameterization_type = reparameterization.FULLY_REPARAMETERIZED
 
+  def _params_event_ndims(self):
+    return dict(concentration1=0, concentration0=0)
+
   @property
   def concentration1(self):
     """Concentration parameter associated with a `1` outcome."""
@@ -181,8 +184,8 @@ class Kumaraswamy(transformed_distribution.TransformedDistribution):
   def _entropy(self):
     a = self.concentration1
     b = self.concentration0
-    return (
-        1 - 1. / a) + (1 - 1. / b) * _harmonic_number(b) + tf.log(a) + tf.log(b)
+    return (1 - 1. / a) + (1 - 1. / b) * _harmonic_number(b) + tf.math.log(
+        a) + tf.math.log(b)
 
   def _moment(self, n):
     """Compute the n'th (uncentered) moment."""
@@ -193,7 +196,7 @@ class Kumaraswamy(transformed_distribution.TransformedDistribution):
         total_concentration, dtype=self.dtype) * self.concentration0
     beta_arg0 = 1 + n / expanded_concentration1
     beta_arg = tf.stack([beta_arg0, expanded_concentration0], -1)
-    log_moment = tf.log(expanded_concentration0) + tf.lbeta(beta_arg)
+    log_moment = tf.math.log(expanded_concentration0) + tf.math.lbeta(beta_arg)
     return tf.exp(log_moment)
 
   def _mean(self):
@@ -220,12 +223,12 @@ class Kumaraswamy(transformed_distribution.TransformedDistribution):
       is_defined = (self.concentration1 > 1.) & (self.concentration0 > 1.)
       return tf.where(is_defined, mode, nan)
 
-    return control_flow_ops.with_dependencies([
-        tf.assert_less(
+    return distribution_util.with_dependencies([
+        tf.compat.v1.assert_less(
             tf.ones([], dtype=self.concentration1.dtype),
             self.concentration1,
             message="Mode undefined for concentration1 <= 1."),
-        tf.assert_less(
+        tf.compat.v1.assert_less(
             tf.ones([], dtype=self.concentration0.dtype),
             self.concentration0,
             message="Mode undefined for concentration0 <= 1.")

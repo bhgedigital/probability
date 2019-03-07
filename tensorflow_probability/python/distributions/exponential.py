@@ -89,9 +89,9 @@ class Exponential(gamma.Gamma):
     # true in the parent class "Gamma."  Therefore, passing
     # allow_nan_stats=True
     # through to the parent class results in unnecessary asserts.
-    with tf.name_scope(name, values=[rate]) as name:
+    with tf.compat.v1.name_scope(name, values=[rate]) as name:
       self._rate = tf.convert_to_tensor(
-          rate,
+          value=rate,
           name="rate",
           dtype=dtype_util.common_dtype([rate], preferred_dtype=tf.float32))
     super(Exponential, self).__init__(
@@ -105,17 +105,20 @@ class Exponential(gamma.Gamma):
 
   @staticmethod
   def _param_shapes(sample_shape):
-    return {"rate": tf.convert_to_tensor(sample_shape, dtype=tf.int32)}
+    return {"rate": tf.convert_to_tensor(value=sample_shape, dtype=tf.int32)}
+
+  def _params_event_ndims(self):
+    return dict(rate=0)
 
   @property
   def rate(self):
     return self._rate
 
   def _log_survival_function(self, value):
-    return self._log_prob(value) - tf.log(self._rate)
+    return self._log_prob(value) - tf.math.log(self._rate)
 
   def _sample_n(self, n, seed=None):
-    shape = tf.concat([[n], tf.shape(self._rate)], 0)
+    shape = tf.concat([[n], tf.shape(input=self._rate)], 0)
     # Uniform variates must be sampled from the open-interval `(0, 1)` rather
     # than `[0, 1)`. To do so, we use `np.finfo(self.dtype.as_numpy_dtype).tiny`
     # because it is the smallest, positive, "normal" number. A "normal" number
@@ -123,10 +126,10 @@ class Exponential(gamma.Gamma):
     # numbers x, y have the reasonable property that, `x + y >= max(x, y)`. In
     # this case, a subnormal number (i.e., np.nextafter) can cause us to sample
     # 0.
-    sampled = tf.random_uniform(
+    sampled = tf.random.uniform(
         shape,
         minval=np.finfo(self.dtype.as_numpy_dtype).tiny,
         maxval=1.,
         seed=seed,
         dtype=self.dtype)
-    return -tf.log(sampled) / self._rate
+    return -tf.math.log(sampled) / self._rate

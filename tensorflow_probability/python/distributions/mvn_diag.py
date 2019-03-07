@@ -21,6 +21,7 @@ from __future__ import print_function
 import tensorflow as tf
 from tensorflow_probability.python.distributions import mvn_linear_operator
 from tensorflow_probability.python.internal import distribution_util
+from tensorflow.python.util import deprecation  # pylint: disable=g-direct-tensorflow-import
 
 
 __all__ = [
@@ -193,8 +194,8 @@ class MultivariateNormalDiag(
       ValueError: if at most `scale_identity_multiplier` is specified.
     """
     parameters = dict(locals())
-    with tf.name_scope(name) as name:
-      with tf.name_scope(
+    with tf.compat.v1.name_scope(name) as name:
+      with tf.compat.v1.name_scope(
           "init", values=[loc, scale_diag, scale_identity_multiplier]):
         # No need to validate_args while making diag_scale.  The returned
         # LinearOperatorDiag has an assert_non_singular method that is called by
@@ -217,6 +218,12 @@ class MultivariateNormalDiag(
 class MultivariateNormalDiagWithSoftplusScale(MultivariateNormalDiag):
   """MultivariateNormalDiag with `diag_stddev = softplus(diag_stddev)`."""
 
+  @deprecation.deprecated(
+      "2019-06-05",
+      "MultivariateNormalDiagWithSoftplusScale is deprecated, use "
+      "MultivariateNormalDiag(loc=loc, scale_diag=tf.nn.softplus(scale_diag)) "
+      "instead.",
+      warn_once=True)
   def __init__(self,
                loc,
                scale_diag,
@@ -224,7 +231,7 @@ class MultivariateNormalDiagWithSoftplusScale(MultivariateNormalDiag):
                allow_nan_stats=True,
                name="MultivariateNormalDiagWithSoftplusScale"):
     parameters = dict(locals())
-    with tf.name_scope(name, values=[scale_diag]) as name:
+    with tf.compat.v1.name_scope(name, values=[scale_diag]) as name:
       super(MultivariateNormalDiagWithSoftplusScale, self).__init__(
           loc=loc,
           scale_diag=tf.nn.softplus(scale_diag),

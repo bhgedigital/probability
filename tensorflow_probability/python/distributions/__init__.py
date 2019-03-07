@@ -24,11 +24,12 @@ from tensorflow_probability.python.distributions.batch_reshape import BatchResha
 from tensorflow_probability.python.distributions.bernoulli import Bernoulli
 from tensorflow_probability.python.distributions.beta import Beta
 from tensorflow_probability.python.distributions.binomial import Binomial
+from tensorflow_probability.python.distributions.blockwise import Blockwise
 from tensorflow_probability.python.distributions.categorical import Categorical
 from tensorflow_probability.python.distributions.cauchy import Cauchy
 from tensorflow_probability.python.distributions.chi import Chi
 from tensorflow_probability.python.distributions.chi2 import Chi2
-from tensorflow_probability.python.distributions.chi2 import Chi2WithAbsDf
+from tensorflow_probability.python.distributions.chi2 import Chi2WithAbsDf  # deprecated, remove 6/5/19
 from tensorflow_probability.python.distributions.conditional_distribution import ConditionalDistribution
 from tensorflow_probability.python.distributions.conditional_transformed_distribution import ConditionalTransformedDistribution
 from tensorflow_probability.python.distributions.deterministic import Deterministic
@@ -36,6 +37,7 @@ from tensorflow_probability.python.distributions.deterministic import VectorDete
 from tensorflow_probability.python.distributions.dirichlet import Dirichlet
 from tensorflow_probability.python.distributions.dirichlet_multinomial import DirichletMultinomial
 from tensorflow_probability.python.distributions.distribution import Distribution
+from tensorflow_probability.python.distributions.empirical import Empirical
 from tensorflow_probability.python.distributions.exponential import Exponential
 from tensorflow_probability.python.distributions.gamma import Gamma
 from tensorflow_probability.python.distributions.gamma_gamma import GammaGamma
@@ -52,7 +54,8 @@ from tensorflow_probability.python.distributions.internal.moving_stats import as
 from tensorflow_probability.python.distributions.internal.moving_stats import assign_moving_mean_variance
 from tensorflow_probability.python.distributions.internal.moving_stats import moving_mean_variance
 from tensorflow_probability.python.distributions.inverse_gamma import InverseGamma
-from tensorflow_probability.python.distributions.inverse_gamma import InverseGammaWithSoftplusConcentrationRate
+from tensorflow_probability.python.distributions.inverse_gamma import InverseGammaWithSoftplusConcentrationRate  # deprecated, remove 6/5/19
+from tensorflow_probability.python.distributions.inverse_gamma import InverseGammaWithSoftplusConcentrationScale  # deprecated, remove 6/5/19
 from tensorflow_probability.python.distributions.inverse_gaussian import InverseGaussian
 from tensorflow_probability.python.distributions.kullback_leibler import kl_divergence
 from tensorflow_probability.python.distributions.kullback_leibler import RegisterKL
@@ -67,7 +70,7 @@ from tensorflow_probability.python.distributions.mixture_same_family import Mixt
 from tensorflow_probability.python.distributions.multinomial import Multinomial
 from tensorflow_probability.python.distributions.multivariate_student_t import MultivariateStudentTLinearOperator
 from tensorflow_probability.python.distributions.mvn_diag import MultivariateNormalDiag
-from tensorflow_probability.python.distributions.mvn_diag import MultivariateNormalDiagWithSoftplusScale
+from tensorflow_probability.python.distributions.mvn_diag import MultivariateNormalDiagWithSoftplusScale  # deprecated, remove 6/5/19
 from tensorflow_probability.python.distributions.mvn_diag_plus_low_rank import MultivariateNormalDiagPlusLowRank
 from tensorflow_probability.python.distributions.mvn_full_covariance import MultivariateNormalFullCovariance
 from tensorflow_probability.python.distributions.mvn_linear_operator import MultivariateNormalLinearOperator
@@ -96,6 +99,7 @@ from tensorflow_probability.python.distributions.transformed_distribution import
 from tensorflow_probability.python.distributions.triangular import Triangular
 from tensorflow_probability.python.distributions.truncated_normal import TruncatedNormal
 from tensorflow_probability.python.distributions.uniform import Uniform
+from tensorflow_probability.python.distributions.variational_gaussian_process import VariationalGaussianProcess
 from tensorflow_probability.python.distributions.vector_diffeomixture import quadrature_scheme_softmaxnormal_gauss_hermite
 from tensorflow_probability.python.distributions.vector_diffeomixture import quadrature_scheme_softmaxnormal_quantiles
 from tensorflow_probability.python.distributions.vector_diffeomixture import VectorDiffeomixture
@@ -117,13 +121,6 @@ from tensorflow_probability.python.internal.reparameterization import FULLY_REPA
 from tensorflow_probability.python.internal.reparameterization import NOT_REPARAMETERIZED
 from tensorflow_probability.python.internal.reparameterization import ReparameterizationType
 
-from tensorflow.python.ops.distributions.beta import BetaWithSoftplusConcentration
-from tensorflow.python.ops.distributions.exponential import ExponentialWithSoftplusRate
-from tensorflow.python.ops.distributions.gamma import GammaWithSoftplusConcentrationRate
-from tensorflow.python.ops.distributions.laplace import LaplaceWithSoftplusScale
-from tensorflow.python.ops.distributions.normal import NormalWithSoftplusScale
-from tensorflow.python.ops.distributions.student_t import StudentTWithAbsDfSoftplusScale
-
 # pylint: enable=unused-import,wildcard-import,line-too-long,g-importing-member
 
 __all__ = [
@@ -140,23 +137,23 @@ __all__ = [
     'Bernoulli',
     'Beta',
     'Binomial',
-    'BetaWithSoftplusConcentration',
+    'Blockwise',
     'Categorical',
     'Chi',
     'Chi2',
     'Chi2WithAbsDf',
     'Deterministic',
     'VectorDeterministic',
+    'Empirical',
     'Exponential',
-    'ExponentialWithSoftplusRate',
     'VectorExponentialDiag',
     'Gamma',
     'GammaGamma',
     'InverseGaussian',
-    'GammaWithSoftplusConcentrationRate',
     'Geometric',
     'GaussianProcess',
     'GaussianProcessRegressionModel',
+    'VariationalGaussianProcess',
     'Gumbel',
     'HalfCauchy',
     'HalfNormal',
@@ -165,22 +162,20 @@ __all__ = [
     'Independent',
     'InverseGamma',
     'InverseGammaWithSoftplusConcentrationRate',
+    'InverseGammaWithSoftplusConcentrationScale',
     'Kumaraswamy',
     'LinearGaussianStateSpaceModel',
     'Laplace',
-    'LaplaceWithSoftplusScale',
     'LKJ',
     'Logistic',
     'LogNormal',
     'NegativeBinomial',
     'Normal',
-    'NormalWithSoftplusScale',
     'Poisson',
     'PoissonLogNormalQuadratureCompound',
     'SeedStream',
     'SinhArcsinh',
     'StudentT',
-    'StudentTWithAbsDfSoftplusScale',
     'StudentTProcess',
     'Triangular',
     'TruncatedNormal',

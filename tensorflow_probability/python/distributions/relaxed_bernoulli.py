@@ -162,12 +162,14 @@ class RelaxedBernoulli(transformed_distribution.TransformedDistribution):
       ValueError: If both `probs` and `logits` are passed, or if neither.
     """
     parameters = dict(locals())
-    with tf.name_scope(name, values=[logits, probs, temperature]) as name:
+    with tf.compat.v1.name_scope(
+        name, values=[logits, probs, temperature]) as name:
       dtype = dtype_util.common_dtype([logits, probs, temperature], tf.float32)
       self._temperature = tf.convert_to_tensor(
-          temperature, name="temperature", dtype=dtype)
+          value=temperature, name="temperature", dtype=dtype)
       if validate_args:
-        with tf.control_dependencies([tf.assert_positive(temperature)]):
+        with tf.control_dependencies(
+            [tf.compat.v1.assert_positive(temperature)]):
           self._temperature = tf.identity(self._temperature)
       self._logits, self._probs = distribution_util.get_logits_and_probs(
           logits=logits, probs=probs, validate_args=validate_args, dtype=dtype)
@@ -185,7 +187,10 @@ class RelaxedBernoulli(transformed_distribution.TransformedDistribution):
 
   @staticmethod
   def _param_shapes(sample_shape):
-    return {"logits": tf.convert_to_tensor(sample_shape, dtype=tf.int32)}
+    return {"logits": tf.convert_to_tensor(value=sample_shape, dtype=tf.int32)}
+
+  def _params_event_ndims(self):
+    return dict(temparature=0, logits=0, probs=0)
 
   @property
   def temperature(self):

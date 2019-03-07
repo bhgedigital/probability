@@ -20,10 +20,12 @@ import importlib
 
 # Dependency imports
 import numpy as np
+
 import tensorflow as tf
 import tensorflow_probability as tfp
 
-tfe = tf.contrib.eager
+from tensorflow_probability.python.internal import test_util as tfp_test_util
+from tensorflow.python.framework import test_util  # pylint: disable=g-direct-tensorflow-import,g-import-not-at-top
 
 
 def try_import(name):  # pylint: disable=invalid-name
@@ -31,7 +33,7 @@ def try_import(name):  # pylint: disable=invalid-name
   try:
     module = importlib.import_module(name)
   except ImportError as e:
-    tf.logging.warning("Could not import %s: %s" % (name, str(e)))
+    tf.compat.v1.logging.warning("Could not import %s: %s" % (name, str(e)))
   return module
 
 
@@ -72,7 +74,7 @@ def _kumaraswamy_pdf(a, b, x):
   return a * b * x ** (a - 1) * (1 - x ** a) ** (b - 1)
 
 
-@tfe.run_all_tests_in_graph_and_eager_modes
+@test_util.run_all_in_graph_and_eager_modes
 class KumaraswamyTest(tf.test.TestCase):
 
   def testSimpleShapes(self):
@@ -197,7 +199,7 @@ class KumaraswamyTest(tf.test.TestCase):
     self.assertEqual((2, 2), pdf.shape)
 
   def testKumaraswamyMean(self):
-    with tf.Session():
+    with tf.compat.v1.Session():
       a = [1., 2, 3]
       b = [2., 4, 1.2]
       dist = tfd.Kumaraswamy(a, b)
@@ -208,7 +210,7 @@ class KumaraswamyTest(tf.test.TestCase):
       self.assertAllClose(expected_mean, self.evaluate(dist.mean()))
 
   def testKumaraswamyVariance(self):
-    with tf.Session():
+    with tf.compat.v1.Session():
       a = [1., 2, 3]
       b = [2., 4, 1.2]
       dist = tfd.Kumaraswamy(a, b)
@@ -220,7 +222,7 @@ class KumaraswamyTest(tf.test.TestCase):
       self.assertAllClose(expected_variance, self.evaluate(dist.variance()))
 
   def testKumaraswamyMode(self):
-    with tf.Session():
+    with tf.compat.v1.Session():
       a = np.array([1.1, 2, 3])
       b = np.array([2., 4, 1.2])
       expected_mode = _kumaraswamy_mode(a, b)
@@ -229,7 +231,7 @@ class KumaraswamyTest(tf.test.TestCase):
       self.assertAllClose(expected_mode, self.evaluate(dist.mode()))
 
   def testKumaraswamyModeInvalid(self):
-    with tf.Session():
+    with tf.compat.v1.Session():
       a = np.array([1., 2, 3])
       b = np.array([2., 4, 1.2])
       dist = tfd.Kumaraswamy(a, b, allow_nan_stats=False)
@@ -243,7 +245,7 @@ class KumaraswamyTest(tf.test.TestCase):
         self.evaluate(dist.mode())
 
   def testKumaraswamyModeEnableAllowNanStats(self):
-    with tf.Session():
+    with tf.compat.v1.Session():
       a = np.array([1., 2, 3])
       b = np.array([2., 4, 1.2])
       dist = tfd.Kumaraswamy(a, b, allow_nan_stats=True)
@@ -263,7 +265,7 @@ class KumaraswamyTest(tf.test.TestCase):
       self.assertAllClose(expected_mode, self.evaluate(dist.mode()))
 
   def testKumaraswamyEntropy(self):
-    with tf.Session():
+    with tf.compat.v1.Session():
       a = np.array([1., 2, 3])
       b = np.array([2., 4, 1.2])
       dist = tfd.Kumaraswamy(a, b)
@@ -304,16 +306,17 @@ class KumaraswamyTest(tf.test.TestCase):
     a_val = 1.
     b_val = 2.
     n_val = 100
+    seed = tfp_test_util.test_seed()
 
-    tf.set_random_seed(654321)
+    tf.compat.v1.set_random_seed(seed)
     kumaraswamy1 = tfd.Kumaraswamy(
         concentration1=a_val, concentration0=b_val, name="kumaraswamy1")
-    samples1 = self.evaluate(kumaraswamy1.sample(n_val, seed=123456))
+    samples1 = self.evaluate(kumaraswamy1.sample(n_val, seed=seed))
 
-    tf.set_random_seed(654321)
+    tf.compat.v1.set_random_seed(seed)
     kumaraswamy2 = tfd.Kumaraswamy(
         concentration1=a_val, concentration0=b_val, name="kumaraswamy2")
-    samples2 = self.evaluate(kumaraswamy2.sample(n_val, seed=123456))
+    samples2 = self.evaluate(kumaraswamy2.sample(n_val, seed=seed))
 
     self.assertAllClose(samples1, samples2)
 

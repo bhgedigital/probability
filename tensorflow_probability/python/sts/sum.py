@@ -25,7 +25,6 @@ import tensorflow as tf
 
 from tensorflow_probability.python import bijectors as tfb
 from tensorflow_probability.python import distributions as tfd
-from tensorflow_probability.python.internal import distribution_util
 
 from tensorflow_probability.python.sts.internal import util as sts_util
 from tensorflow_probability.python.sts.structural_time_series import Parameter
@@ -208,13 +207,15 @@ class AdditiveStateSpaceModel(tfd.LinearGaussianStateSpaceModel):
       ValueError: if components have different `num_timesteps`.
     """
 
-    with tf.name_scope(name, 'AdditiveStateSpaceModel',
-                       values=[observation_noise_scale, initial_step]) as name:
+    with tf.compat.v1.name_scope(
+        name,
+        'AdditiveStateSpaceModel',
+        values=[observation_noise_scale, initial_step]) as name:
 
       assertions = []
 
       # Check that all components have the same dtype
-      tf.assert_same_float_dtype(component_ssms)
+      tf.debugging.assert_same_float_dtype(component_ssms)
 
       # Construct an initial state prior as a block-diagonal combination
       # of the component state priors.
@@ -224,9 +225,9 @@ class AdditiveStateSpaceModel(tfd.LinearGaussianStateSpaceModel):
       dtype = initial_state_prior.dtype
 
       static_num_timesteps = [
-          distribution_util.static_value(ssm.num_timesteps)
+          tf.get_static_value(ssm.num_timesteps)
           for ssm in component_ssms
-          if distribution_util.static_value(ssm.num_timesteps) is not None
+          if tf.get_static_value(ssm.num_timesteps) is not None
       ]
 
       # If any components have a static value for `num_timesteps`, use that
@@ -243,11 +244,12 @@ class AdditiveStateSpaceModel(tfd.LinearGaussianStateSpaceModel):
         num_timesteps = component_ssms[0].num_timesteps
       if validate_args and len(static_num_timesteps) != len(component_ssms):
         assertions += [
-            tf.assert_equal(num_timesteps,
-                            ssm.num_timesteps,
-                            message='Additive model components must all have '
-                            'the same number of timesteps.')
-            for ssm in component_ssms]
+            tf.compat.v1.assert_equal(
+                num_timesteps,
+                ssm.num_timesteps,
+                message='Additive model components must all have '
+                'the same number of timesteps.') for ssm in component_ssms
+        ]
 
       # Define the transition and observation models for the additive SSM.
       # See the "mathematical details" section of the class docstring for
@@ -268,7 +270,7 @@ class AdditiveStateSpaceModel(tfd.LinearGaussianStateSpaceModel):
       # matrices from components. We also take this as an opportunity to enforce
       # any dynamic assertions we may have generated above.
       broadcast_batch_shape = tf.convert_to_tensor(
-          sts_util.broadcast_batch_shape(component_ssms), dtype=tf.int32)
+          value=sts_util.broadcast_batch_shape(component_ssms), dtype=tf.int32)
       broadcast_obs_matrix = tf.ones(
           tf.concat([broadcast_batch_shape, [1, 1]], axis=0), dtype=dtype)
       if assertions:
@@ -283,7 +285,7 @@ class AdditiveStateSpaceModel(tfd.LinearGaussianStateSpaceModel):
 
       if observation_noise_scale is not None:
         observation_noise_scale = tf.convert_to_tensor(
-            observation_noise_scale,
+            value=observation_noise_scale,
             name='observation_noise_scale',
             dtype=dtype)
         def observation_noise_fn(t):
@@ -388,14 +390,14 @@ class Sum(StructuralTimeSeries):
       ValueError: if components do not have unique names.
     """
 
-    with tf.name_scope(
+    with tf.compat.v1.name_scope(
         name, 'Sum', values=[observed_time_series]) as name:
       if observation_noise_scale_prior is None:
         observed_stddev, _ = (
             sts_util.empirical_statistics(observed_time_series)
             if observed_time_series is not None else (1., 0.))
         observation_noise_scale_prior = tfd.LogNormal(
-            loc=tf.log(.01 * observed_stddev), scale=2.)
+            loc=tf.math.log(.01 * observed_stddev), scale=2.)
 
       # Check that components have unique names, to ensure that inherited
       # parameters will be assigned unique names.

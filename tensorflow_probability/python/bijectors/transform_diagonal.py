@@ -59,15 +59,20 @@ class TransformDiagonal(bijector.Bijector):
         forward_min_event_ndims=2,
         inverse_min_event_ndims=2,
         validate_args=validate_args,
+        dtype=diag_bijector.dtype,
         name=name)
 
+  @property
+  def diag_bijector(self):
+    return self._diag_bijector
+
   def _forward(self, x):
-    diag = self._diag_bijector.forward(tf.matrix_diag_part(x))
-    return tf.matrix_set_diag(x, diag)
+    diag = self.diag_bijector.forward(tf.linalg.diag_part(x))
+    return tf.linalg.set_diag(x, diag)
 
   def _inverse(self, y):
-    diag = self._diag_bijector.inverse(tf.matrix_diag_part(y))
-    return tf.matrix_set_diag(y, diag)
+    diag = self.diag_bijector.inverse(tf.linalg.diag_part(y))
+    return tf.linalg.set_diag(y, diag)
 
   def _forward_log_det_jacobian(self, x):
     # We formulate the Jacobian with respect to the flattened matrices
@@ -94,9 +99,9 @@ class TransformDiagonal(bijector.Bijector):
     # Note that for elementwise operations (exp, softplus, etc) the
     # first block of the Jacobian will itself be a diagonal matrix,
     # but our implementation does not require this to be true.
-    return self._diag_bijector.forward_log_det_jacobian(
-        tf.matrix_diag_part(x), event_ndims=1)
+    return self.diag_bijector.forward_log_det_jacobian(
+        tf.linalg.diag_part(x), event_ndims=1)
 
   def _inverse_log_det_jacobian(self, y):
-    return self._diag_bijector.inverse_log_det_jacobian(
-        tf.matrix_diag_part(y), event_ndims=1)
+    return self.diag_bijector.inverse_log_det_jacobian(
+        tf.linalg.diag_part(y), event_ndims=1)
