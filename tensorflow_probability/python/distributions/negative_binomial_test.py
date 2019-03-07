@@ -22,14 +22,16 @@ from scipy import stats
 import tensorflow as tf
 import tensorflow_probability as tfp
 
+from tensorflow_probability.python.internal import test_util as tfp_test_util
+from tensorflow.python.framework import test_util  # pylint: disable=g-direct-tensorflow-import,g-import-not-at-top
+
 tfd = tfp.distributions
-tfe = tf.contrib.eager
 
 
 # In all tests that follow, we use scipy.stats.nbinom, which
 # represents a Negative Binomial distribution, with success and failure
 # probabilities flipped.
-@tfe.run_all_tests_in_graph_and_eager_modes
+@test_util.run_all_in_graph_and_eager_modes
 class NegativeBinomialTest(tf.test.TestCase):
 
   def testNegativeBinomialShape(self):
@@ -122,7 +124,7 @@ class NegativeBinomialTest(tf.test.TestCase):
     batch_size = 6
     probs = [.9] * batch_size
     total_count = 5.
-    x = tf.placeholder_with_default(
+    x = tf.compat.v1.placeholder_with_default(
         input=[2.5, 3.2, 4.3, 5.1, 6., 7.], shape=[6])
     negbinom = tfd.NegativeBinomial(
         total_count=total_count, probs=probs, validate_args=True)
@@ -188,13 +190,13 @@ class NegativeBinomialTest(tf.test.TestCase):
     n = int(100e3)
     negbinom = tfd.NegativeBinomial(total_count=total_count, probs=probs)
 
-    samples = negbinom.sample(n, seed=12345)
+    samples = negbinom.sample(n, seed=tfp_test_util.test_seed())
     self.assertEqual([n, 2], samples.shape)
 
-    sample_mean = tf.reduce_mean(samples, axis=0)
+    sample_mean = tf.reduce_mean(input_tensor=samples, axis=0)
     sample_var = tf.reduce_mean(
-        (samples - sample_mean[tf.newaxis, ...])**2., axis=0)
-    sample_min = tf.reduce_min(samples)
+        input_tensor=(samples - sample_mean[tf.newaxis, ...])**2., axis=0)
+    sample_min = tf.reduce_min(input_tensor=samples)
     [sample_mean_, sample_var_,
      sample_min_] = self.evaluate([sample_mean, sample_var, sample_min])
     self.assertAllEqual(

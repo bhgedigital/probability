@@ -33,6 +33,8 @@ py_library(
         ":matern",
         ":polynomial",
         ":positive_semidefinite_kernel",
+        ":rational_quadratic",
+        "//tensorflow_probability/python/internal:dtype_util",
         "//tensorflow_probability/python/positive_semidefinite_kernels/internal",
     ],
 )

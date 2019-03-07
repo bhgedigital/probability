@@ -23,11 +23,13 @@ import numpy as np
 import scipy.special
 import tensorflow as tf
 import tensorflow_probability as tfp
+
+from tensorflow_probability.python.internal import test_util as tfp_test_util
+from tensorflow.python.framework import test_util  # pylint: disable=g-direct-tensorflow-import,g-import-not-at-top
 tfd = tfp.distributions
-tfe = tf.contrib.eager
 
 
-@tfe.run_all_tests_in_graph_and_eager_modes
+@test_util.run_all_in_graph_and_eager_modes
 class RelaxedBernoulliTest(tf.test.TestCase):
 
   def testP(self):
@@ -127,7 +129,7 @@ class RelaxedBernoulliTest(tf.test.TestCase):
     p = [0.2, 0.6, 0.5]
     dist = tfd.RelaxedBernoulli(temperature, probs=p)
     n = 10000
-    samples = dist.sample(n, seed=123)
+    samples = dist.sample(n, seed=tfp_test_util.test_seed())
     self.assertEqual(samples.dtype, tf.float32)
     sample_values = self.evaluate(samples)
     self.assertTrue(np.all(sample_values >= 0))

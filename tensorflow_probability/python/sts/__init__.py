@@ -18,16 +18,22 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+from tensorflow_probability.python.sts.autoregressive import Autoregressive
+from tensorflow_probability.python.sts.autoregressive import AutoregressiveStateSpaceModel
 from tensorflow_probability.python.sts.fitting import build_factored_variational_loss
 from tensorflow_probability.python.sts.fitting import fit_with_hmc
 from tensorflow_probability.python.sts.fitting import sample_uniform_initial_state
 from tensorflow_probability.python.sts.forecast import forecast
 from tensorflow_probability.python.sts.forecast import one_step_predictive
+from tensorflow_probability.python.sts.local_level import LocalLevel
+from tensorflow_probability.python.sts.local_level import LocalLevelStateSpaceModel
 from tensorflow_probability.python.sts.local_linear_trend import LocalLinearTrend
 from tensorflow_probability.python.sts.local_linear_trend import LocalLinearTrendStateSpaceModel
 from tensorflow_probability.python.sts.regression import LinearRegression
 from tensorflow_probability.python.sts.seasonal import Seasonal
 from tensorflow_probability.python.sts.seasonal import SeasonalStateSpaceModel
+from tensorflow_probability.python.sts.semilocal_linear_trend import SemiLocalLinearTrend
+from tensorflow_probability.python.sts.semilocal_linear_trend import SemiLocalLinearTrendStateSpaceModel
 from tensorflow_probability.python.sts.structural_time_series import StructuralTimeSeries
 from tensorflow_probability.python.sts.sum import AdditiveStateSpaceModel
 from tensorflow_probability.python.sts.sum import Sum
@@ -36,11 +42,17 @@ from tensorflow.python.util.all_util import remove_undocumented
 
 _allowed_symbols = [
     'AdditiveStateSpaceModel',
+    'Autoregressive',
+    'AutoregressiveStateSpaceModel',
     'LinearRegression',
+    'LocalLevel',
+    'LocalLevelStateSpaceModel',
     'LocalLinearTrend',
     'LocalLinearTrendStateSpaceModel',
     'Seasonal',
     'SeasonalStateSpaceModel',
+    'SemiLocalLinearTrend',
+    'SemiLocalLinearTrendStateSpaceModel',
     'StructuralTimeSeries',
     'Sum',
     'build_factored_variational_loss',

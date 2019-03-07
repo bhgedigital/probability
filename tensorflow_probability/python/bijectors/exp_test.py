@@ -24,10 +24,10 @@ import tensorflow as tf
 from tensorflow_probability.python import bijectors as tfb
 
 from tensorflow_probability.python.bijectors import bijector_test_util
-tfe = tf.contrib.eager
+from tensorflow.python.framework import test_util  # pylint: disable=g-direct-tensorflow-import,g-import-not-at-top
 
 
-@tfe.run_all_tests_in_graph_and_eager_modes
+@test_util.run_all_in_graph_and_eager_modes
 class ExpBijectorTest(tf.test.TestCase):
   """Tests correctness of the Y = g(X) = exp(X) transformation."""
 
@@ -60,6 +60,15 @@ class ExpBijectorTest(tf.test.TestCase):
     y = np.logspace(-10, 10, num=10).astype(np.float32)
     bijector_test_util.assert_bijective_and_finite(
         bijector, x, y, eval_func=self.evaluate, event_ndims=0)
+
+  def testJacobian(self):
+    bijector = tfb.Exp()
+    x = np.expand_dims(np.linspace(-1, 1, num=10), -1)
+    fldj = bijector.forward_log_det_jacobian(x, event_ndims=1)
+    fldj_theoretical = bijector_test_util.get_fldj_theoretical(
+        bijector, x, event_ndims=1)
+    fldj_, fldj_theoretical_ = self.evaluate([fldj, fldj_theoretical])
+    self.assertAllClose(fldj_, fldj_theoretical_)
 
 
 if __name__ == "__main__":

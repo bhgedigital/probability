@@ -78,12 +78,13 @@ class Chi(transformed_distribution.TransformedDistribution):
       name: Python `str` name prefixed to Ops created by this class.
         Default value: `'Chi'`.
     """
-    with tf.name_scope(name, values=[df]) as name:
+    with tf.compat.v1.name_scope(name, values=[df]) as name:
       df = tf.convert_to_tensor(
-          df,
+          value=df,
           name="df",
           dtype=dtype_util.common_dtype([df], preferred_dtype=tf.float32))
-      validation_assertions = [tf.assert_positive(df)] if validate_args else []
+      validation_assertions = [tf.compat.v1.assert_positive(df)
+                              ] if validate_args else []
       with tf.control_dependencies(validation_assertions):
         self._df = tf.identity(df, name="df")
 
@@ -94,22 +95,25 @@ class Chi(transformed_distribution.TransformedDistribution):
                                  name=name),
           bijector=invert_bijector.Invert(square_bijector.Square()))
 
+  def _params_event_ndims(self):
+    return dict(df=0)
+
   @property
   def df(self):
     """Distribution parameter for degrees of freedom."""
     return self._df
 
   def _mean(self):
-    return np.sqrt(2) * tf.exp(tf.lgamma(0.5 * (self.df + 1)) -
-                               tf.lgamma(0.5 * self.df))
+    return np.sqrt(2) * tf.exp(
+        tf.math.lgamma(0.5 * (self.df + 1)) - tf.math.lgamma(0.5 * self.df))
 
   def _variance(self):
     return self.df - tf.square(self._mean())
 
   def _entropy(self):
-    return (tf.lgamma(self.df / 2) +
-            0.5 * (self.df - np.log(2) -
-                   (self.df - 1) * tf.digamma(0.5 * self.df)))
+    return (tf.math.lgamma(self.df / 2) + 0.5 *
+            (self.df - np.log(2) -
+             (self.df - 1) * tf.math.digamma(0.5 * self.df)))
 
 
 @kullback_leibler.RegisterKL(Chi, Chi)
@@ -125,10 +129,10 @@ def _kl_chi_chi(a, b, name=None):
   Returns:
     Batchwise KL(a || b)
   """
-  with tf.name_scope(name, "kl_chi_chi", [a.df, b.df]):
+  with tf.compat.v1.name_scope(name, "kl_chi_chi", [a.df, b.df]):
     # Consistent with
     # https://mast.queensu.ca/~communications/Papers/gil-msc11.pdf, page 118
     # The paper introduces an additional scaling parameter; setting that
     # parameter to 1 and simplifying yields the expression we use here.
-    return (0.5 * tf.digamma(0.5 * a.df) * (a.df - b.df) +
-            tf.lgamma(0.5 * b.df) - tf.lgamma(0.5 * a.df))
+    return (0.5 * tf.math.digamma(0.5 * a.df) * (a.df - b.df) +
+            tf.math.lgamma(0.5 * b.df) - tf.math.lgamma(0.5 * a.df))

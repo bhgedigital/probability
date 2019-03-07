@@ -24,14 +24,15 @@ from scipy import stats
 import tensorflow as tf
 import tensorflow_probability as tfp
 
+from tensorflow_probability.python.internal import test_util as tfp_test_util
 tfd = tfp.distributions
-tfe = tf.contrib.eager
+from tensorflow.python.framework import test_util  # pylint: disable=g-direct-tensorflow-import,g-import-not-at-top
 
 
 # In all tests that follow, we use scipy.stats.geom, which
 # represents the "Shifted" Geometric distribution. Hence, loc=-1 is passed
 # in to each scipy function for testing.
-@tfe.run_all_tests_in_graph_and_eager_modes
+@test_util.run_all_in_graph_and_eager_modes
 class GeometricTest(tf.test.TestCase):
 
   def testGeometricShape(self):
@@ -78,7 +79,7 @@ class GeometricTest(tf.test.TestCase):
   def testGeometricLogPmf_validate_args(self):
     batch_size = 6
     probs = tf.constant([.9] * batch_size)
-    x = tf.placeholder_with_default(
+    x = tf.compat.v1.placeholder_with_default(
         input=[2.5, 3.2, 4.3, 5.1, 6., 7.], shape=[6])
     geom = tfd.Geometric(probs=probs, validate_args=True)
 
@@ -171,7 +172,7 @@ class GeometricTest(tf.test.TestCase):
     n = tf.constant(100000)
     geom = tfd.Geometric(probs=probs)
 
-    samples = geom.sample(n, seed=12345)
+    samples = geom.sample(n, seed=tfp_test_util.test_seed())
     self.assertEqual([100000, 2], samples.shape)
 
     sample_values = self.evaluate(samples)
@@ -194,7 +195,7 @@ class GeometricTest(tf.test.TestCase):
     geom = tfd.Geometric(probs=probs)
 
     n = 400000
-    samples = geom.sample(n, seed=12345)
+    samples = geom.sample(n, seed=tfp_test_util.test_seed())
     self.assertEqual([n, batch_size, 2], samples.shape)
 
     sample_values = self.evaluate(samples)

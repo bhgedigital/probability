@@ -50,7 +50,7 @@ class MatvecLU(bijector.Bijector):
   ```python
   def trainable_lu_factorization(
       event_size, batch_shape=(), seed=None, dtype=tf.float32, name=None):
-    with tf.name_scope(name, 'trainable_lu_factorization',
+    with tf.compat.v1.name_scope(name, 'trainable_lu_factorization',
                        [event_size, batch_shape]):
       event_size = tf.convert_to_tensor(
           event_size, preferred_dtype=tf.int32, name='event_size')
@@ -118,11 +118,12 @@ class MatvecLU(bijector.Bijector):
       ValueError: If both/neither `channels` and `lower_upper`/`permutation` are
         specified.
     """
-    with tf.name_scope(name, 'MatvecLU', [lower_upper, permutation]) as name:
+    with tf.compat.v1.name_scope(name, 'MatvecLU',
+                                 [lower_upper, permutation]) as name:
       self._lower_upper = tf.convert_to_tensor(
-          lower_upper, preferred_dtype=tf.float32, name='lower_upper')
+          value=lower_upper, dtype_hint=tf.float32, name='lower_upper')
       self._permutation = tf.convert_to_tensor(
-          permutation, preferred_dtype=tf.int32, name='permutation')
+          value=permutation, dtype_hint=tf.int32, name='permutation')
     super(MatvecLU, self).__init__(
         is_constant_jacobian=True,
         forward_min_event_ndims=1,
@@ -152,5 +153,7 @@ class MatvecLU(bijector.Bijector):
         validate_args=self.validate_args)[..., 0]
 
   def _forward_log_det_jacobian(self, unused_x):
-    return tf.reduce_sum(tf.log(tf.abs(tf.diag_part(self.lower_upper))),
-                         axis=-1)
+    return tf.reduce_sum(
+        input_tensor=tf.math.log(
+            tf.abs(tf.linalg.tensor_diag_part(self.lower_upper))),
+        axis=-1)

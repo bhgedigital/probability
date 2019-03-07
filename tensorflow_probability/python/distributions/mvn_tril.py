@@ -183,12 +183,12 @@ class MultivariateNormalTriL(
 
     def _convert_to_tensor(x, name, dtype):
       return None if x is None else tf.convert_to_tensor(
-          x, name=name, dtype=dtype)
+          value=x, name=name, dtype=dtype)
 
     if loc is None and scale_tril is None:
       raise ValueError("Must specify one or both of `loc`, `scale_tril`.")
-    with tf.name_scope(name) as name:
-      with tf.name_scope("init", values=[loc, scale_tril]):
+    with tf.compat.v1.name_scope(name) as name:
+      with tf.compat.v1.name_scope("init", values=[loc, scale_tril]):
         dtype = dtype_util.common_dtype([loc, scale_tril], tf.float32)
         loc = _convert_to_tensor(loc, name="loc", dtype=dtype)
         scale_tril = _convert_to_tensor(
@@ -216,3 +216,6 @@ class MultivariateNormalTriL(
         allow_nan_stats=allow_nan_stats,
         name=name)
     self._parameters = parameters
+
+  def _params_event_ndims(self):
+    return dict(loc=1, scale_tril=2)

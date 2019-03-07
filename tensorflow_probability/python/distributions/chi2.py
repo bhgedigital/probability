@@ -21,6 +21,7 @@ from __future__ import print_function
 import tensorflow as tf
 from tensorflow_probability.python.distributions import gamma
 from tensorflow_probability.python.internal import dtype_util
+from tensorflow.python.util import deprecation  # pylint: disable=g-direct-tensorflow-import
 
 
 __all__ = [
@@ -84,13 +85,13 @@ class Chi2(gamma.Gamma):
     # not true in the parent class "gamma."  therefore, passing
     # allow_nan_stats=True
     # through to the parent class results in unnecessary asserts.
-    with tf.name_scope(name, values=[df]) as name:
+    with tf.compat.v1.name_scope(name, values=[df]) as name:
       df = tf.convert_to_tensor(
-          df,
+          value=df,
           name="df",
           dtype=dtype_util.common_dtype([df], preferred_dtype=tf.float32))
       with tf.control_dependencies([
-          tf.assert_positive(df),
+          tf.compat.v1.assert_positive(df),
       ] if validate_args else []):
         self._df = tf.identity(df, name="df")
 
@@ -104,7 +105,10 @@ class Chi2(gamma.Gamma):
 
   @staticmethod
   def _param_shapes(sample_shape):
-    return {"df": tf.convert_to_tensor(sample_shape, dtype=tf.int32)}
+    return {"df": tf.convert_to_tensor(value=sample_shape, dtype=tf.int32)}
+
+  def _params_event_ndims(self):
+    return dict(df=0)
 
   @property
   def df(self):
@@ -114,13 +118,18 @@ class Chi2(gamma.Gamma):
 class Chi2WithAbsDf(Chi2):
   """Chi2 with parameter transform `df = floor(abs(df))`."""
 
+  @deprecation.deprecated(
+      "2019-06-05",
+      "Chi2WithAbsDf is deprecated, use "
+      "Chi2(df=tf.floor(tf.abs(scale_diag))) instead.",
+      warn_once=True)
   def __init__(self,
                df,
                validate_args=False,
                allow_nan_stats=True,
                name="Chi2WithAbsDf"):
     parameters = dict(locals())
-    with tf.name_scope(name, values=[df]) as name:
+    with tf.compat.v1.name_scope(name, values=[df]) as name:
       super(Chi2WithAbsDf, self).__init__(
           df=tf.floor(tf.abs(df, name="abs_df"), name="floor_abs_df"),
           validate_args=validate_args,

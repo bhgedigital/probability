@@ -34,8 +34,11 @@ py_library(
     deps = [
         ":conv_variational",
         ":dense_variational",
+        ":dense_variational_v2",
         ":distribution_layer",
+        ":initializers",
         ":util",
+        ":variable_input",
     ],
 )
 
@@ -92,6 +95,30 @@ py_test(
 )
 
 py_library(
+    name = "dense_variational_v2",
+    srcs = [
+        "dense_variational_v2.py",
+    ],
+    srcs_version = "PY2AND3",
+    deps = [
+        # tensorflow dep,
+        "//tensorflow_probability/python/distributions:kullback_leibler",
+        "//tensorflow_probability/python/distributions:seed_stream",
+    ],
+)
+
+py_test(
+    name = "dense_variational_v2_test",
+    size = "small",
+    srcs = ["dense_variational_v2_test.py"],
+    deps = [
+        # numpy dep,
+        # tensorflow dep,
+        "//tensorflow_probability",
+    ],
+)
+
+py_library(
     name = "distribution_layer",
     srcs = ["distribution_layer.py"],
     srcs_version = "PY2AND3",
@@ -115,6 +142,26 @@ py_test(
 )
 
 py_library(
+    name = "initializers",
+    srcs = [
+        "initializers.py",
+    ],
+    srcs_version = "PY2AND3",
+    deps = [
+        # tensorflow dep,
+    ],
+)
+
+py_test(
+    name = "initializers_test",
+    srcs = ["initializers_test.py"],
+    deps = [
+        # tensorflow dep,
+        "//tensorflow_probability",
+    ],
+)
+
+py_library(
     name = "util",
     srcs = [
         "util.py",
@@ -123,5 +170,26 @@ py_library(
     deps = [
         # numpy dep,
         # tensorflow dep,
+    ],
+)
+
+py_library(
+    name = "variable_input",
+    srcs = [
+        "variable_input.py",
+    ],
+    srcs_version = "PY2AND3",
+    deps = [
+        # tensorflow dep,
+        "//tensorflow_probability/python/layers/internal",
+    ],
+)
+
+py_test(
+    name = "variable_input_test",
+    srcs = ["variable_input_test.py"],
+    deps = [
+        # tensorflow dep,
+        "//tensorflow_probability",
     ],
 )

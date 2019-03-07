@@ -53,10 +53,13 @@ py_test(
     args = [
         "--fake_data",
         "--max_steps=3",
+        "--skip_plots",
     ],
     main = "logistic_regression.py",
     srcs_version = "PY2AND3",
-    tags = ["nozapfhahn"],
+    tags = [
+        "nozapfhahn",
+    ],
     deps = [
         ":logistic_regression_lib",
     ],

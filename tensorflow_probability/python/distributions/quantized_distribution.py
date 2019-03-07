@@ -25,7 +25,6 @@ import tensorflow as tf
 from tensorflow_probability.python.distributions import distribution as distributions
 from tensorflow_probability.python.internal import distribution_util
 from tensorflow_probability.python.internal import reparameterization
-from tensorflow.python.ops import control_flow_ops
 
 
 __all__ = ["QuantizedDistribution"]
@@ -44,8 +43,9 @@ def _logsum_expbig_minus_expsmall(big, small):
   Returns:
     `Tensor` of same `dtype` of `big` and broadcast shape.
   """
-  with tf.name_scope("logsum_expbig_minus_expsmall", values=[small, big]):
-    return tf.log1p(-tf.exp(small - big)) + big
+  with tf.compat.v1.name_scope(
+      "logsum_expbig_minus_expsmall", values=[small, big]):
+    return tf.math.log1p(-tf.exp(small - big)) + big
 
 
 _prob_base_note = """
@@ -267,14 +267,17 @@ class QuantizedDistribution(distributions.Distribution):
     values = (
         list(distribution.parameters.values()) +
         [low, high])
-    with tf.name_scope(name, values=values) as name:
+    with tf.compat.v1.name_scope(name, values=values) as name:
       self._dist = distribution
 
       if low is not None:
-        low = tf.convert_to_tensor(low, name="low", dtype=distribution.dtype)
+        low = tf.convert_to_tensor(
+            value=low, name="low", dtype=distribution.dtype)
       if high is not None:
-        high = tf.convert_to_tensor(high, name="high", dtype=distribution.dtype)
-      tf.assert_same_float_dtype(tensors=[self.distribution, low, high])
+        high = tf.convert_to_tensor(
+            value=high, name="high", dtype=distribution.dtype)
+      tf.debugging.assert_same_float_dtype(
+          tensors=[self.distribution, low, high])
 
       # We let QuantizedDistribution access _graph_parents since this class is
       # more like a baseclass.
@@ -283,7 +286,7 @@ class QuantizedDistribution(distributions.Distribution):
       checks = []
       if validate_args and low is not None and high is not None:
         message = "low must be strictly less than high."
-        checks.append(tf.assert_less(low, high, message=message))
+        checks.append(tf.compat.v1.assert_less(low, high, message=message))
       self._validate_args = validate_args  # self._check_integer uses this.
       with tf.control_dependencies(checks if validate_args else []):
         if low is not None:
@@ -336,13 +339,13 @@ class QuantizedDistribution(distributions.Distribution):
   def _sample_n(self, n, seed=None):
     low = self._low
     high = self._high
-    with tf.name_scope("transform"):
-      n = tf.convert_to_tensor(n, name="n")
+    with tf.compat.v1.name_scope("transform"):
+      n = tf.convert_to_tensor(value=n, name="n")
       x_samps = self.distribution.sample(n, seed=seed)
       ones = tf.ones_like(x_samps)
 
       # Snap values to the intervals (j - 1, j].
-      result_so_far = tf.ceil(x_samps)
+      result_so_far = tf.math.ceil(x_samps)
 
       if low is not None:
         result_so_far = tf.where(result_so_far < low, low * ones, result_so_far)
@@ -498,7 +501,7 @@ class QuantizedDistribution(distributions.Distribution):
 
     # P[Y > j] = P[ceiling(Y) > j] since mass is only at integers, not in
     # between.
-    j = tf.ceil(y)
+    j = tf.math.ceil(y)
 
     # P[X > j], used when low < X < high.
     result_so_far = self.distribution.log_survival_function(j)
@@ -530,7 +533,7 @@ class QuantizedDistribution(distributions.Distribution):
 
     # P[Y > j] = P[ceiling(Y) > j] since mass is only at integers, not in
     # between.
-    j = tf.ceil(y)
+    j = tf.math.ceil(y)
 
     # P[X > j], used when low < X < high.
     result_so_far = self.distribution.survival_function(j)
@@ -550,10 +553,10 @@ class QuantizedDistribution(distributions.Distribution):
     return result_so_far
 
   def _check_integer(self, value):
-    with tf.name_scope("check_integer", values=[value]):
-      value = tf.convert_to_tensor(value, name="value")
+    with tf.compat.v1.name_scope("check_integer", values=[value]):
+      value = tf.convert_to_tensor(value=value, name="value")
       if not self.validate_args:
         return value
       dependencies = [distribution_util.assert_integer_form(
           value, message="value has non-integer components.")]
-      return control_flow_ops.with_dependencies(dependencies, value)
+      return distribution_util.with_dependencies(dependencies, value)

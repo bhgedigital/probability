@@ -253,7 +253,7 @@ class TransformedTransitionKernel(TransitionKernel):
       kernel_results: `collections.namedtuple` of internal calculations used to
         advance the chain.
     """
-    with tf.name_scope(
+    with tf.compat.v1.name_scope(
         name=make_name(self.name, 'transformed_kernel', 'one_step'),
         values=[previous_kernel_results]):
       transformed_next_state, kernel_results = self._inner_kernel.one_step(
@@ -319,7 +319,7 @@ class TransformedTransitionKernel(TransitionKernel):
     if (init_state is None) == (transformed_init_state is None):
       raise ValueError('Must specify exactly one of `init_state` '
                        'or `transformed_init_state`.')
-    with tf.name_scope(
+    with tf.compat.v1.name_scope(
         name=make_name(self.name, 'transformed_kernel', 'bootstrap_results'),
         values=[init_state, transformed_init_state]):
       if transformed_init_state is None:
@@ -332,12 +332,12 @@ class TransformedTransitionKernel(TransitionKernel):
       else:
         if is_list_like(transformed_init_state):
           transformed_init_state = [
-              tf.convert_to_tensor(s, name='transformed_init_state')
+              tf.convert_to_tensor(value=s, name='transformed_init_state')
               for s in transformed_init_state
           ]
         else:
           transformed_init_state = tf.convert_to_tensor(
-              transformed_init_state, name='transformed_init_state')
+              value=transformed_init_state, name='transformed_init_state')
       kernel_results = TransformedTransitionKernelResults(
           transformed_state=transformed_init_state,
           inner_results=self._inner_kernel.bootstrap_results(

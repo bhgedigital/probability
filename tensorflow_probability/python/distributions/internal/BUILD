@@ -49,7 +49,9 @@ py_test(
     name = "moving_stats_test",
     size = "small",
     srcs = ["moving_stats_test.py"],
-    tags = ["nomsan"],  # disable to avoid false positives from scipy.
+    tags = [
+        "nomsan",  # disable to avoid false positives from scipy.
+    ],
     deps = [
         ":moving_stats",
         # numpy dep,
@@ -62,6 +64,7 @@ py_library(
     srcs = ["statistical_testing.py"],
     deps = [
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:distribution_util",
         "//tensorflow_probability/python/internal:dtype_util",
     ],
 )
@@ -116,5 +119,22 @@ py_test(
         ":correlation_matrix_volumes_py",
         ":statistical_testing",
         # numpy dep,
+    ],
+)
+
+py_library(
+    name = "slicing",
+    srcs = ["slicing.py"],
+    deps = [
+        # tensorflow dep,
+    ],
+)
+
+py_test(
+    name = "slicing_test",
+    srcs = ["slicing_test.py"],
+    deps = [
+        ":slicing",
+        # tensorflow dep,
     ],
 )

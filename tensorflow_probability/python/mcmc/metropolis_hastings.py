@@ -182,7 +182,7 @@ class MetropolisHastings(kernel_base.TransitionKernel):
       ValueError: if `inner_kernel` results doesn't contain the member
         "target_log_prob".
     """
-    with tf.name_scope(
+    with tf.compat.v1.name_scope(
         name=mcmc_util.make_name(self.name, 'mh', 'one_step'),
         values=[current_state, previous_kernel_results]):
       # Take one inner step.
@@ -216,10 +216,11 @@ class MetropolisHastings(kernel_base.TransitionKernel):
       # If proposed state increases likelihood: always accept.
       # I.e., u < min(1, accept_ratio),  where u ~ Uniform[0,1)
       #       ==> log(u) < log_accept_ratio
-      log_uniform = tf.log(tf.random_uniform(
-          shape=tf.shape(proposed_results.target_log_prob),
-          dtype=proposed_results.target_log_prob.dtype.base_dtype,
-          seed=self._seed_stream()))
+      log_uniform = tf.math.log(
+          tf.random.uniform(
+              shape=tf.shape(input=proposed_results.target_log_prob),
+              dtype=proposed_results.target_log_prob.dtype.base_dtype,
+              seed=self._seed_stream()))
       is_accepted = log_uniform < log_accept_ratio
 
       next_state = mcmc_util.choose(
@@ -258,7 +259,7 @@ class MetropolisHastings(kernel_base.TransitionKernel):
       ValueError: if `inner_kernel` results doesn't contain the member
         "target_log_prob".
     """
-    with tf.name_scope(
+    with tf.compat.v1.name_scope(
         name=mcmc_util.make_name(self.name, 'mh', 'bootstrap_results'),
         values=[init_state]):
       pkr = self.inner_kernel.bootstrap_results(init_state)
