@@ -2,11 +2,11 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
 import numpy as np
 import functools
 import math
-ds = tf.contrib.distributions
 from tensorflow_probability.python.mcmc import sample_chain, HamiltonianMonteCarlo, TransformedTransitionKernel
 from tensorflow_probability.python import distributions  as tfd
 from  tensorflow_probability.python import bijectors as tfb
@@ -86,9 +86,8 @@ class BayesianGP():
 		Cov_train = varm*Kxx + (noise + self.jitter_level)*tf.eye(self.n_train)
 
 		#-------- Computing the cholesky factor ------------
-		Cov_temp = tf.cast(Cov_train, tf.float64)
-		L_temp = tf.cholesky(Cov_temp)
-		L = tf.cast(L_temp, tf.float32)
+		L= tf.linalg.cholesky(Cov_train)
+
 
 
 		#---- Multivariate normal random variable for the combined outputs -----
@@ -466,7 +465,7 @@ class BayesianGP():
 		# ------- generate covariance matrix for training data and computing the corresponding cholesky factor
 		Kxx = self.kernel(self.Xtrain, self.Xtrain, beta)
 		Cov_train = varm*Kxx +  (self.noise + self.jitter_level)*tf.eye(self.n_train)
-		L = tf.cholesky(Cov_train)
+		L = tf.linalg.cholesky(Cov_train)
 
 		#-------- generate covariance matrix for test data
 		n_test = Xtest.shape[0].value
@@ -638,7 +637,7 @@ class BayesianGP():
 		Kxx = self.kernel(self.Xtrain, self.Xtrain, beta)
 
 		Cov_train = varm*Kxx + (self.noise+self.jitter_level)*tf.eye(self.n_train)
-		L = tf.cholesky(Cov_train)
+		L = tf.linalg.cholesky(Cov_train)
 
 
 		f = lambda Xin: self.expected_PosteriormeanVariance(Xin, L, hyperpars)
@@ -676,7 +675,7 @@ class BayesianGP():
 		Kxx = self.kernel(self.Xtrain, self.Xtrain, beta)
 
 		Cov_train = varm*Kxx + (self.noise+self.jitter_level)*tf.eye(self.n_train)
-		L = tf.cholesky(Cov_train)
+		L = tf.linalg.cholesky(Cov_train)
 
 		results = self.full_PosteriormeanVariance(X, L, hyperpars)
 

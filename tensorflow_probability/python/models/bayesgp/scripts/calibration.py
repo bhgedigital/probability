@@ -2,12 +2,12 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
 import numpy as np
 import time
 import functools
 import math
-ds = tf.contrib.distributions
 from tensorflow_probability.python.mcmc import sample_chain, HamiltonianMonteCarlo, TransformedTransitionKernel
 from tensorflow_probability.python import distributions  as tfd
 from  tensorflow_probability.python import bijectors as tfb
@@ -149,7 +149,7 @@ class Calibration():
 
 		#-------- Computing the cholesky factor ------------
 		Cov = Cov_sim + Cov_err + self.jitter_level*tf.eye(self.n_total)
-		L = tf.cholesky(Cov)
+		L = tf.linalg.cholesky(Cov)
 
 		#---- Multivariate normal random variable for the combined outputs -----
 		mean = loc*tf.ones(self.n_total)
@@ -661,7 +661,7 @@ class Calibration():
 		Cov_err = tf.pad(Cov_err, tf.constant([[self.n_sim,0],[self.n_sim,0]]), name = None, constant_values=0)
 
 		Cov_train = Cov_sim + Cov_err + self.jitter_level*tf.eye(self.n_total)
-		L = tf.cholesky(Cov_train)
+		L = tf.linalg.cholesky(Cov_train)
 
 		#-------- generate covariance matrix for test data
 		n_test = Xtest.shape[0].value
@@ -732,7 +732,7 @@ class Calibration():
 		Cov_sim = varsim*tf.multiply(Kxx, Kpp) +  self.noise*tf.eye(self.n_total)
 
 		Cov_train = Cov_sim + self.jitter_level*tf.eye(self.n_total)
-		L = tf.cholesky(Cov_train)
+		L = tf.linalg.cholesky(Cov_train)
 
 		#-------- generate covariance matrix for test data
 		n_test = Xtest.shape[0].value
@@ -798,7 +798,7 @@ class Calibration():
 		Cov_err = tf.pad(Cov_err, tf.constant([[self.n_sim,0],[self.n_sim,0]]), name = None, constant_values=0)
 
 		Cov_train = Cov_sim + Cov_err + self.jitter_level*tf.eye(self.n_total)
-		L = tf.cholesky(Cov_train)
+		L = tf.linalg.cholesky(Cov_train)
 
 
 		#-------- generate covariance matrix for test data
@@ -1144,7 +1144,7 @@ class Calibration():
 			Cov_sim = varsim*tf.multiply(Kxx, Kpp) + self.noise*tf.eye(self.n_sim)
 
 			Cov_train = Cov_sim + self.jitter_level*tf.eye(self.n_sim)
-			L = tf.cholesky(Cov_train)
+			L = tf.linalg.cholesky(Cov_train)
 
 			f = lambda Vin: self.expected_simPosteriormeanVariance(Vin, L, hyperpars)
 			n_devices = len(devices_list)
@@ -1177,7 +1177,7 @@ class Calibration():
 			Cov_err = tf.pad(Cov_err, tf.constant([[self.n_sim,0],[self.n_sim,0]]), name = None, constant_values=0)
 
 			Cov_train = Cov_sim + Cov_err + self.jitter_level*tf.eye(self.n_total)
-			L = tf.cholesky(Cov_train)
+			L = tf.linalg.cholesky(Cov_train)
 			f = lambda Vin: self.expected_errorPosteriormeanVariance(Vin, L, hyperpars)
 			n_devices = len(devices_list)
 			V_list = np.array_split(Vnew, n_devices, axis = 0)
@@ -1223,7 +1223,7 @@ class Calibration():
 
 			Cov_train = Cov_sim + self.jitter_level*tf.eye(self.n_sim)
 			Cov_temp = tf.cast(Cov_train, tf.float64)
-			L_temp = tf.cholesky(Cov_temp)
+			L_temp = tf.linalg.cholesky(Cov_temp)
 			L = tf.cast(L_temp, tf.float32)
 			results = self.full_simPosteriormeanVariance(V, L, hyperpars)
 
@@ -1248,7 +1248,7 @@ class Calibration():
 
 			Cov_train = Cov_sim + Cov_err + self.jitter_level*tf.eye(self.n_total)
 			Cov_temp = tf.cast(Cov_train, tf.float64)
-			L_temp = tf.cholesky(Cov_temp)
+			L_temp = tf.linalg.cholesky(Cov_temp)
 			L = tf.cast(L_temp, tf.float32)
 			results = self.full_errorPosteriormeanVariance(V, L, hyperpars)
 
