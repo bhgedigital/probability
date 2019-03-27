@@ -2,8 +2,10 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import tensorflow.compat.v1 as tf
-tf.disable_v2_behavior()
+import tensorflow as tf
+#-- fix for tensorflow 2.0 version ---
+# import tensorflow.compat.v1 as tf
+# tf.disable_v2_behavior()
 import numpy as np
 import time
 import functools
@@ -475,7 +477,7 @@ class Calibration():
 			par_probs,
 			betad_probs,
 			vard_probs
-		], em_kernel_results = sample_chain(num_results= 10, num_burnin_steps= 10,
+		], em_kernel_results = sample_chain(num_results= 10, num_burnin_steps= 0,
 																current_state= current_state,
 																kernel=TransformedTransitionKernel(
 																	inner_kernel=HamiltonianMonteCarlo(
@@ -1059,7 +1061,7 @@ class Calibration():
 
 		Y = self.Yaug[:, tf.newaxis] - loc
 
-		mean, var = posterior_Gaussian(L, Cov_mixed, Cov_test, Y, fullCov)
+		mean, var = posterior_Gaussian(L, Cov_mixed, Cov_test, Y, False)
 
 		mean_and_var = tf.concat([mean, var], axis = 1)
 

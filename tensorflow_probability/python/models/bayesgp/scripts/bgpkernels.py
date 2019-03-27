@@ -2,8 +2,10 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import tensorflow.compat.v1 as tf
-tf.disable_v2_behavior()
+import tensorflow as tf
+#-- fix for tensorflow 2.0 version ---
+# import tensorflow.compat.v1 as tf
+# tf.disable_v2_behavior()
 import math
 
 
@@ -110,7 +112,7 @@ def Matern32_aug(X1, X2, beta, diag = False):
 
 def Matern52_aug(X1, X2, beta, diag = False):
     # computes the Matern 5/2 kernel
-	r_squared = scaled_sq_dist_aug(X1, X2, beta)
+	r_squared = scaled_sq_dist_aug(X1, X2, beta, diag)
 	r = tf.sqrt(r_squared)
 	sq5 = tf.constant(math.sqrt(5),tf.float32)
 	return (1.0 + sq5*r + 5.0*r_squared/3.0)*tf.exp(-sq5*r)

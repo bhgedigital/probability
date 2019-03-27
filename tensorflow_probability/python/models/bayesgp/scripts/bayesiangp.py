@@ -2,8 +2,11 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import tensorflow.compat.v1 as tf
-tf.disable_v2_behavior()
+
+import tensorflow as tf
+#-- fix for tensorflow 2.0 version ---
+# import tensorflow.compat.v1 as tf
+# tf.disable_v2_behavior()
 import numpy as np
 import functools
 import math
@@ -332,7 +335,7 @@ class BayesianGP():
 			beta_probs,
 			varm_probs,
 			loc_probs
-		], em_kernel_results = sample_chain(num_results= 10, num_burnin_steps= 10,
+		], em_kernel_results = sample_chain(num_results= 10, num_burnin_steps= 0,
 																current_state=current_state,
 																kernel= TransformedTransitionKernel(
 																	inner_kernel= HamiltonianMonteCarlo(
@@ -347,7 +350,7 @@ class BayesianGP():
 		varm_update2 = varm_cur.assign(tf.reduce_mean(varm_probs, axis = 0))
 		loc_update2 = loc_cur.assign(tf.reduce_mean(loc_probs, axis = 0))
 
-		expectation_update = tf.group([beta_update1, varm_update1,loc_update1])
+		expectation_update = tf.group([beta_update2, varm_update2,loc_update2])
 
 		#-- Set up M-step (updating noise variance)
 		with tf.control_dependencies([expectation_update]):
