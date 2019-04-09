@@ -126,7 +126,7 @@ class Calibration():
 
 		self.jitter_level = 1e-6 # jitter level to deal with numerical instability with cholesky factorization
 
-		self.kernel, self.aug_kernel = kernel_mapping[kernel_type]
+		self.kernel, self.expected_kernel = kernel_mapping[kernel_type]
 
 
 		return
@@ -339,6 +339,7 @@ class Calibration():
 			vard_samples,
 		], kernel_results = sample_chain(num_results= mcmc_samples, num_burnin_steps= num_burnin_steps,
 																current_state=initial_state,
+																num_steps_between_results = 3,
 																kernel=TransformedTransitionKernel(
 																	inner_kernel=HamiltonianMonteCarlo(
 			    																target_log_prob_fn=unnormalized_posterior_log_prob,
@@ -996,47 +997,32 @@ class Calibration():
 		return mean_and_var
 
 
-	def expected_simPosteriormeanVariance(self, XPin, L, hyperpars):
-		# This is needed for computing the main effecs and interactions of the simulation Gaussian process
-		# Inputs:
-		#	XPin:= is a 3-dimensional array
-		#	L:= Cholesky factor of the Covariance matrix of the training data
-		# hyperpars := list of values for the kernel hyperparameters (of the form [betasx, betaspar, varsim, loc, betad, vard])
-		n_blocks = XPin.shape[0].value
+	def expected_simPosteriormeanVariance(self, XPin, L, hyperpars, Kx_expected, Kp_expected):
+		# This is needed for computing the main effecs and interactions
+		# XPin is a 2-dimensional array
 
 		betasx, betaspar, varsim, loc, betad, vard = hyperpars
 
-		XPm, XPk1, XPk2 = tf.split(XPin,num_or_size_splits = 3, axis = 2)
-		Xm = XPm[:,:,:self.dim_input]
-		Pm = XPm[:,:,self.dim_input:]
-		Xk1 = XPk1[:,:,:self.dim_input]
-		Pk1 = XPk1[:,:,self.dim_input:]
-		Xk2 = XPk2[:,:,:self.dim_input]
-		Pk2 = XPk2[:,:,self.dim_input:]
+		X = XPin[:,:self.dim_input]
+		P = XPin[:,self.dim_input:]
 
-
-		Kx2 = self.aug_kernel(Xk1, Xk2, betasx, diag = True)
-		Kp2 = self.aug_kernel(Pk1, Pk2, betaspar, diag = True)
-		Cov_test_expected = varsim*tf.reduce_mean(tf.multiply(Kx2,Kp2), axis = 1)
+		Cov_test_expected = varsim*Kx_expected*Kp_expected
 
 		#------- covariance between test data and simulation training data
-		Xsim_tiled = tf.tile(self.Xsim[tf.newaxis,:,:], [n_blocks,1,1])
-		Psim_tiled = tf.tile(self.Psim[tf.newaxis,:,:], [n_blocks,1,1])
 
-		Kx3 = self.aug_kernel(Xsim_tiled, Xm, betasx, diag = False)
-
-		Kp3 = self.aug_kernel(Psim_tiled, Pm, betaspar, )
-		Cov_mixed_expected = varsim*tf.reduce_mean(tf.multiply(Kx3, Kp3), axis = -1)
-		Cov_mixed_expected = tf.transpose(Cov_mixed_expected)
+		Kx3 = self.kernel(self.Xsim, X, betasx)
+		Kp3 = self.kernel(self.Psim, P, betaspar)
+		Cov_mixed_expected = varsim*tf.reduce_mean(tf.multiply(Kx3, Kp3), axis = -1, keepdims = True)
 
 		Y = self.Ysim[:, tf.newaxis] - loc
 
 
 		mean, var = posterior_Gaussian(L, Cov_mixed_expected, Cov_test_expected, Y, False)
-		var = tf.maximum(var, 1e-30)
+		var = tf.maximum(var, 1e-40)
 
 
 		mean_and_var = tf.concat([mean, var], axis = 1)
+		mean_and_var = tf.reshape(mean_and_var, [2])
 
 		return mean_and_var
 
@@ -1071,38 +1057,25 @@ class Calibration():
 
 
 
-	def expected_errorPosteriormeanVariance(self, Xin, L, hyperpars):
-		# This is needed for computing the main effecs and interactions of the discrepancy Gaussian process
-		# Inputs:
-		#	Xin:= is a 3-dimensional array
-		#	L:= Cholesky factor of the Covariance matrix of the training data
-		# hyperpars := list of values for the kernel hyperparameters (of the form [betasx, betaspar, varsim, loc, betad, vard])
-
-		n_new = Xin.shape[1].value
-		n_blocks = Xin.shape[0].value
+	def expected_errorPosteriormeanVariance(self, Xin, L, hyperpars, Kx_expected):
 
 		betasx, betaspar, varsim, loc, betad, vard = hyperpars
 
-		Xm, Xk1, Xk2 = tf.split(Xin,num_or_size_splits = 3, axis = 2)
-
 		#-------- generate covariance matrix for test data
-		Kx2 = self.aug_kernel(Xk1, Xk2, betad, diag = True)
-		Cov_test_expected = vard*tf.reduce_mean(Kx2, axis = 1)
+		Cov_test_expected = vard*Kx_expected
 
 		#------- covariance between test data and experimental training data
 
-		Xexp_tiled = tf.tile(self.Xexp[tf.newaxis,:,:], [n_blocks,1,1])
-		Kx3 = self.aug_kernel(Xexp_tiled, Xm, betad)
+		Kx3 = self.kernel(self.Xexp, Xin, betad)
 
-		Cov_mixed_expected = vard*tf.reduce_mean(Kx3, axis = -1)
-		Cov_mixed_expected = tf.transpose(Cov_mixed_expected)
+		Cov_mixed_expected = vard*tf.reduce_mean(Kx3, axis = -1, keepdims = True)
 
 		Cov_mixed_expected = tf.pad(Cov_mixed_expected, tf.constant([[self.n_sim,0],[0,0]]), name = None, constant_values=0)
 
 		Y = self.Yaug[:, tf.newaxis] - loc
 
 		mean, var = posterior_Gaussian(L, Cov_mixed_expected, Cov_test_expected, Y, False)
-		var = tf.maximum(var, 1e-30)
+		var = tf.maximum(var, 1e-40)
 
 		mean_and_var = tf.concat([mean, var], axis = 1)
 
@@ -1111,30 +1084,24 @@ class Calibration():
 
 
 
-	def expected_predict_posterior(self, Vnew, hyperpar_samples, par_samples, devices_list,  type):
-		# function used to compute the mean and variance of main effect for simulator Gaussian process
-		# or discrepancy Gaussian process
-		# These are Gaussian processes of the form
-		#          E[Y|v_i]
-		# This means that we are keeping a set of variables fixed (in this case the
-		# subset v_i) while averaging out over the rest of the variables. For simplicity,
-		# the variables are assumed to have uniform distributions. The integrals involved
-		# in the computation are approximated with Monte Carlo integration
+	def expected_predict_posterior(self, sampling_dict, hyperpar_samples, par_samples, type):
+		# function used to compute the mean and variance of posterior Gaussian process
 		# Inputs:
-		# 	Vnew := 4-dimensional numpy array containing the input samples. In the case of the
-		#     	simulator model, it consists of samples for the input variables and the calibration parameters.
-		#		In the case of the discrepancy model, it consists of only samples fro the input variables
+		# sampling_dict := dictionary containing samples and information about the sampling
 		# 	hyperpar_samples := list [loc_samples, varsim_samples, betaspar_samples, betasx_samples, betad_samples, vard_samples] of numpy arrays containing samples for the hyperparameters
 		# 	par_samples := numpy array of samples for the calibration parameters
-		# 	devices_list := list of GPU devices available for the computation. This helps with parallelizing the computation.
 		# 	type := string specifying if the computation is done for the simulator or the discrepancy Gaussian process
 
 		loc_samples, varsim_samples, betaspar_samples, betasx_samples, betad_samples, vard_samples = hyperpar_samples
-		betasx = tf.convert_to_tensor(np.median(betasx_samples, axis =0), tf.float32)
-		betaspar = tf.convert_to_tensor(np.median(betaspar_samples, axis =0), tf.float32)
+		betasx_median  = np.median(betasx_samples, axis =0)
+		betaspar_median = np.median(betaspar_samples, axis =0)
+		betad_median = np.median(betad_samples,axis =0)
+
+		betasx = tf.convert_to_tensor(betasx_median, tf.float32)
+		betaspar = tf.convert_to_tensor(betaspar_median, tf.float32)
 		varsim = tf.convert_to_tensor(np.median(varsim_samples,axis =0), tf.float32)
 		loc = tf.convert_to_tensor(np.median(loc_samples, axis =0), tf.float32)
-		betad = tf.convert_to_tensor(np.median(betad_samples,axis =0), tf.float32)
+		betad = tf.convert_to_tensor(betad_median, tf.float32)
 		vard = tf.convert_to_tensor(np.median(vard_samples,axis =0), tf.float32)
 		hyperpars = [betasx, betaspar, varsim, loc, betad, vard]
 
@@ -1146,27 +1113,68 @@ class Calibration():
 			Cov_sim = varsim*tf.multiply(Kxx, Kpp) + self.noise*tf.eye(self.n_sim)
 
 			Cov_train = Cov_sim + self.jitter_level*tf.eye(self.n_sim)
-			L = tf.linalg.cholesky(Cov_train)
+			L = tf.cholesky(Cov_train)
+			Kx_expected = tf.Variable(1.0, name = 'Kx_expected')
+			Kp_expected = tf.Variable(1.0, name = 'Kp_expected')
 
-			f = lambda Vin: self.expected_simPosteriormeanVariance(Vin, L, hyperpars)
-			n_devices = len(devices_list)
-			V_list = np.array_split(Vnew, n_devices, axis = 0)
-			results = []
-			for i in range(n_devices):
-				d = devices_list[i]
-				with tf.device(d):
-					results.append(tf.map_fn(f, tf.convert_to_tensor(V_list[i], tf.float32), swap_memory = False))
+			f = lambda XPin: self.expected_simPosteriormeanVariance(XPin, L, hyperpars, Kx_expected, Kp_expected)
+
+			k = list(sampling_dict.keys())[0]
+			grid_points, num_samples1, _ = sampling_dict[k]['X_sampling'].shape
+			num_samples2, _ = sampling_dict[k]['diff_samples'].shape
+			n_input = self.dim_input
+			n_par = self.dim_par
+			indices_x = set([ i for i in range(n_input)])
+			indices_p = set([ (i + n_input)  for i in range(n_par)])
+			indices = set([i for i in range(n_input + n_par)])
+			betax_slice = tf.placeholder(tf.float32, shape = [1,n_input], name = 'betax_slice')
+			betap_slice = tf.placeholder(tf.float32, shape = [1,n_par], name = 'betap_slice')
+			diffx_samples = tf.placeholder(tf.float32, shape = [num_samples2, n_input], name = 'diffx_samples')
+			diffp_samples = tf.placeholder(tf.float32, shape = [num_samples2, n_par], name = 'diffp_samples')
+			XPin  = tf.placeholder(tf.float32, shape = [grid_points, num_samples1, n_input + n_par], name =  'XPin')
+			Kx_expected_new = self.expected_kernel(diffx_samples, betax_slice)
+			Kx_expected_update = Kx_expected.assign(Kx_expected_new)
+			Kp_expected_new = self.expected_kernel(diffp_samples, betap_slice)
+			Kp_expected_update = Kp_expected.assign(Kp_expected_new)
+			K_updates = tf.group([Kx_expected_update, Kp_expected_update])
+			with tf.control_dependencies([K_updates]):
+				results = tf.map_fn(f,XPin)
+			collect_results = {}
+			init = tf.global_variables_initializer()
 			with tf.Session() as sess:
-				results_ = sess.run([results[i] for i in range(n_devices)])
-			results_= np.concatenate(results_, axis = 0)
-			return results_
+				sess.run(init)
+				for i in sampling_dict.keys():
+					ids = sampling_dict[i]['fixed_indices_list']
+					ids_left = indices - set(ids)
+					idsx_left = list(ids_left & indices_x)
+					nx_left = len(idsx_left)
+					idsx_left.sort()
+					idsx_left = np.array(idsx_left).astype('int64')
+					idsp_left  = list(ids_left & indices_p)
+					np_left = len(idsp_left)
+					idsp_left.sort()
+					idsp_left = np.array(idsp_left) - n_input
+					idsp_left = idsp_left.astype('int64')
+					diff_samples_batch = sampling_dict[i]['diff_samples']
+					diffx_samples_batch = diff_samples_batch[:,:nx_left]
+					diffp_samples_batch = diff_samples_batch[:,nx_left:]
+					diffx_samples_batch =  np.pad(diffx_samples_batch, ((0,0), (0,n_input - nx_left)), mode = 'constant')
+					diffp_samples_batch =  np.pad(diffp_samples_batch, ((0,0), (0,n_par - np_left)), mode = 'constant')
+					XPbatch = sampling_dict[i]['X_sampling']
+					betax_input = betasx_median[idsx_left]
+					betax_input = np.pad(betax_input[None,:], ((0,0),(0, n_input - nx_left)), mode = 'constant')
+					betap_input = betaspar_median[idsp_left]
+					betap_input = np.pad(betap_input[None,:], ((0,0),(0, n_par - np_left)), mode = 'constant')
+					_, collect_results[i]= sess.run([K_updates, results],
+		 								feed_dict={betax_slice: betax_input,betap_slice: betap_input, diffx_samples: diffx_samples_batch, diffp_samples: diffp_samples_batch,  XPin: XPbatch})
+
+			return collect_results
 
 		if type == 'discrepancy':
 
 			par = tf.convert_to_tensor(np.median(par_samples, axis =0), tf.float32)
 
 			Kxx = self.kernel(self.Xaug, self.Xaug, betasx)
-
 			par_tiled = tf.tile(par[tf.newaxis,:], [self.n_exp,1])
 			Paug = tf.concat([self.Psim, par_tiled], axis = 0)
 			Kpp = self.kernel(Paug, Paug, betaspar)
@@ -1179,19 +1187,40 @@ class Calibration():
 			Cov_err = tf.pad(Cov_err, tf.constant([[self.n_sim,0],[self.n_sim,0]]), name = None, constant_values=0)
 
 			Cov_train = Cov_sim + Cov_err + self.jitter_level*tf.eye(self.n_total)
-			L = tf.linalg.cholesky(Cov_train)
-			f = lambda Vin: self.expected_errorPosteriormeanVariance(Vin, L, hyperpars)
-			n_devices = len(devices_list)
-			V_list = np.array_split(Vnew, n_devices, axis = 0)
-			results = []
-			for i in range(n_devices):
-				d = devices_list[i]
-				with tf.device(d):
-					results.append(tf.map_fn(f, tf.convert_to_tensor(V_list[i], tf.float32), swap_memory = False))
+			L = tf.cholesky(Cov_train)
+			K_expected = tf.Variable(1.0, name = 'Kx_expected')
+
+			f = lambda Xin : self.expected_errorPosteriormeanVariancev2(Xin, L, hyperpars, K_expected)
+
+			k = list(sampling_dict.keys())[0]
+			grid_points, num_samples1, _ = sampling_dict[k]['X_sampling'].shape
+			num_samples2, _ = sampling_dict[k]['diff_samples'].shape
+			n_input = self.dim_input
+			indices = set([ i for i in range(n_input)])
+			beta_slice = tf.placeholder(tf.float32, shape = [1,n_input], name = 'betax_slice')
+			diff_samples = tf.placeholder(tf.float32, shape = [num_samples2, n_input], name = 'diffx_samples')
+			Xin  = tf.placeholder(tf.float32, shape = [grid_points, num_samples1, n_input], name =  'Xin')
+			K_expected_new = self.expected_kernel(diffx_samples, beta_slice)
+			K_expected_update = K_expected.assign(K_expected_new)
+			with tf.control_dependencies([K_expected_update]):
+				results = tf.map_fn(f,XPin)
+			collect_results = {}
+			init = tf.global_variables_initializer()
 			with tf.Session() as sess:
-				results_ = sess.run([results[i] for i in range(n_devices)])
-			results_= np.concatenate(results_, axis = 0)
-			return results_
+				sess.run(init)
+				for i in sampling_dict.keys():
+					ids = sampling_dict[i]['fixed_indices_list']
+					ids_left = lits(indices - set(ids))
+					ids_left.sort()
+					pad_size = len(ids)
+					diff_samples_batch = sampling_dict[i]['diff_samples']
+					diff_samples_batch =  np.pad(diff_samples_batch, ((0,0),(0,pad_size)), mode = 'constant')
+					Xbatch = sampling_dict[i]['X_sampling']
+					beta_input = betad_median[ids_left]
+					beta_input = np.pad(beta_input[None,:], ((0,0),(0, pad_size)), mode = 'constant')
+					_, collect_results[i]= sess.run([K_updates, results],
+		 								feed_dict={beta_slice: beta_input, diff_samples: diff_samples_batch, Xin: Xbatch})
+			return collect_results
 
 
 

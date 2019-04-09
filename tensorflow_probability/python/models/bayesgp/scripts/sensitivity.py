@@ -38,7 +38,18 @@ def powerset(S,min_size, max_size):
         out.append(y)
     return out
 
-def allEffect(model, bounds, nx_samples, hyperpar_samples, devices_list, *args):
+def uniform_to_triangular(u):
+    # function to convert a standard uniform random variable to a random variable
+    # with a triangular distribution
+    if u < 0.5:
+        return (2*u)**0.5 -1.0
+    else:
+        return 1.0 - (2*(1-u))**0.5
+
+# vectorizing the function
+vuniform_to_triangular = np.vectorize(uniform_to_triangular)
+
+def allEffect(model, bounds, nx_samples, hyperpar_samples, *args):
     # Computes mean and variance of the Gp E[Y] which is obtained from integrating
     # out all the variables
     # The integration is done using Monte Carlo integration
@@ -46,25 +57,24 @@ def allEffect(model, bounds, nx_samples, hyperpar_samples, devices_list, *args):
     a = bounds[:,1] -bounds[:,0]
     a = a[None,:]
     b = bounds[:,0][None,:]
-
+    diff_samples = lhs(n_var, samples = 4*nx_samples)
+    diff_samples = vuniform_to_triangular(diff_samples)
     M = lhs(n_var, samples = nx_samples)
-    Mp = lhs(2*n_var, samples = nx_samples)
-    Mp1 = Mp[:, :n_var].copy()
-    Mp2 = Mp[:,n_var:].copy()
-    Mt= affineTransform(M, b, a)
-    Mpt1 = affineTransform(Mp1,b,a)
-    Mpt2 = affineTransform(Mp2,b,a)
-    Xtest = np.zeros((1,1, nx_samples, 3*n_var))
-    Xtest[0,0,:,:] = np.concatenate([Mt, Mpt1, Mpt2], axis = 1)
+    sampling_dict = {}
+    sampling_dict[0] = {}
+    sampling_dict[0]['fixed_indices_list'] = []
+    sampling_dict[0]['diff_samples'] = diff_samples*a
+    sampling_dict[0]['X_sampling'] = np.zeros((1, nx_samples, n_var))
+    sampling_dict[0]['X_sampling'][0,:,:] = affineTransform(M, b, a)
     if len(args): # calibration case
         par_samples = args[0]
         type = args[1]
-        ybase = model.expected_predict_posterior(Xtest, hyperpar_samples, par_samples, devices_list, type)[0,0,:]
+        ybase = model.expected_predict_posterior(sampling_dict, hyperpar_samples, par_samples, type)
     else:
-        ybase = model.expected_predict_posterior(Xtest, hyperpar_samples,devices_list)[0,0,:]
+        ybase = model.expected_predict_posterior(sampling_dict, hyperpar_samples)
     return ybase
 
-def mainEffect(model, bounds, selected_vars, nx_samples, hyperpar_samples,devices_list, n_points = 30, *args):
+def mainEffect(model, bounds, selected_vars, nx_samples, hyperpar_samples,n_points = 30, *args):
     # Computes mean and variance of the Gp E[Y | Xp]
     # The integration is done using Monte Carlo integration
     n_var = bounds.shape[0]
@@ -72,138 +82,123 @@ def mainEffect(model, bounds, selected_vars, nx_samples, hyperpar_samples,device
     a = bounds[:,1] -bounds[:,0]
     a = a[None,:]
     b = bounds[:,0][None,:]
-
     points = np.linspace(0,1,n_points)
-    Xtest = np.zeros((n_points, n_selected, nx_samples, 3*n_var))
     M = lhs(n_var-1, samples = nx_samples)
-    Mp = lhs(2*(n_var-1), samples = nx_samples)
-    for idx in range(n_var):
+    diff_samples = lhs(n_var-1, 4*nx_samples)
+    if diff_samples.shape[1] > 0:
+        diff_samples = vuniform_to_triangular(diff_samples)
+    sampling_dict = {}
+    vars = [i for i in range(n_var)]
+    for idx in range(n_selected):
         j = selected_vars[idx]
+        key  = tuple([j])
+        sampling_dict[key] ={}
+        sampling_dict[key]['fixed_indices_list'] = [j]
+        sampling_dict[key]['X_sampling'] = np.zeros((n_points,nx_samples, n_var))
+        vars_left = vars[:]
+        vars_left.remove(j)
+        range_slice = a[:,vars_left].copy()
+        sampling_dict[key]['diff_samples'] = diff_samples*range_slice
         for k in range(n_points):
             v = points[k]
-            N = M.copy()
-            N = np.insert(N, j, v*np.ones(nx_samples), axis = 1)
-            Nt = affineTransform(N, b, a)
-            Np1 = Mp[:, :n_var-1].copy()
-            Np1 = np.insert(Np1, j, v*np.ones(nx_samples), axis = 1)
-            Npt1 = affineTransform(Np1, b, a)
-            Np2 = Mp[:,n_var-1:].copy()
-            Np2 = np.insert(Np2, j, v*np.ones(nx_samples), axis = 1)
-            Npt2 = affineTransform(Np2, b, a)
-            Xtest[k,idx,:,:] = np.concatenate([Nt, Npt1, Npt2], axis = 1)
-    if len(args)> 0: # calibration case
+            N = np.insert(M, j, v*np.ones(nx_samples), axis = 1)
+            sampling_dict[key]['X_sampling'][k,:,:] = affineTransform(N, b, a)
+    if len(args): # calibration case
         par_samples = args[0]
         type = args[1]
-        y = model.expected_predict_posterior(Xtest, hyperpar_samples, par_samples, devices_list, type)
+        y = model.expected_predict_posterior(sampling_dict, hyperpar_samples, par_samples, type)
     else:
-        y = model.expected_predict_posterior(Xtest, hyperpar_samples, devices_list)
-
-    y = np.swapaxes(y,0,1)
-
+        y= model.expected_predict_posterior(sampling_dict, hyperpar_samples)
     return y
 
-def mainInteraction(model, bounds, selected_pairs, nx_samples, hyperpar_samples, devices_list, n_points = 30, *args):
+def mainInteraction(model, bounds, selected_pairs, nx_samples, hyperpar_samples, n_points = 30, *args):
     # Computes mean and variance of the Gp E[Y | Xpq]
     # using Monte Carlo integration
-
     n_var = bounds.shape[0]
     n_pairs = len(selected_pairs)
     a = bounds[:,1] -bounds[:,0]
     a = a[None,:]
     b = bounds[:,0][None,:]
     M = lhs(n_var, samples = nx_samples)
-    Mp = lhs(2*n_var, samples = nx_samples)
-    Mp1 = Mp[:, :n_var].copy()
-    Mp2 = Mp[:,n_var:].copy()
+    diff_samples = lhs(n_var-2, 4*nx_samples)
+    if diff_samples.shape[1] > 0:
+        diff_samples = vuniform_to_triangular(diff_samples)
     points = np.linspace(0,1,n_points)
     p1, p2 = np.meshgrid(points,points)
     q1 = p1.ravel()
     q2 = p2.ravel()
-    Xtest = np.zeros((n_points**2, n_pairs, nx_samples, 3*n_var))
+    sampling_dict = {}
+    vars = set([i for i in range(n_var)])
     M = lhs(n_var-2, samples = nx_samples)
-    Mp = lhs(2*(n_var-2), samples = nx_samples)
-    Mp1 = Mp[:, :n_var-2].copy()
-    Mp2 = Mp[:,n_var-2:].copy()
     # Computing samples for E(Y|xi xj)
     for idx in range(n_pairs):
         j1, j2 = selected_pairs[idx]
+        key = tuple([j1,j2])
+        sampling_dict[key] ={}
+        sampling_dict[key]['fixed_indices_list'] = [j1, j2]
+        sampling_dict[key]['X_sampling'] = np.zeros((n_points**2,nx_samples, n_var))
+        vars_left = list(vars - set([j1,j2]))
+        vars_left.sort()
+        range_slice = a[:,vars_left].copy()
+        sampling_dict[key]['diff_samples'] = diff_samples*range_slice
         for k in range(n_points**2):
             v1 = q1[k]
             v2 = q2[k]
-            N = M.copy()
-            N = np.insert(N, j1, v1*np.ones(nx_samples), axis = 1)
+            N = np.insert(M, j1, v1*np.ones(nx_samples), axis = 1)
             N = np.insert(N, j2, v2*np.ones(nx_samples), axis = 1)
-            Nt = affineTransform(N, b, a)
-            Np1 = Mp1.copy()
-            Np1 = np.insert(Np1, j1, v1*np.ones(nx_samples), axis = 1)
-            Np1 = np.insert(Np1, j2, v2*np.ones(nx_samples), axis = 1)
-            Npt1 = affineTransform(Np1, b, a)
-            Np2 = Mp2.copy()
-            Np2 = np.insert(Np2, j1, v1*np.ones(nx_samples), axis = 1)
-            Np2 = np.insert(Np2, j2, v2*np.ones(nx_samples), axis = 1)
-            Npt2 = affineTransform(Np2, b, a)
-            Xtest[k,idx,:,:] = np.concatenate([Nt, Npt1, Npt2], axis = 1)
-    if len(args)> 0: # calibration case
+            sampling_dict[key]['X_sampling'][k,:,:] = affineTransform(N, b, a)
+    if len(args): # calibration case
         par_samples = args[0]
         type = args[1]
-        y = model.expected_predict_posterior(Xtest, hyperpar_samples, par_samples, devices_list, type)
+        y = model.expected_predict_posterior(sampling_dict, hyperpar_samples, par_samples, type)
     else:
-        y = model.expected_predict_posterior(Xtest, hyperpar_samples, devices_list)
-    y = np.swapaxes(y, 0,1)
-
+        y= model.expected_predict_posterior(sampling_dict, hyperpar_samples)
     return y
 
-def sampling_Matrix(L, values):
-    subset, b, a, n_var, nx_samples = L
-    size_subset  = len(subset)
-    size_left = n_var - size_subset
-    size_left = n_var - size_subset
-    N = lhs(size_left, samples = nx_samples)
-    Np = lhs(2*size_left, samples = nx_samples)
-    Np1 = Np[:, :size_left]
-    Np2 = Np[:,size_left:]
-    for jdx in range(size_subset):
-        j = subset[jdx]
-        value = values[jdx]
-        N = np.insert(N, j, value*np.ones(nx_samples), axis = 1)
-        Np1 = np.insert(Np1, j, value*np.ones(nx_samples), axis = 1)
-        Np2 = np.insert(Np2, j, value*np.ones(nx_samples), axis = 1)
-    Nt = affineTransform(N, b, a)
-    Npt1 = affineTransform(Np1, b, a)
-    Npt2 = affineTransform(Np2, b, a)
-    out = np.concatenate([Nt, Npt1, Npt2], axis = 1)
-    return out[np.newaxis,:,:]
 
 
-
-def mainHigherOrder(model, bounds, subsets_list, nx_samples, hyperpar_samples, devices_list, *args):
+def mainHigherOrder(model, bounds, subsets_list, nx_samples, hyperpar_samples, *args):
     # Computes mean and variance of the Gp E[Y|Xsub] where Xsub denotes a subset
     # of the variables that are kept fixed
-    p = mp.Pool(processes = 10)
     n_var = bounds.shape[0]
     n_subset = len(subsets_list)
     a = bounds[:,1] -bounds[:,0]
     a = a[None,:]
     b = bounds[:,0][None,:]
-    Xtest = np.zeros((nx_samples//3, n_subset, nx_samples, 3*n_var))
+    a_aug = a[np.newaxis, :]
+    b_aug = b[np.newaxis, :]
+    sampling_dict ={}
+    vars = set([i for i in range(n_var)])
     for idx in range(n_subset):
         subset = subsets_list[idx]
+        key = tuple(subset)
         size_subset = len(subset)
-        L = [subset, b, a, n_var, nx_samples]
-        f = functools.partial(sampling_Matrix,L)
-        Sampling = lhs(size_subset, samples = nx_samples//3)
-        results = [p.apply(f,args=(x,)) for x in Sampling]
-        Xtest[:,idx,:,:] = np.concatenate(results, axis=0)
-    print('Sampling matrix generated')
-    if len(args)> 0: # calibration case
+        size_left = n_var - size_subset
+        M_fixed = lhs(size_subset, samples = nx_samples//2)
+        M_varying = lhs(size_left, samples = nx_samples)
+        M_varying = np.tile(M_varying[np.newaxis,:,:],[nx_samples//2,1,1])
+        for jdx in range(size_subset):
+            j = subset[jdx]
+            points = M_fixed[:,jdx]
+            M_varying = np.insert(M_varying,j, points[:, None], axis = -1)
+        sampling_dict[key] ={}
+        sampling_dict[key]['fixed_indices_list'] = subset[:]
+        sampling_dict[key]['X_sampling'] = affineTransform(M_varying,b_aug, a_aug)
+        vars_left = list(vars - set(subset))
+        diff_samples = lhs(len(vars_left), 4*nx_samples)
+        if diff_samples.shape[1] > 0:
+            diff_samples = vuniform_to_triangular(diff_samples)
+        range_slice = a[:,vars_left].copy()
+        sampling_dict[key]['diff_samples'] = diff_samples*range_slice
+
+    if len(args): # calibration case
         par_samples = args[0]
         type = args[1]
-        y = model.expected_predict_posterior(Xtest, hyperpar_samples, par_samples, devices_list, type)
+        y = model.expected_predict_posterior(sampling_dict, hyperpar_samples, par_samples, type)
     else:
-        y = model.expected_predict_posterior(Xtest, hyperpar_samples, devices_list)
-
-    y = np.swapaxes(y, 0,1)
+        y= model.expected_predict_posterior(sampling_dict, hyperpar_samples)
     return y
+
 
 
 
@@ -225,41 +220,41 @@ def direct_samples(model, bounds, nx_samples, hyperpar_samples,*args):
     return y
 
 
-def compute_remaining_effect(model, bounds, selected_vars, nx_samples, hyperpar_samples, devices_list, *args):
+def compute_remaining_effect(model, bounds, selected_vars, nx_samples, hyperpar_samples,n_points = 60, *args):
     # Computes mean and variance of the Gp E[Y | X_p]
     # using Monte Carlo integration
     n_var = bounds.shape[0]
     n_selected = len(selected_vars)
     a = bounds[:,1] -bounds[:,0]
-    a = a[np.newaxis, np.newaxis, :]
+    a_aug = a[np.newaxis, np.newaxis, :]
     b = bounds[:,0]
-    b = b[np.newaxis, np.newaxis, :]
+    b_aug = b[np.newaxis, np.newaxis, :]
     M = lhs(n_var-1, samples = nx_samples)
-    n_points = nx_samples//3
     M = np.tile(M[:,np.newaxis,:],[1,n_points,1])
     points = np.linspace(0,1,n_points)
-    pairs  = lhs(2, samples = n_points)
-    Xtest  = np.zeros((nx_samples,n_selected,n_points, 3*n_var))
+    diff_samples = lhs(1, 4*nx_samples)
+    diff_samples = vuniform_to_triangular(diff_samples)
+    sampling_dict = {}
+    vars = [i for i in range(n_var)]
 
     for idx in range(n_selected):
-        i = selected_vars[idx]
-        Xm = np.insert(M,i,points[None, :], axis = -1)
-        Xp1 = np.insert(M,i,pairs[:,0][None, :], axis = -1)
-        Xp2 = np.insert(M,i,pairs[:,1][None, :], axis = -1)
-        # Perform the affine trnsformation
-        Xm = Xm*a + b
-        Xp1 = Xp1*a + b
-        Xp2 = Xp2*a + b
-        Xtest[:,idx,:,:] = np.concatenate([Xm, Xp1, Xp2], axis = -1)
+        j = selected_vars[idx]
+        key  = tuple([j])
+        sampling_dict[key] ={}
+        vars_left = vars[:]
+        vars_left.remove(j)
+        sampling_dict[key]['fixed_indices_list'] = vars_left
+        Xm = np.insert(M,j,points[None, :], axis = -1)
+        # Perform the affine transformation
+        sampling_dict[key]['X_sampling']  = affineTransform(Xm,b_aug, a_aug)
+        sampling_dict[key]['diff_samples'] = diff_samples*a[j]
     if len(args)> 0: # calibration case
         par_samples = args[0]
         type = args[1]
-        y = model.expected_predict_posterior(Xtest, hyperpar_samples, par_samples, devices_list, type)
+        y = model.expected_predict_posterior(sampling_dict, hyperpar_samples, par_samples, type)
     else:
-        y = model.expected_predict_posterior(Xtest, hyperpar_samples, devices_list)
-    y = np.swapaxes(y, 0,1)
+        y = model.expected_predict_posterior(sampling_dict, hyperpar_samples)
     return y
-
 
 
 
