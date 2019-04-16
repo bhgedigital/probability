@@ -3,6 +3,9 @@ from __future__ import division
 from __future__ import print_function
 
 import tensorflow as tf
+#-- fix for tensorflow 2.0 version ---
+# import tensorflow.compat.v1 as tf
+# tf.disable_v2_behavior()
 import math
 from tensorflow_probability.python.mcmc import util as mcmc_util
 
@@ -38,6 +41,38 @@ def posterior_Gaussian(L, Kmn, Knn, Y, fullCov):
 	fmean = tf.matmul(alpha, Y, transpose_a=True)
 
 	return fmean, var
+
+
+def mixing_Covariance(K, Wmix, varm,varc):
+	# K := Q x N1 x N2 kernels corresponding to independent Gaussians processes
+	# Wmix := M X Q  mixing matrix
+	# varm := M x Q array of variances
+
+	Cov1 = Wmix[:,:,tf.newaxis, tf.newaxis]*K[tf.newaxis,:,:,:]*varc  # shape M x Q x N1 x N2
+	     # shape M X Q x 1 X 1              # shape 1 X Q x N1 X N2
+
+	Cov1  = tf.tensordot(Cov1, Wmix, [[1],[1]]) # Cov has shape M x N1 x N2 x M
+	Cov1  = tf.transpose(Cov1, perm = [0,1,3,2]) # shape is now M x N1 x M x N2
+
+	n_tasks = varm.shape[0].value
+
+	D = tf.eye(n_tasks)
+	Cov2 = D[:,:, tf.newaxis]*varm[tf.newaxis,:,:]   # shape M x M x Q
+	Cov2 = tf.tensordot(Cov2, K,[[2],[0]]) # shape M x M x N1 x N2
+	Cov2 = tf.transpose(Cov2,perm = [0,2,1,3] ) # shape M x N1 x M x N2
+
+	Cov = Cov1 + Cov2
+
+	return Cov
+
+def mixing_Covariance_diag(K_expected, Wmix, varm, varc):
+	# K_expected :=  expected kernels of shape Q
+	# Wmix := M X Q  mixing matrix
+	# varm := M x Q array of variances
+	Cov = varc*tf.square(Wmix) + varm # shape M x Q
+	Cov = tf.tensordot(Cov, K_expected, [[1],[0]])
+	return Cov
+
 
 #-------------------------------------------------------------------------------
 #---------------  HMC sampling tools -------------------------------------------

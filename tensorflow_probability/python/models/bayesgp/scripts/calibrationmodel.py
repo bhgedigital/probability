@@ -3,6 +3,9 @@ from __future__ import division
 from __future__ import print_function
 
 import tensorflow as tf
+#-- fix for tensorflow 2.0 version ---
+# import tensorflow.compat.v1 as tf
+# tf.disable_v2_behavior()
 import numpy as np
 import os
 import matplotlib.pyplot as plt
@@ -16,6 +19,7 @@ from tensorflow.python.client import device_lib
 from tensorflow_probability.python.models.bayesgp.scripts import calibration
 from tensorflow_probability.python.models.bayesgp.scripts import sensitivity
 import copy
+import math
 
 
 class Calibration_model():
@@ -432,12 +436,6 @@ class Calibration_model():
         if not(os.path.isdir(directory_path2)):
             raise Exception('Invalid directory path ', directory_path2)
 
-        # get list of gpu devices to parallelize computation if possible
-        local_device_protos = device_lib.list_local_devices()
-        devices_list = [x.name for x in local_device_protos if x.device_type == 'GPU']
-        if len(devices_list) == 0:
-            devices_list = ['/cpu:0']
-
         mean_sim, std_sim = self.scaling_input
         mean_y, std_y = self.scaling_output
 
@@ -470,14 +468,31 @@ class Calibration_model():
         if nx_samples == None:
             nx_samples = 300*n_vars
         selected_vars = [i for i in range(n_vars)]
-        y_main = sensitivity.mainEffect(self.model, used_Rangenorm, selected_vars, nx_samples, hyperpar_samples,devices_list, grid_points, par_samples, type)
-        ybase = sensitivity.allEffect(self.model, used_Rangenorm, nx_samples, hyperpar_samples, devices_list, par_samples, type)
-        z_mean = y_main[:,:,0] - ybase[0] # mean value of the normalized main effect function E[Y|xi]
+        ybase = sensitivity.allEffect(self.model, used_Rangenorm, nx_samples, hyperpar_samples, par_samples, type)
 
-        # The next 3 lines give an approximation of the standard deviation of the normalized main effect function E[Y|xi]
-        lower_app = np.sqrt(np.abs(np.sqrt(y_main[:,:,1]) - np.sqrt(ybase[1])))
-        upper_app = np.sqrt(y_main[:,:,1]) + np.sqrt(ybase[1])
-        z_std = (lower_app + upper_app)/2.0
+        if n_vars <= 6:
+            y_main = sensitivity.mainEffect(self.model, used_Rangenorm, selected_vars, nx_samples, hyperpar_samples, grid_points, par_samples, type)
+        else:
+            y_main = {}
+            vars_groups = np.array_split(selected_vars,6)
+            completed = 0
+            for group in var_groups:
+                y_group = sensitivity.mainEffect(self.model, used_Rangenorm, group, nx_samples, hyperpar_samples, grid_points, par_samples, type)
+                completed += len(group)
+                progress = 100.0*completed/n_vars
+                print("Main effect computation: {:.2f}% complete".format(progress))
+                y_main.update(y_group)
+
+        z_mean = np.zeros((n_vars, grid_points))
+        z_std = np.zeros((n_vars, grid_points))
+        for i in range(n_vars):
+            key = tuple([i])
+            z_mean[i,:] = y_main[key][:,0] - ybase[0][0,0]
+            # The next 3 lines give an approximation of the standard deviation of the normalized main effect function E[Y|xi] - E[Y]
+            lower_app = np.sqrt(np.abs(np.sqrt(y_main[key][:,1]) - np.sqrt(ybase[0][0,1])))
+            upper_app = np.sqrt(y_main[key][:,1]) + np.sqrt(ybase[0][0,1])
+            z_std[i,:] = (lower_app + upper_app)/2.0
+
         # Converting to the proper scale and storing
         main = {}
         for i in range(n_vars):
@@ -490,22 +505,44 @@ class Calibration_model():
             main[key]['output_mean']= y
             main[key]['output_std']= y_std
         if create_plot:
-            fig, axes = plt.subplots(nrows=1, ncols=n_vars, sharey=True, figsize =(20,10))
-            for i in range(n_vars):
-                key = self.labels[i]
-                x = main[key]['inputs']
-                y = main[key]['output_mean']
-                y_std = main[key]['output_std']
-                axes[i].plot(x,y, label= used_labels[i])
-                axes[i].fill_between(x, y-2*y_std, y + 2*y_std, alpha = 0.2, color ='orange')
-                axes[i].grid()
-                axes[i].legend()
-            title = 'main_effects'
-            plt.title(title)
-            figpath = title + '.png'
-            figpath = os.path.join(directory_path1, figpath)
-            plt.savefig(figpath)
-            plt.close()
+            print('Generating main effect plots.')
+            if n_vars <= 6:
+                fig, axes = plt.subplots(nrows=1, ncols=n_vars, sharey=True, figsize =(20,10))
+                for i in range(n_vars):
+                    key = self.labels[i]
+                    x = main[key]['inputs']
+                    y = main[key]['output_mean']
+                    y_std = main[key]['output_std']
+                    axes[i].plot(x,y, label= self.labels[i])
+                    axes[i].fill_between(x, y-2*y_std, y + 2*y_std, alpha = 0.2, color ='orange')
+                    axes[i].grid()
+                    axes[i].legend()
+                title = 'main_effects'
+                plt.title(title)
+                figpath = title + '.png'
+                figpath = os.path.join(directory_path1, figpath)
+                plt.savefig(figpath)
+                plt.close(fig)
+            else:
+                plot_rows = math.ceil(self.n_inputs/6)
+                fig, axes = plt.subplots(nrows=plot_rows, ncols=6, sharey=True, figsize =(20,15))
+                for i in range(n_vars):
+                    row_idx = i//6
+                    col_idx = i%6
+                    key = self.labels[i]
+                    x = main[key]['inputs']
+                    y = main[key]['output_mean']
+                    y_std = main[key]['output_std']
+                    axes[row_idx, col_idx].plot(x,y, label= self.labels[i])
+                    axes[row_idx, col_idx].fill_between(x, y-2*y_std, y + 2*y_std, alpha = 0.2, color ='orange')
+                    axes[row_idx, col_idx].grid()
+                    axes[row_idx, col_idx].legend()
+                title = 'main_effects'
+                plt.title(title)
+                figpath = title + '.png'
+                figpath = os.path.join(directory_path1, figpath)
+                plt.savefig(figpath)
+                plt.close(fig)
 
         #---------------------------------------------------------------------
         # Interaction effect
@@ -514,25 +551,36 @@ class Calibration_model():
             for j in range(i+1,n_vars):
                 selected_pairs.append([i,j])
         selected_pairs = np.array(selected_pairs)
-        y_int = sensitivity.mainInteraction(self.model, used_Rangenorm, selected_pairs, nx_samples, hyperpar_samples, devices_list, grid_points, par_samples, type)
         n_pairs = len(selected_pairs)
+        if n_pairs <= 6:
+            y_int = sensitivity.mainInteraction(self.model, used_Rangenorm, selected_pairs, nx_samples, hyperpar_samples, grid_points, par_samples, type)
+        else:
+            y_int = {}
+            pairs_groups = np.array_split(selected_pairs,6)
+            completed = 0
+            for group in pairs_groups:
+                y_group = sensitivity.mainInteraction(self.model, used_Rangenorm, group, nx_samples, hyperpar_samples, grid_points, par_samples, type)
+                completed += len(group)
+                progress = 100.0*completed/n_pairs
+                print("Main interaction computation: {:.2f}% complete".format(progress))
+                y_int.update(y_group)
         z_intmean = np.zeros((n_pairs, grid_points, grid_points))
         z_intstd = np.zeros((n_pairs, grid_points, grid_points))
         for k in  range(n_pairs):
-            y_slice = y_int[k,:,:]
+            key = tuple(selected_pairs[k])
+            y_slice = np.reshape(y_int[key],(grid_points,grid_points,2))
             j1, j2 = selected_pairs[k]
-            idx1 = selected_vars.index(j1)
-            idx2 = selected_vars.index(j2)
-            v1 = y_main[idx1,:,0]
-            v2 = y_main[idx2,:,0]
+            key1 = tuple([j1])
+            key2 = tuple([j2])
+            v1 = y_main[key1][:,0]
+            v2 = y_main[key2][:,0]
             p1, p2 = np.meshgrid(v1,v2)
-            w1 = np.sqrt(y_main[idx1,:,1])
-            w2 = np.sqrt(y_main[idx2,:,1])
+            w1 = np.sqrt(y_main[key1][:,1])
+            w2 = np.sqrt(y_main[key2][:,1])
             q1, q2 = np.meshgrid(w1,w2)
-            z_intmean[k,:,:] = np.reshape(y_slice[:,0], (grid_points, grid_points)) - p1 - p2 +  ybase[0]
-            # The next 3 lines give an approximation of the standard deviation of the normalized interaction effect function E[Y|xi xj]
-            upper_app = np.sqrt(np.reshape(y_slice[:,1], (grid_points, grid_points))) + q1 + q2 + np.sqrt(ybase[1])
-            lower_app = np.abs(np.sqrt(np.reshape(y_slice[:,1], (grid_points, grid_points))) - q1 - q2 + np.sqrt(ybase[1]))
+            z_intmean[k,:,:] = y_slice[:,:,0] - p1 - p2 +  ybase[0][0,0]
+            upper_app = np.sqrt(y_slice[:,:,1]) + q1 + q2 + np.sqrt(ybase[0][0,1])
+            lower_app = np.abs(np.sqrt(y_slice[:,:,1]) - q1 - q2 + np.sqrt(ybase[0][0,1]))
             z_intstd[k,:,:] = (upper_app + lower_app)/2.0
 
         # Converting to the proper scale and storing
@@ -545,7 +593,7 @@ class Calibration_model():
             Z = z_intmean[k,:,:]*std_y + mean_y
             Zstd = z_intstd[k,:,:]*std_y
             X,  Y = np.meshgrid(x,y)
-            key = used_labels[j1] + ' || ' + used_labels[j2]
+            key = used_labels[j1] + '_&_' + used_labels[j2]
             X,  Y = np.meshgrid(x,y)
             interaction[key] = {}
             interaction[key]['input1'] = X
@@ -554,6 +602,7 @@ class Calibration_model():
             interaction[key]['output_std'] = Zstd
 
         if create_plot:
+            print('Generating interaction surfaces plots.')
             # Bounds for the interaction surface plot
             zmin = np.min(z_intmean)*std_y + mean_y
             zmax = np.max(z_intmean)*std_y + mean_y
@@ -563,7 +612,7 @@ class Calibration_model():
             for k in range(n_pairs):
                 item = selected_pairs[k]
                 j1, j2 = item
-                key = used_labels[j1] + ' || ' + used_labels[j2]
+                key = used_labels[j1] + '_&_' + used_labels[j2]
                 X = interaction[key]['input1']
                 Y = interaction[key]['input2']
                 Z = interaction[key]['output_mean']
@@ -613,11 +662,6 @@ class Calibration_model():
         if not(os.path.isdir(directory_path)):
             raise Exception('Invalid directory path ', directory_path)
 
-        # get list of gpu devices to parallelize computation if possible
-        local_device_protos = device_lib.list_local_devices()
-        devices_list = [x.name for x in local_device_protos if x.device_type == 'GPU']
-        if len(devices_list) == 0:
-            devices_list = ['/cpu:0']
 
         mean_sim, std_sim = self.scaling_input
         mean_y, std_y = self.scaling_output
@@ -673,20 +717,30 @@ class Calibration_model():
 
         n_subset = len(subsets_list)
         if n_subset > 0:
-            ybase = sensitivity.allEffect(self.model, used_Rangenorm, nx_samples, hyperpar_samples, devices_list, par_samples, type)
+            ybase = sensitivity.allEffect(self.model, used_Rangenorm, nx_samples, hyperpar_samples, par_samples, type)
             ey_square = sensitivity.direct_samples(self.model, used_Rangenorm, nx_samples, hyperpar_samples, par_samples, type)
-            y_higher_order = sensitivity.mainHigherOrder(self.model, used_Rangenorm, subsets_list, nx_samples, hyperpar_samples, devices_list, par_samples, type)
-
-
+            if n_subset <= 10:
+                y_higher_order = sensitivity.mainHigherOrder(self.model, used_Rangenorm, subsets_list, nx_samples, hyperpar_samples, par_samples, type)
+            else:
+                y_higher_order = {}
+                completed = 0
+                n_groups = math.ceil(n_subset/10)
+                for i in range(n_groups):
+                    group = subsets_list[i*10:(i+1)*10]
+                    y_group = sensitivity.mainHigherOrder(self.model, used_Rangenorm, group, nx_samples, hyperpar_samples, par_samples, type)
+                    completed += len(group)
+                    progress = 100.0*completed/n_subset
+                    print("Sobol indices computation: {:.2f}% complete".format(progress))
+                    y_higher_order.update(y_group)
 
             e1 = np.mean(ey_square[:,1] + np.square(ey_square[:,0]))
-            e2 = ybase[1] + np.square(ybase[0])
+            e2 = ybase[0][0,1] + np.square(ybase[0][0,0])
             # This will store the quantities E*[Vsub]/E*(Var(Y)) where Vsub = E[Y|Xsub] and Y is normalized
             quotient_variances = {}
 
             for idx in range(n_subset):
                 k = tuple(subsets_list[idx])
-                quotient_variances[k] = np.mean(y_higher_order[idx,:,1] + np.square(y_higher_order[idx,:,0]))
+                quotient_variances[k] = np.mean(y_higher_order[k][:,1] + np.square(y_higher_order[k][:,0]))
                 quotient_variances[k] = (quotient_variances[k] - e2)/(e1-e2)
         if S != None:
             Sobol = S
@@ -701,6 +755,7 @@ class Calibration_model():
 
         # plotting
         if create_plot:
+            print('Generating Sobol indices barplot.')
             si_all = np.array(si_all)
             order = np.argsort(-si_all)
             n_selected = min(40, len(si_all))
@@ -740,11 +795,6 @@ class Calibration_model():
         if not(os.path.isdir(directory_path)):
             raise Exception('Invalid directory path ', directory_path)
 
-        # get list of gpu devices to parallelize computation if possible
-        local_device_protos = device_lib.list_local_devices()
-        devices_list = [x.name for x in local_device_protos if x.device_type == 'GPU']
-        if len(devices_list) == 0:
-            devices_list = ['/cpu:0']
 
         mean_sim, std_sim = self.scaling_input
         mean_y, std_y = self.scaling_output
@@ -780,18 +830,33 @@ class Calibration_model():
             nx_samples = 300*n_vars
         selected_vars = [i for i in range(n_vars)]
 
-        ybase = sensitivity.allEffect(self.model, used_Rangenorm, nx_samples, hyperpar_samples, devices_list, par_samples, type)
+        ybase = sensitivity.allEffect(self.model, used_Rangenorm, nx_samples, hyperpar_samples, par_samples, type)
         ey_square = sensitivity.direct_samples(self.model, used_Rangenorm, nx_samples, hyperpar_samples, par_samples, type)
-        y_remaining  = sensitivity.compute_remaining_effect(self.model, used_Rangenorm, selected_vars, nx_samples, hyperpar_samples, devices_list, par_samples, type)
+        # y_remaining  = sensitivity.compute_remaining_effect(self.model, used_Rangenorm, selected_vars, nx_samples, hyperpar_samples, devices_list, par_samples, type)
+
+        if n_vars  <= 6:
+            y_remaining  = sensitivity.compute_remaining_effect(self.model, used_Rangenorm, selected_vars, nx_samples, hyperpar_samples,60, par_samples, type)
+        else:
+            y_remaining = {}
+            vars_groups = np.array_split(selected_vars,6)
+            completed = 0
+            for group in vars_groups:
+                y_group = sensitivity.compute_remaining_effect(self.model, used_Rangenorm, group, nx_samples, hyperpar_samples,60,par_samples, type)
+                completed += len(group)
+                progress = 100.0*completed/n_vars
+                print("Total Sobol indices computation: {:.2f}% complete".format(progress))
+                y_remaining.update(y_group)
 
         e1 = np.mean(ey_square[:,1] + np.square(ey_square[:,0]))
-        e2 = ybase[1] + np.square(ybase[0])
-        si_remaining = np.mean(y_remaining[:,:,1] + np.square(y_remaining[:,:,0]), axis = 1)
+        e2 = ybase[0][0,1] + np.square(ybase[0][0,0])
+        si_remaining  = np.zeros(n_vars)
+        for i in range(n_vars):
+            key = tuple([i])
+            si_remaining[i] = np.mean(y_remaining[key][:,1] + np.square(y_remaining[key][:,0]))
         si_remaining  = (si_remaining -e2)/(e1-e2)
         si_remaining = np.maximum(si_remaining,0)
         si_total = 1 - si_remaining
         si_total = np.maximum(si_total,0)
-
         if create_plot:
             #  generating the plot
             order = np.argsort(-si_total)

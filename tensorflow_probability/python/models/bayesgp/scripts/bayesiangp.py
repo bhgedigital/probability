@@ -2,11 +2,14 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+
 import tensorflow as tf
+#-- fix for tensorflow 2.0 version ---
+# import tensorflow.compat.v1 as tf
+# tf.disable_v2_behavior()
 import numpy as np
 import functools
 import math
-ds = tf.contrib.distributions
 from tensorflow_probability.python.mcmc import sample_chain, HamiltonianMonteCarlo, TransformedTransitionKernel
 from tensorflow_probability.python import distributions  as tfd
 from  tensorflow_probability.python import bijectors as tfb
@@ -34,13 +37,14 @@ import warnings
 # varm := the variance of the Gaussian process
 
 class BayesianGP():
-	def __init__(self, inputs, outputs, kernel_type, noise_level = 1e-3):
+	def __init__(self, inputs, outputs, kernel_type, noise_level = 1e-3, hyp_priors = {}):
 		# Inputs:
 		#	inputs := numpy array of inputs
 		# 	outpust:= numpy array of outputs
 		# kernel_type := string specifying the type of kernel to be used. Options are
 		#                'RBF', 'Matern12', 'Matern32', 'Matern52'
 		# noise_level := value for the noise variance of the output
+		# hyp_priors := dictionary containing information about the prior distribution of the hyperparamters
 
 		#------- Storing training data-------------
 		if len(inputs.shape) == 1:
@@ -54,13 +58,55 @@ class BayesianGP():
 
 		#------ Priors for the Gaussian process model-----------
 		# Priors on the inverse lengthscale
-		self.rv_beta = tfd.Independent(tfd.Gamma(concentration = tf.ones(self.dim_input, tf.float32), rate = tf.ones(self.dim_input, tf.float32)),
+		if 'beta' in hyp_priors:
+		    try:
+		        concentration = tf.convert_to_tensor(hyp_priors['beta']['concentration'],tf.float32)
+		        rate = tf.convert_to_tensor(hyp_priors['beta']['rate'],tf.float32)
+		    except Exception as e:
+		        traceback.print_exc()
+		        print('Could not retrieve prior distibution information for beta.')
+		    conc_shape = np.array(concentration.shape)
+		    rate_shape = np.array(rate.shape)
+		    correct_shape = np.array([self.dim_input])
+		    invalid = not(np.array_equal(conc_shape, correct_shape)) or not(np.array_equal(rate_shape, correct_shape))
+		    if invalid:
+		        raise Exception('Incorrect numpy array shape for rate or concentration for beta hyperparameter.')
+		else:
+		    concentration = tf.ones(self.dim_input, tf.float32)
+		    rate = tf.ones(self.dim_input, tf.float32)
+		self.rv_beta = tfd.Independent(tfd.Gamma(concentration = concentration, rate = rate),
                            reinterpreted_batch_ndims=1, name='rv_beta')
 
 		# prior on the mean
-		self.rv_loc = tfd.Normal(loc = 0.0, scale = 0.5, name = 'rv_loc')
+		if 'loc' in hyp_priors:
+		    try:
+		        loc = tf.convert_to_tensor(hyp_priors['loc']['loc'],tf.float32)
+		        scale = tf.convert_to_tensor(hyp_priors['loc']['scale'],tf.float32)
+		    except Exception as e:
+		        traceback.print_exc()
+		        print('Could not retrieve prior distibution information for loc.')
+		    invalid = not(type(loc) == float) or not(type(scale) == float)
+		    if invalid:
+		        raise Exception('Incorrect type for loc or scale for loc hyperparameter. Values must be of type float.')
+		else:
+		    loc = 0.0
+		    scale = 0.5
+		self.rv_loc = tfd.Normal(loc = loc, scale = scale, name = 'rv_loc')
 
 		# prior on the variance
+		if 'varm' in hyp_priors:
+		    try:
+		        concentration = hyp_priors['varm']['concentration']
+		        rate = hyp_priors['varm']['rate']
+		    except Exception as e:
+		        traceback.print_exc()
+		        print('Could not retrieve prior distibution information for varm.')
+		    invalid = not(type(concentration) == float) or not(type(rate) == float)
+		    if invalid:
+		        raise Exception('Incorrect type for rate or concentration for varc hyperparameter. Values must be of type float.')
+		else:
+		    concentration = 2.0
+		    rate = 2.0
 		self.rv_varm = tfd.Gamma(concentration = 1.0, rate = 1.0,  name = 'rv_varm')
 
 		# prior on the noise variance
@@ -71,7 +117,7 @@ class BayesianGP():
 
 		self.jitter_level = 1e-6 # jitter level to deal with numerical instability with cholesky factorization
 
-		self.kernel, self.aug_kernel = kernel_mapping[kernel_type]
+		self.kernel, self.expected_kernel = kernel_mapping[kernel_type]
 
 		return
 
@@ -86,9 +132,8 @@ class BayesianGP():
 		Cov_train = varm*Kxx + (noise + self.jitter_level)*tf.eye(self.n_train)
 
 		#-------- Computing the cholesky factor ------------
-		Cov_temp = tf.cast(Cov_train, tf.float64)
-		L_temp = tf.cholesky(Cov_temp)
-		L = tf.cast(L_temp, tf.float32)
+		L= tf.linalg.cholesky(Cov_train)
+
 
 
 		#---- Multivariate normal random variable for the combined outputs -----
@@ -223,6 +268,7 @@ class BayesianGP():
 			loc_samples
 		], kernel_results = sample_chain(num_results= mcmc_samples, num_burnin_steps= num_burnin_steps,
 																current_state=initial_state,
+																num_steps_between_results = 4,
 																kernel= TransformedTransitionKernel(
 																	inner_kernel= HamiltonianMonteCarlo(
 			    																target_log_prob_fn=unnormalized_posterior_log_prob,
@@ -333,7 +379,7 @@ class BayesianGP():
 			beta_probs,
 			varm_probs,
 			loc_probs
-		], em_kernel_results = sample_chain(num_results= 10, num_burnin_steps= 10,
+		], em_kernel_results = sample_chain(num_results= 10, num_burnin_steps= 0,
 																current_state=current_state,
 																kernel= TransformedTransitionKernel(
 																	inner_kernel= HamiltonianMonteCarlo(
@@ -348,7 +394,7 @@ class BayesianGP():
 		varm_update2 = varm_cur.assign(tf.reduce_mean(varm_probs, axis = 0))
 		loc_update2 = loc_cur.assign(tf.reduce_mean(loc_probs, axis = 0))
 
-		expectation_update = tf.group([beta_update1, varm_update1,loc_update1])
+		expectation_update = tf.group([beta_update2, varm_update2,loc_update2])
 
 		#-- Set up M-step (updating noise variance)
 		with tf.control_dependencies([expectation_update]):
@@ -466,7 +512,7 @@ class BayesianGP():
 		# ------- generate covariance matrix for training data and computing the corresponding cholesky factor
 		Kxx = self.kernel(self.Xtrain, self.Xtrain, beta)
 		Cov_train = varm*Kxx +  (self.noise + self.jitter_level)*tf.eye(self.n_train)
-		L = tf.cholesky(Cov_train)
+		L = tf.linalg.cholesky(Cov_train)
 
 		#-------- generate covariance matrix for test data
 		n_test = Xtest.shape[0].value
@@ -575,47 +621,34 @@ class BayesianGP():
 		return mean_and_var
 
 
-	def expected_PosteriormeanVariance(self, X, L, hyperpars):
+	def expected_PosteriormeanVariance(self, X, L, hyperpars, K_expected):
 		# This is needed for computing the main effecs and interactions
 		# Inputs:
-		#	X:= is a 3-dimensional array
+		#	X:= is a 2-dimensional array
 		#	L:= Cholesky factor of the Covariance matrix of the training data
 		# hyperpars := list of values for the kernel hyperparameters (of the form [beta, varm, loc])
-		n_blocks = X.shape[0].value
+		# K_expected := expected value for the stationary kernel
 
 		beta, varm, loc = hyperpars
 
-		Xm, Xk1, Xk2 = tf.split(X,num_or_size_splits = 3, axis = 2)
+		Cov_test_expected = varm*K_expected
 
+		Kx3 = self.kernel(self.Xtrain, X, beta)
 
-		Kx2 = self.aug_kernel(Xk1, Xk2, beta, diag = True)
-		Cov_test_expected = varm*tf.reduce_mean(Kx2, axis = 1)
-
-		#------- covariance between test data and simulation training data
-		Xtrain_tiled = tf.tile(self.Xtrain[tf.newaxis,:,:], [n_blocks,1,1])
-
-
-		Kx3 = self.aug_kernel(Xtrain_tiled, Xm, beta)
-
-		Cov_mixed_expected = varm*tf.reduce_mean(Kx3, axis = -1)
-		Cov_mixed_expected = tf.transpose(Cov_mixed_expected)
+		Cov_mixed_expected =  varm*tf.reduce_mean(Kx3, axis = -1, keepdims = True)
 
 		Y = self.Ytrain[:, tf.newaxis] - loc
 
-
 		mean, var = posterior_Gaussian(L, Cov_mixed_expected, Cov_test_expected, Y, False)
-		var = tf.maximum(var, 1e-30)
-
+		var = tf.maximum(var, 1e-40)
 
 		mean_and_var = tf.concat([mean, var], axis = 1)
+		mean_and_var = tf.reshape(mean_and_var, [2])
 
 		return mean_and_var
 
 
-
-
-
-	def expected_predict_posterior(self, Xnew, hyperpar_samples, devices_list):
+	def expected_predict_posterior(self, sampling_dict, hyperpar_samples):
 		# function used to compute the mean and variance of main effect Gaussian processes
 		# These are Gaussian processes of the form
 		#          E[Y|X_i]
@@ -624,37 +657,57 @@ class BayesianGP():
 		# the variables are assumed to have uniform distributions. The integrals involved
 		# in the computation are approximated with Monte Carlo integration
 		# Inputs:
-		# Xnew := 4-dimensional numpy array containing the input samples
+		# sampling_dict := dictionary containing  input samples and ifnormation about the samples
 		# hyperpar_samples := list (of the form [loc_samples, varm_samples, beta_samples]) of numpy arrays containing samples for the hyperparameters
-		# devices_list := list of GPU devices available for the computation. This helps with parallelizing the computation.
 
 		loc_samples, varm_samples, beta_samples = hyperpar_samples
-		beta = tf.convert_to_tensor(np.median(beta_samples, axis =0), tf.float32)
-		varm = tf.convert_to_tensor(np.median(varm_samples,axis =0), tf.float32)
-		loc = tf.convert_to_tensor(np.median(loc_samples, axis =0), tf.float32)
+		beta_median = np.median(beta_samples, axis =0)
+		varm_median = np.median(varm_samples,axis =0)
+		loc_median = np.median(loc_samples, axis =0)
+		beta = tf.convert_to_tensor(beta_median, tf.float32)
+		varm = tf.convert_to_tensor(varm_median, tf.float32)
+		loc = tf.convert_to_tensor(loc_median, tf.float32)
 		hyperpars = [beta, varm, loc]
 
 		# ------- generate covariance matrix for training data and computing the corresponding cholesky factor
 		Kxx = self.kernel(self.Xtrain, self.Xtrain, beta)
 
 		Cov_train = varm*Kxx + (self.noise+self.jitter_level)*tf.eye(self.n_train)
-		L = tf.cholesky(Cov_train)
+		L = tf.linalg.cholesky(Cov_train)
+		K_expected = tf.Variable(1.0, name = 'K_expected')
+		f = lambda Xin: self.expected_PosteriormeanVariance(Xin, L, hyperpars, K_expected)
 
 
-		f = lambda Xin: self.expected_PosteriormeanVariance(Xin, L, hyperpars)
-
-		n_devices = len(devices_list)
-		X_list = np.array_split(Xnew, n_devices, axis = 0)
-		results = []
-		for i in range(n_devices):
-			d = devices_list[i]
-			with tf.device(d):
-				results.append(tf.map_fn(f, tf.convert_to_tensor(X_list[i], tf.float32), swap_memory = False))
+		k = list(sampling_dict.keys())[0]
+		grid_points, num_samples1, _ = sampling_dict[k]['X_sampling'].shape
+		num_samples2, _ = sampling_dict[k]['diff_samples'].shape
+		n_input = self.dim_input
+		indices = set([ i for i in range(n_input)])
+		beta_slice = tf.placeholder(tf.float32, shape = [1,n_input], name = 'beta_slice')
+		diff_samples = tf.placeholder(tf.float32, shape = [num_samples2, n_input], name = 'diff_samples')
+		Xin  = tf.placeholder(tf.float32, shape = [grid_points, num_samples1, n_input], name =  'Xin')
+		K_expected_new = self.expected_kernel(diff_samples, beta_slice)
+		K_expected_update = K_expected.assign(K_expected_new)
+		with tf.control_dependencies([K_expected_update]):
+			results = tf.map_fn(f,Xin)
+		collect_results = {}
+		init = tf.global_variables_initializer()
 		with tf.Session() as sess:
-			results_ = sess.run([results[i] for i in range(n_devices)])
-		results_= np.concatenate(results_, axis = 0)
-		return results_
+			sess.run(init)
+			for i in sampling_dict.keys():
+				ids = sampling_dict[i]['fixed_indices_list']
+				ids_left = list(indices - set(ids))
+				ids_left.sort()
+				pad_size = len(ids)
+				diff_samples_batch = sampling_dict[i]['diff_samples']
+				diff_samples_batch = np.pad(diff_samples_batch, ((0,0), (0, pad_size)), mode = 'constant')
+				Xbatch = sampling_dict[i]['X_sampling']
+				beta_input = beta_median[ids_left]
+				beta_input = np.pad(beta_input[None,:], ((0,0),(0, pad_size)), mode = 'constant')
 
+				_, collect_results[i]= sess.run([K_expected_update,results], feed_dict={beta_slice: beta_input, diff_samples: diff_samples_batch, Xin: Xbatch})
+
+		return collect_results
 
 
 
@@ -676,7 +729,7 @@ class BayesianGP():
 		Kxx = self.kernel(self.Xtrain, self.Xtrain, beta)
 
 		Cov_train = varm*Kxx + (self.noise+self.jitter_level)*tf.eye(self.n_train)
-		L = tf.cholesky(Cov_train)
+		L = tf.linalg.cholesky(Cov_train)
 
 		results = self.full_PosteriormeanVariance(X, L, hyperpars)
 
