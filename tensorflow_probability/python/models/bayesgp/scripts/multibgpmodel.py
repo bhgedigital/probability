@@ -119,7 +119,7 @@ class MultiBGP_model():
         self.n_latent = Wmix.shape[1]
 
 
-        self.model = multibayesiangp.MultiBayesianGp(inputs = Xnorm, outputs = Ynorm, Wmix_init = Wmix,
+        self.model = multibayesiangp.MultiBayesianGP(inputs = Xnorm, outputs = Ynorm, Wmix_init = Wmix,
                                                     noise_level = noise_level, kernel_type = self.kernel_type, hyp_priors = hyp_priors) # initializing internal GP model
 
         # Bounds needed for sensitivity analysis

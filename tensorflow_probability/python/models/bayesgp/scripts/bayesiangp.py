@@ -59,54 +59,54 @@ class BayesianGP():
 		#------ Priors for the Gaussian process model-----------
 		# Priors on the inverse lengthscale
 		if 'beta' in hyp_priors:
-            try:
-                concentration = tf.convert_to_tensor(hyp_priors['beta']['concentration'],tf.float32)
-                rate = tf.convert_to_tensor(hyp_priors['beta']['rate'],tf.float32)
-            except Exception as e:
-                traceback.print_exc()
-                print('Could not retrieve prior distibution information for beta.')
-            conc_shape = np.array(concentration.shape)
-            rate_shape = np.array(rate.shape)
-            correct_shape = np.array([self.dim_input])
-            invalid = not(np.array_equal(conc_shape, correct_shape)) or not(np.array_equal(rate_shape, correct_shape))
-            if invalid:
-                raise Exception('Incorrect numpy array shape for rate or concentration for beta hyperparameter.')
-        else:
-            concentration = tf.ones(self.dim_input, tf.float32)
-            rate = tf.ones([self.n_latent, self.dim_input])
+		    try:
+		        concentration = tf.convert_to_tensor(hyp_priors['beta']['concentration'],tf.float32)
+		        rate = tf.convert_to_tensor(hyp_priors['beta']['rate'],tf.float32)
+		    except Exception as e:
+		        traceback.print_exc()
+		        print('Could not retrieve prior distibution information for beta.')
+		    conc_shape = np.array(concentration.shape)
+		    rate_shape = np.array(rate.shape)
+		    correct_shape = np.array([self.dim_input])
+		    invalid = not(np.array_equal(conc_shape, correct_shape)) or not(np.array_equal(rate_shape, correct_shape))
+		    if invalid:
+		        raise Exception('Incorrect numpy array shape for rate or concentration for beta hyperparameter.')
+		else:
+		    concentration = tf.ones(self.dim_input, tf.float32)
+		    rate = tf.ones(self.dim_input, tf.float32)
 		self.rv_beta = tfd.Independent(tfd.Gamma(concentration = concentration, rate = rate),
                            reinterpreted_batch_ndims=1, name='rv_beta')
 
 		# prior on the mean
 		if 'loc' in hyp_priors:
-            try:
-                loc = tf.convert_to_tensor(hyp_priors['loc']['loc'],tf.float32)
-                scale = tf.convert_to_tensor(hyp_priors['loc']['scale'],tf.float32)
-            except Exception as e:
-                traceback.print_exc()
-                print('Could not retrieve prior distibution information for loc.')
-            invalid = not(type(loc) == float) or not(type(scale) == float)
-            if invalid:
-                raise Exception('Incorrect type for loc or scale for loc hyperparameter. Values must be of type float.')
-        else:
-            loc = 0.0
-            scale = 0.5
+		    try:
+		        loc = tf.convert_to_tensor(hyp_priors['loc']['loc'],tf.float32)
+		        scale = tf.convert_to_tensor(hyp_priors['loc']['scale'],tf.float32)
+		    except Exception as e:
+		        traceback.print_exc()
+		        print('Could not retrieve prior distibution information for loc.')
+		    invalid = not(type(loc) == float) or not(type(scale) == float)
+		    if invalid:
+		        raise Exception('Incorrect type for loc or scale for loc hyperparameter. Values must be of type float.')
+		else:
+		    loc = 0.0
+		    scale = 0.5
 		self.rv_loc = tfd.Normal(loc = loc, scale = scale, name = 'rv_loc')
 
 		# prior on the variance
 		if 'varm' in hyp_priors:
-            try:
-                concentration = hyp_priors['varm']['concentration']
-                rate = hyp_priors['varm']['rate']
-            except Exception as e:
-                traceback.print_exc()
-                print('Could not retrieve prior distibution information for varm.')
-            invalid = not(type(concentration) == float) or not(type(rate) == float)
-            if invalid:
-                raise Exception('Incorrect type for rate or concentration for varc hyperparameter. Values must be of type float.')
-        else:
-            concentration = 2.0
-            rate = 2.0
+		    try:
+		        concentration = hyp_priors['varm']['concentration']
+		        rate = hyp_priors['varm']['rate']
+		    except Exception as e:
+		        traceback.print_exc()
+		        print('Could not retrieve prior distibution information for varm.')
+		    invalid = not(type(concentration) == float) or not(type(rate) == float)
+		    if invalid:
+		        raise Exception('Incorrect type for rate or concentration for varc hyperparameter. Values must be of type float.')
+		else:
+		    concentration = 2.0
+		    rate = 2.0
 		self.rv_varm = tfd.Gamma(concentration = 1.0, rate = 1.0,  name = 'rv_varm')
 
 		# prior on the noise variance

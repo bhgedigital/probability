@@ -41,7 +41,7 @@ import traceback
 # varm := array containing the variance of the latent Gaussian processes
 
 
-class MultiBayesianGp():
+class MultiBayesianGP():
 
     def __init__(self, inputs, outputs, Wmix_init, noise_level, kernel_type = 'RBF', hyp_priors = {}):
     	# inputs := N x D array of inputs
