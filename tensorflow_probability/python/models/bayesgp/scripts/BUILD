@@ -14,9 +14,12 @@ py_library(
     deps = [
         ":bayesiangp",
         ":bgpmodel",
+        ":multibayesiangp",
+        ":multibgpmodel"
         ":calibrationmodel",
         ":calibration",
         ":bgpkernels",
+        ":multigpkernels",
         ":bgputils",
         ":sensitivity",
     ],
@@ -43,6 +46,30 @@ py_library(
         "//tensorflow_probability/python/bijectors",
         "//tensorflow_probability/python/distributions",
         ":bgpkernels",
+        ":bgputils",
+    ],
+)
+
+py_library(
+    name = "multibgpmodel",
+    srcs = ["multibgpmodel.py"],
+    srcs_version = "PY2AND3",
+    deps = [
+        ":multibayesiangp",
+        ":sensitivity",
+        # matplotlib,
+    ],
+)
+
+
+py_library(
+    name = "multibayesiangp",
+    srcs = ["multibayesiangp.py"],
+    srcs_version = "PY2AND3",
+    deps = [
+        "//tensorflow_probability/python/bijectors",
+        "//tensorflow_probability/python/distributions",
+        ":multigpkernels",
         ":bgputils",
     ],
 )
@@ -75,6 +102,15 @@ py_library(
 py_library(
     name = "bgpkernels",
     srcs = ["bgpkernels.py"],
+    srcs_version = "PY2AND3",
+    deps = [
+        # tensorflow dep,
+    ],
+)
+
+py_library(
+    name = "multigpkernels",
+    srcs = ["multigpkernels.py"],
     srcs_version = "PY2AND3",
     deps = [
         # tensorflow dep,

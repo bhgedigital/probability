@@ -593,7 +593,7 @@ class Calibration_model():
             Z = z_intmean[k,:,:]*std_y + mean_y
             Zstd = z_intstd[k,:,:]*std_y
             X,  Y = np.meshgrid(x,y)
-            key = used_labels[j1] + ' || ' + used_labels[j2]
+            key = used_labels[j1] + '_&_' + used_labels[j2]
             X,  Y = np.meshgrid(x,y)
             interaction[key] = {}
             interaction[key]['input1'] = X
@@ -612,7 +612,7 @@ class Calibration_model():
             for k in range(n_pairs):
                 item = selected_pairs[k]
                 j1, j2 = item
-                key = used_labels[j1] + ' || ' + used_labels[j2]
+                key = used_labels[j1] + '_&_' + used_labels[j2]
                 X = interaction[key]['input1']
                 Y = interaction[key]['input2']
                 Z = interaction[key]['output_mean']

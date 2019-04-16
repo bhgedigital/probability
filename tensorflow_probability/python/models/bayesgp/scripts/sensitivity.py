@@ -336,5 +336,5 @@ def compute_Sobol(S,Q,key, labels):
         for item in subsets:
             l_item = generate_label(item, labels)
             S[l] -= S[l_item]
-    S[l] = max(S[l],0)
+    S[l] = np.maximum(S[l],0)
     return

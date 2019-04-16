@@ -457,7 +457,7 @@ class BGP_model():
             y = np.linspace(self.Range[j2,0],self.Range[j2,1],grid_points)
             Z = z_intmean[k,:,:]*std_y + mean_y
             Zstd = z_intstd[k,:,:]*std_y
-            key = self.labels[j1] + ' || ' + self.labels[j2]
+            key = self.labels[j1] + '_&_' + self.labels[j2]
             X,  Y = np.meshgrid(x,y)
             interaction[key] = {}
             interaction[key]['input1'] = X
@@ -476,7 +476,7 @@ class BGP_model():
             for k in range(n_pairs):
                 item = selected_pairs[k]
                 j1, j2 = item
-                key = self.labels[j1] + ' || ' + self.labels[j2]
+                key = self.labels[j1] + '_&_' + self.labels[j2]
                 X = interaction[key]['input1']
                 Y = interaction[key]['input2']
                 Z = interaction[key]['output_mean']

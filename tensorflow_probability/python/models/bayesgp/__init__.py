@@ -4,4 +4,4 @@ from __future__ import print_function
 
 
 
-from tensorflow_probability.python.models.bayesgp.scripts import BayesianGP, BGP_model, Calibration_model, Calibration
+from tensorflow_probability.python.models.bayesgp.scripts import BayesianGP, BGP_model, MultiBayesianGP, MultiBGP_model, Calibration_model, Calibration
