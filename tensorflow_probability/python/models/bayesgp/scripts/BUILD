@@ -15,7 +15,7 @@ py_library(
         ":bayesiangp",
         ":bgpmodel",
         ":multibayesiangp",
-        ":multibgpmodel"
+        ":multibgpmodel",
         ":calibrationmodel",
         ":calibration",
         ":bgpkernels",

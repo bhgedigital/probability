@@ -36,7 +36,7 @@ import math
 
 class BGP_model():
 
-    def __init__(self, inputs, outputs, model_info = None, kernel_type = 'RBF', noise_level = 1e-3, labels = []):
+    def __init__(self, inputs, outputs, model_info = None, kernel_type = 'RBF', noise_level = 1e-3, labels = [], hyp_priors = {}):
         # Inputs:
         #   inputs := N x D numpy array of inputs
         #   outputs := N-dimensional numpy vector of outputs
@@ -51,6 +51,7 @@ class BGP_model():
         #   noise_level := variance of the Gaussian noise for the normalized data
         #   labels:= list containing labels for the input variables. A default list is
         #           generated if this is not specified
+        # hyp_priors := dictionary containing information about the prior distribution of the hyperparamters
 
 
         if model_info:
