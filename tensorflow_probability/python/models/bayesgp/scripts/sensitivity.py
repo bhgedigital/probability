@@ -338,3 +338,58 @@ def compute_Sobol(S,Q,key, labels):
             S[l] -= S[l_item]
     S[l] = np.maximum(S[l],0)
     return
+
+
+def create_groups(partition, all_labels):
+    # Inputs:
+    #   partition = list of lists representing a partition of labels
+    #   all_labels = list of labels
+    # Output:
+    #   groups_map:= dictionary where each key gives a list containing the variable indices for a group
+    # Checking that the  partition is valid
+    combined = []
+    for entry in partition:
+        combined +=entry
+    cond1 = len(combined) == len(all_labels)
+    cond2 = set(combined) == set(all_labels)
+    if not(cond1 & cond2):
+        raise ValueError('Partition is not valid.')
+    groups_map = {}
+    n_g = len(partition)
+    for i in range(n_g):
+        groups_map[i] = []
+        for item in partition[i]:
+            idx = all_labels.index(item)
+            groups_map[i].append(idx)
+        groups_map[i].sort()
+    return groups_map
+
+
+def generate_group_label(group_subset):
+    # function used to generate group labels for group sobol indices
+    if len(group_subset) > 1:
+        target = ['G' + str(i) for i in group_subset]
+        return " || ".join(target)
+    else:
+        return 'G' + str(group_subset[0])
+
+def get_variable_indices_list(group_subset, groups_map):
+    # function use to retrieve all the variable indices for a subset of groups given the group mapping
+    idx_list = []
+    for i in group_subset:
+        idx_list += groups_map[i]
+    idx_list.sort()
+    return idx_list
+
+def compute_group_Sobol(S,Q,key):
+    # function used to compute the sobol indices recursively given a dictionary
+    # Q containing the values for the quotient variances
+    l = generate_group_label(list(key))
+    S[l] = Q[key]
+    if len(key) > 1:
+        subsets = powerset(list(key),1,len(key)-1)
+        for item in subsets:
+            l_item = generate_group_label(item)
+            S[l] -= S[l_item]
+    S[l] = np.maximum(S[l],0)
+    return

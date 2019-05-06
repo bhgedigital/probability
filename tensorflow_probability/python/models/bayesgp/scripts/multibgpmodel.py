@@ -369,7 +369,7 @@ class MultiBGP_model():
             return mean_pos, std_pos
 
     # Sensitivity analysis
-    def maineffect_and_interaction(self, grid_points = 30, nx_samples = None, directory_path1 = None, directory_path2 = None, create_plot = True):
+    def maineffect_and_interaction(self, grid_points = 30, nx_samples = None, directory_path1 = None, directory_path2 = None, create_plot = True, batch_size=10):
         # Computes  and generate main_effect function plots
         # Inputs:
         #   grid_points:= the number of grid poinst for the plots
@@ -414,7 +414,8 @@ class MultiBGP_model():
             y_main = sensitivity.mainEffect(self.model, self.Rangenorm, selected_vars, nx_samples, hyperpar_samples, grid_points)
         else:
             y_main = {}
-            vars_groups = np.array_split(selected_vars,6)
+            n_batches = D//batch_size
+            vars_groups = np.array_split(selected_vars,n_batches)
             completed = 0
             for group in vars_groups:
                 y_group = sensitivity.mainEffect(self.model, self.Rangenorm, group, nx_samples, hyperpar_samples, grid_points)
@@ -474,11 +475,12 @@ class MultiBGP_model():
                 selected_pairs.append([i,j])
         selected_pairs = np.array(selected_pairs)
         n_pairs = len(selected_pairs)
-        if n_pairs <= 6:
+        if n_pairs <= batch_size:
             y_int = sensitivity.mainInteraction(self.model, self.Rangenorm, selected_pairs, nx_samples, hyperpar_samples, grid_points)
         else:
             y_int = {}
-            pairs_groups = np.array_split(selected_pairs,6)
+            n_batches = n_pairs//batch_size
+            pairs_groups = np.array_split(selected_pairs,n_batches, axis=0)
             completed = 0
             for group in pairs_groups:
                 y_group = sensitivity.mainInteraction(self.model, self.Rangenorm, group, nx_samples, hyperpar_samples, grid_points)
@@ -567,7 +569,7 @@ class MultiBGP_model():
 
 
 
-    def sobol_indices(self,  max_order = 2, S = None, nx_samples = None, directory_path = None, create_plot = True):
+    def sobol_indices(self,  max_order = 2, S = None, nx_samples = None, directory_path = None, create_plot = True, batch_size=10):
         # Computes sobol indices and generate bar plot.
         # Inputs:
         #   Sobol_store := dictionary containing previously computed Sobol indices. The computation of
@@ -625,14 +627,14 @@ class MultiBGP_model():
             ybase = sensitivity.allEffect(self.model, self.Rangenorm, nx_samples, hyperpar_samples)
             ey_square = sensitivity.direct_samples(self.model, self.Rangenorm, nx_samples, hyperpar_samples)
             ey_square = np.reshape(ey_square,(M,nx_samples,2))
-            if n_subset <= 10:
+            if n_subset <= batch_size:
                 y_higher_order = sensitivity.mainHigherOrder(self.model, self.Rangenorm, subsets_list, nx_samples, hyperpar_samples)
             else:
                 y_higher_order = {}
                 completed = 0
-                n_groups = math.ceil(n_subset/10)
+                n_groups = math.ceil(n_subset/batch_size)
                 for i in range(n_groups):
-                    group = subsets_list[i*10:(i+1)*10]
+                    group = subsets_list[i*batch_size:(i+1)*batch_size]
                     y_group = sensitivity.mainHigherOrder(self.model, self.Rangenorm, group, nx_samples, hyperpar_samples)
                     completed += len(group)
                     progress = 100.0*completed/n_subset
@@ -686,7 +688,7 @@ class MultiBGP_model():
 
         return Sobol
 
-    def total_sobol_indices(self, nx_samples = None, directory_path = None, create_plot = True):
+    def total_sobol_indices(self, nx_samples = None, directory_path = None, create_plot = True, batch_size=10):
         # Computes total sobol indices and generate bar plot.
         # Inputs:
         #   nx_samples = the number of sample points for the Monte Carlo integration. Will default
@@ -722,16 +724,17 @@ class MultiBGP_model():
         ybase = sensitivity.allEffect(self.model, self.Rangenorm, nx_samples, hyperpar_samples)
         ey_square = sensitivity.direct_samples(self.model, self.Rangenorm, nx_samples, hyperpar_samples)
         ey_square = np.reshape(ey_square,(M,nx_samples,2))
-        if self.n_inputs  <= 6:
+        if D  <= 6:
             y_remaining  = sensitivity.compute_remaining_effect(self.model, self.Rangenorm, selected_vars, nx_samples, hyperpar_samples)
         else:
             y_remaining = {}
-            vars_groups = np.array_split(selected_vars,6)
+            n_batches = D//batch_size
+            vars_groups = np.array_split(selected_vars,n_batches)
             completed = 0
             for group in vars_groups:
                 y_group = sensitivity.compute_remaining_effect(self.model, self.Rangenorm, group, nx_samples, hyperpar_samples)
                 completed += len(group)
-                progress = 100.0*completed/n_vars
+                progress = 100.0*completed/D
                 print("Total Sobol indices computation: {:.2f}% complete".format(progress))
                 y_remaining.update(y_group)
 

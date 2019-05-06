@@ -107,7 +107,7 @@ class BayesianGP():
 		else:
 		    concentration = 2.0
 		    rate = 2.0
-		self.rv_varm = tfd.Gamma(concentration = 1.0, rate = 1.0,  name = 'rv_varm')
+		self.rv_varm = tfd.Gamma(concentration = concentration, rate = rate,  name = 'rv_varm')
 
 		# prior on the noise variance
 		self.rv_noise = tfd.LogNormal(loc = -6.9, scale = 1.5, name = 'rv_noise')

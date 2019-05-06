@@ -408,7 +408,7 @@ class Calibration_model():
             return main_results, sim_results, disc_results
 
     # Sensitivity analysis
-    def maineffect_and_interaction(self, type = 'simulator', grid_points = 30, nx_samples = None, directory_path1 = None, directory_path2 = None, create_plot = True):
+    def maineffect_and_interaction(self, type = 'simulator', grid_points = 30, nx_samples = None, directory_path1 = None, directory_path2 = None, create_plot = True, batch_size=10):
         # Computes  and generate main_effect function plots
         # Inputs:
         #   type := string that specifies for which gaussian process we are performing the sensitivity analysis.
@@ -470,11 +470,12 @@ class Calibration_model():
         selected_vars = [i for i in range(n_vars)]
         ybase = sensitivity.allEffect(self.model, used_Rangenorm, nx_samples, hyperpar_samples, par_samples, type)
 
-        if n_vars <= 6:
+        if n_vars <= batch_size:
             y_main = sensitivity.mainEffect(self.model, used_Rangenorm, selected_vars, nx_samples, hyperpar_samples, grid_points, par_samples, type)
         else:
             y_main = {}
-            vars_groups = np.array_split(selected_vars,6)
+            n_batches = n_vars//batch_size
+            vars_groups = np.array_split(selected_vars,n_batches)
             completed = 0
             for group in var_groups:
                 y_group = sensitivity.mainEffect(self.model, used_Rangenorm, group, nx_samples, hyperpar_samples, grid_points, par_samples, type)
@@ -546,23 +547,25 @@ class Calibration_model():
 
         #---------------------------------------------------------------------
         # Interaction effect
+        print("Starting interaction computations.")
         selected_pairs = []
         for i in range(n_vars-1):
             for j in range(i+1,n_vars):
                 selected_pairs.append([i,j])
         selected_pairs = np.array(selected_pairs)
         n_pairs = len(selected_pairs)
-        if n_pairs <= 6:
+        if n_pairs <= batch_size:
             y_int = sensitivity.mainInteraction(self.model, used_Rangenorm, selected_pairs, nx_samples, hyperpar_samples, grid_points, par_samples, type)
         else:
             y_int = {}
-            pairs_groups = np.array_split(selected_pairs,6)
+            n_batches = n_pairs//batch_size
+            pairs_groups = np.array_split(selected_pairs,n_batches,axis=0)
             completed = 0
             for group in pairs_groups:
                 y_group = sensitivity.mainInteraction(self.model, used_Rangenorm, group, nx_samples, hyperpar_samples, grid_points, par_samples, type)
                 completed += len(group)
                 progress = 100.0*completed/n_pairs
-                print("Main interaction computation: {:.2f}% complete".format(progress))
+                print("Interaction effect computation: {:.2f}% complete".format(progress))
                 y_int.update(y_group)
         z_intmean = np.zeros((n_pairs, grid_points, grid_points))
         z_intstd = np.zeros((n_pairs, grid_points, grid_points))
@@ -641,7 +644,7 @@ class Calibration_model():
 
         return main, interaction
 
-    def sobol_indices(self, type = 'simulator', max_order = 2, S = None, nx_samples = None, directory_path = None, create_plot = True):
+    def sobol_indices(self, type = 'simulator', max_order = 2, S = None, nx_samples = None, directory_path = None, create_plot = True, batch_size=10):
         # Computes sobol indices and generate bar plot.
         # Inputs:
         #   Sobol_store := dictionary containing previously computed Sobol indices. The computation of
@@ -719,14 +722,14 @@ class Calibration_model():
         if n_subset > 0:
             ybase = sensitivity.allEffect(self.model, used_Rangenorm, nx_samples, hyperpar_samples, par_samples, type)
             ey_square = sensitivity.direct_samples(self.model, used_Rangenorm, nx_samples, hyperpar_samples, par_samples, type)
-            if n_subset <= 10:
+            if n_subset <= batch_size:
                 y_higher_order = sensitivity.mainHigherOrder(self.model, used_Rangenorm, subsets_list, nx_samples, hyperpar_samples, par_samples, type)
             else:
                 y_higher_order = {}
                 completed = 0
-                n_groups = math.ceil(n_subset/10)
+                n_groups = math.ceil(n_subset/batch_size)
                 for i in range(n_groups):
-                    group = subsets_list[i*10:(i+1)*10]
+                    group = subsets_list[i*batch_size:(i+1)*batch_size]
                     y_group = sensitivity.mainHigherOrder(self.model, used_Rangenorm, group, nx_samples, hyperpar_samples, par_samples, type)
                     completed += len(group)
                     progress = 100.0*completed/n_subset
@@ -776,7 +779,7 @@ class Calibration_model():
 
         return Sobol
 
-    def total_sobol_indices(self, type = 'simulator', nx_samples = None, directory_path = None, create_plot = True):
+    def total_sobol_indices(self, type = 'simulator', nx_samples = None, directory_path = None, create_plot = True, batch_size=10):
         # Computes total sobol indices and generate bar plot.
         # Inputs:
         #   nx_samples = the number of sample points for the Monte Carlo integration. Will default
@@ -834,11 +837,12 @@ class Calibration_model():
         ey_square = sensitivity.direct_samples(self.model, used_Rangenorm, nx_samples, hyperpar_samples, par_samples, type)
         # y_remaining  = sensitivity.compute_remaining_effect(self.model, used_Rangenorm, selected_vars, nx_samples, hyperpar_samples, devices_list, par_samples, type)
 
-        if n_vars  <= 6:
+        if n_vars  <= batch_size:
             y_remaining  = sensitivity.compute_remaining_effect(self.model, used_Rangenorm, selected_vars, nx_samples, hyperpar_samples,60, par_samples, type)
         else:
             y_remaining = {}
-            vars_groups = np.array_split(selected_vars,6)
+            n_batches = n_vars//batch_size
+            vars_groups = np.array_split(selected_vars,n_batches)
             completed = 0
             for group in vars_groups:
                 y_group = sensitivity.compute_remaining_effect(self.model, used_Rangenorm, group, nx_samples, hyperpar_samples,60,par_samples, type)
