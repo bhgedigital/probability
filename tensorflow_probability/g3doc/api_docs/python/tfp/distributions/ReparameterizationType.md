@@ -9,9 +9,15 @@
 
 ## Class `ReparameterizationType`
 
-
-
 Instances of this class represent how sampling is reparameterized.
+
+
+
+
+
+Defined in [`python/internal/reparameterization.py`](https://github.com/tensorflow/probability/tree/master/tensorflow_probability/python/internal/reparameterization.py).
+
+<!-- Placeholder for "Used in" -->
 
 Two static instances exist in the distributions library, signifying
 one of two possible properties for samples from a distribution:
@@ -32,7 +38,7 @@ one of two possible properties for samples from a distribution:
 __init__(rep_type)
 ```
 
-
+Initialize self.  See help(type(self)) for accurate signature.
 
 
 

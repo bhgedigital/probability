@@ -5,18 +5,24 @@
 
 # tfp.trainable_distributions.multivariate_normal_tril
 
+Constructs a trainable `tfd.MultivariateNormalTriL` distribution.
+
 ``` python
 tfp.trainable_distributions.multivariate_normal_tril(
     x,
     dims,
-    layer_fn=tf.layers.dense,
+    layer_fn=tf.compat.v1.layers.dense,
     loc_fn=(lambda x: x),
     scale_fn=tfp.trainable_distributions.tril_with_diag_softplus_and_shift,
     name=None
 )
 ```
 
-Constructs a trainable `tfd.MultivariateNormalTriL` distribution.
+
+
+Defined in [`python/trainable_distributions/trainable_distributions_lib.py`](https://github.com/tensorflow/probability/tree/master/tensorflow_probability/python/trainable_distributions/trainable_distributions_lib.py).
+
+<!-- Placeholder for "Used in" -->
 
 This function creates a MultivariateNormal (MVN) with lower-triangular scale
 matrix. By default the MVN is parameterized via affine transformation of input
@@ -89,24 +95,24 @@ with tf.Session() as sess:
 #### Args:
 
 * <b>`x`</b>: `Tensor` with floating type. Must have statically defined rank and
-    statically known right-most dimension.
+  statically known right-most dimension.
 * <b>`dims`</b>: Scalar, `int`, `Tensor` indicated the MVN event size, i.e., the
-    created MVN will be distribution over length-`dims` vectors.
+  created MVN will be distribution over length-`dims` vectors.
 * <b>`layer_fn`</b>: Python `callable` which takes input `x` and `int` scalar `d` and
-    returns a transformation of `x` with shape
-    `tf.concat([tf.shape(x)[:-1], [d]], axis=0)`.
-    Default value: `tf.layers.dense`.
+  returns a transformation of `x` with shape
+  `tf.concat([tf.shape(x)[:-1], [d]], axis=0)`.
+  Default value: `tf.layers.dense`.
 * <b>`loc_fn`</b>: Python `callable` which transforms the `loc` parameter. Takes a
-    (batch of) length-`dims` vectors and returns a `Tensor` of same shape and
-    `dtype`.
-    Default value: `lambda x: x`.
+  (batch of) length-`dims` vectors and returns a `Tensor` of same shape and
+  `dtype`.
+  Default value: `lambda x: x`.
 * <b>`scale_fn`</b>: Python `callable` which transforms the `scale` parameters. Takes a
-    (batch of) length-`dims * (dims + 1) / 2` vectors and returns a
-    lower-triangular `Tensor` of same batch shape with rightmost dimensions
-    having shape `[dims, dims]`.
-    Default value: `tril_with_diag_softplus_and_shift`.
+  (batch of) length-`dims * (dims + 1) / 2` vectors and returns a
+  lower-triangular `Tensor` of same batch shape with rightmost dimensions
+  having shape `[dims, dims]`.
+  Default value: `tril_with_diag_softplus_and_shift`.
 * <b>`name`</b>: A `name_scope` name for operations created by this function.
-    Default value: `None` (i.e., "multivariate_normal_tril").
+  Default value: `None` (i.e., "multivariate_normal_tril").
 
 
 #### Returns:

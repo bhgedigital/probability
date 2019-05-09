@@ -25,9 +25,15 @@
 
 ## Class `Invert`
 
+Bijector which inverts another Bijector.
+
 Inherits From: [`Bijector`](../../tfp/bijectors/Bijector.md)
 
-Bijector which inverts another Bijector.
+
+
+Defined in [`python/bijectors/invert.py`](https://github.com/tensorflow/probability/tree/master/tensorflow_probability/python/bijectors/invert.py).
+
+<!-- Placeholder for "Used in" -->
 
 Example Use: [ExpGammaDistribution (see Background & Context)](
 https://reference.wolfram.com/language/ref/ExpGammaDistribution.html)
@@ -65,7 +71,7 @@ return -self.inverse_log_det_jacobian(y, **kwargs)
 
 * <b>`bijector`</b>: Bijector instance.
 * <b>`validate_args`</b>: Python `bool` indicating whether arguments should be
-    checked for correctness.
+  checked for correctness.
 * <b>`name`</b>: Python `str`, name given to ops managed by this object.
 
 
@@ -141,12 +147,12 @@ three different ways, depending on the input:
 * <b>`value`</b>: A `tfd.Distribution`, `tfb.Bijector`, or a `Tensor`.
 * <b>`name`</b>: Python `str` name given to ops created by this function.
 * <b>`**kwargs`</b>: Additional keyword arguments passed into the created
-    `tfd.TransformedDistribution`, `tfb.Bijector`, or `self.forward`.
+  `tfd.TransformedDistribution`, `tfb.Bijector`, or `self.forward`.
 
 
 #### Returns:
 
-* <b>`composition`</b>: A `tfd.TransformedDistribution` if the input was a
+  composition: A `tfd.TransformedDistribution` if the input was a
     `tfd.Distribution`, a `tfb.Chain` if the input was a `tfb.Bijector`, or
     a `Tensor` computed by `self.forward`.
 
@@ -177,7 +183,25 @@ tfb.Exp()([-1., 0., 1.])
 forward(x)
 ```
 
+Returns the forward `Bijector` evaluation, i.e., X = g(Y).
 
+#### Args:
+
+* <b>`x`</b>: `Tensor`. The input to the "forward" evaluation.
+* <b>`name`</b>: The name to give this op.
+* <b>`**kwargs`</b>: Named arguments forwarded to subclass implementation.
+
+
+#### Returns:
+
+`Tensor`.
+
+
+#### Raises:
+
+* <b>`TypeError`</b>: if `self.dtype` is specified and `x.dtype` is not
+  `self.dtype`.
+* <b>`NotImplementedError`</b>: if `_forward` is not implemented.
 
 <h3 id="forward_event_shape"><code>forward_event_shape</code></h3>
 
@@ -185,7 +209,20 @@ forward(x)
 forward_event_shape(input_shape)
 ```
 
+Shape of a single sample from a single batch as a `TensorShape`.
 
+Same meaning as `forward_event_shape_tensor`. May be only partially defined.
+
+#### Args:
+
+* <b>`input_shape`</b>: `TensorShape` indicating event-portion shape passed into
+  `forward` function.
+
+
+#### Returns:
+
+* <b>`forward_event_shape_tensor`</b>: `TensorShape` indicating event-portion shape
+  after applying `forward`. Possibly unknown.
 
 <h3 id="forward_event_shape_tensor"><code>forward_event_shape_tensor</code></h3>
 
@@ -193,7 +230,19 @@ forward_event_shape(input_shape)
 forward_event_shape_tensor(input_shape)
 ```
 
+Shape of a single sample from a single batch as an `int32` 1D `Tensor`.
 
+#### Args:
+
+* <b>`input_shape`</b>: `Tensor`, `int32` vector indicating event-portion shape
+  passed into `forward` function.
+* <b>`name`</b>: name to give to the op
+
+
+#### Returns:
+
+* <b>`forward_event_shape_tensor`</b>: `Tensor`, `int32` vector indicating
+  event-portion shape after applying `forward`.
 
 <h3 id="forward_log_det_jacobian"><code>forward_log_det_jacobian</code></h3>
 
@@ -204,7 +253,33 @@ forward_log_det_jacobian(
 )
 ```
 
+Returns both the forward_log_det_jacobian.
 
+#### Args:
+
+* <b>`x`</b>: `Tensor`. The input to the "forward" Jacobian determinant evaluation.
+* <b>`event_ndims`</b>: Number of dimensions in the probabilistic events being
+  transformed. Must be greater than or equal to
+  `self.forward_min_event_ndims`. The result is summed over the final
+  dimensions to produce a scalar Jacobian determinant for each event, i.e.
+  it has shape `rank(x) - event_ndims` dimensions.
+* <b>`name`</b>: The name to give this op.
+* <b>`**kwargs`</b>: Named arguments forwarded to subclass implementation.
+
+
+#### Returns:
+
+`Tensor`, if this bijector is injective.
+  If not injective this is not implemented.
+
+
+#### Raises:
+
+* <b>`TypeError`</b>: if `self.dtype` is specified and `y.dtype` is not
+  `self.dtype`.
+* <b>`NotImplementedError`</b>: if neither `_forward_log_det_jacobian`
+  nor {`_inverse`, `_inverse_log_det_jacobian`} are implemented, or
+  this is a non-injective bijector.
 
 <h3 id="inverse"><code>inverse</code></h3>
 
@@ -212,7 +287,27 @@ forward_log_det_jacobian(
 inverse(y)
 ```
 
+Returns the inverse `Bijector` evaluation, i.e., X = g^{-1}(Y).
 
+#### Args:
+
+* <b>`y`</b>: `Tensor`. The input to the "inverse" evaluation.
+* <b>`name`</b>: The name to give this op.
+* <b>`**kwargs`</b>: Named arguments forwarded to subclass implementation.
+
+
+#### Returns:
+
+`Tensor`, if this bijector is injective.
+  If not injective, returns the k-tuple containing the unique
+  `k` points `(x1, ..., xk)` such that `g(xi) = y`.
+
+
+#### Raises:
+
+* <b>`TypeError`</b>: if `self.dtype` is specified and `y.dtype` is not
+  `self.dtype`.
+* <b>`NotImplementedError`</b>: if `_inverse` is not implemented.
 
 <h3 id="inverse_event_shape"><code>inverse_event_shape</code></h3>
 
@@ -220,7 +315,20 @@ inverse(y)
 inverse_event_shape(output_shape)
 ```
 
+Shape of a single sample from a single batch as a `TensorShape`.
 
+Same meaning as `inverse_event_shape_tensor`. May be only partially defined.
+
+#### Args:
+
+* <b>`output_shape`</b>: `TensorShape` indicating event-portion shape passed into
+  `inverse` function.
+
+
+#### Returns:
+
+* <b>`inverse_event_shape_tensor`</b>: `TensorShape` indicating event-portion shape
+  after applying `inverse`. Possibly unknown.
 
 <h3 id="inverse_event_shape_tensor"><code>inverse_event_shape_tensor</code></h3>
 
@@ -228,7 +336,19 @@ inverse_event_shape(output_shape)
 inverse_event_shape_tensor(output_shape)
 ```
 
+Shape of a single sample from a single batch as an `int32` 1D `Tensor`.
 
+#### Args:
+
+* <b>`output_shape`</b>: `Tensor`, `int32` vector indicating event-portion shape
+  passed into `inverse` function.
+* <b>`name`</b>: name to give to the op
+
+
+#### Returns:
+
+* <b>`inverse_event_shape_tensor`</b>: `Tensor`, `int32` vector indicating
+  event-portion shape after applying `inverse`.
 
 <h3 id="inverse_log_det_jacobian"><code>inverse_log_det_jacobian</code></h3>
 
@@ -239,7 +359,38 @@ inverse_log_det_jacobian(
 )
 ```
 
+Returns the (log o det o Jacobian o inverse)(y).
 
+Mathematically, returns: `log(det(dX/dY))(Y)`. (Recall that: `X=g^{-1}(Y)`.)
+
+Note that `forward_log_det_jacobian` is the negative of this function,
+evaluated at `g^{-1}(y)`.
+
+#### Args:
+
+* <b>`y`</b>: `Tensor`. The input to the "inverse" Jacobian determinant evaluation.
+* <b>`event_ndims`</b>: Number of dimensions in the probabilistic events being
+  transformed. Must be greater than or equal to
+  `self.inverse_min_event_ndims`. The result is summed over the final
+  dimensions to produce a scalar Jacobian determinant for each event, i.e.
+  it has shape `rank(y) - event_ndims` dimensions.
+* <b>`name`</b>: The name to give this op.
+* <b>`**kwargs`</b>: Named arguments forwarded to subclass implementation.
+
+
+#### Returns:
+
+* <b>`ildj`</b>: `Tensor`, if this bijector is injective.
+  If not injective, returns the tuple of local log det
+  Jacobians, `log(det(Dg_i^{-1}(y)))`, where `g_i` is the restriction
+  of `g` to the `ith` partition `Di`.
+
+
+#### Raises:
+
+* <b>`TypeError`</b>: if `self.dtype` is specified and `y.dtype` is not
+  `self.dtype`.
+* <b>`NotImplementedError`</b>: if `_inverse_log_det_jacobian` is not implemented.
 
 
 

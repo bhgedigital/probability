@@ -18,7 +18,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import tensorflow as tf
+import tensorflow.compat.v2 as tf
 
 from tensorflow_probability.python.distributions import gaussian_process
 from tensorflow_probability.python.distributions import independent
@@ -39,8 +39,8 @@ def _add_diagonal_shift(matrix, shift):
 
 def _solve_cholesky_factored_system(
     cholesky_factor, rhs, name=None):
-  with tf.compat.v1.name_scope(name, '_solve_cholesky_factored_system',
-                               values=[cholesky_factor, rhs]) as scope:
+  with tf.name_scope(
+      name or '_solve_cholesky_factored_system') as scope:
     cholesky_factor = tf.convert_to_tensor(value=cholesky_factor,
                                            name='cholesky_factor')
     rhs = tf.convert_to_tensor(value=rhs, name='rhs')
@@ -50,14 +50,14 @@ def _solve_cholesky_factored_system(
 
 
 def _solve_cholesky_factored_system_vec(cholesky_factor, rhs, name=None):
-  with tf.compat.v1.name_scope(name, '_solve_cholesky_factored_system',
-                               values=[cholesky_factor, rhs]) as scope:
+  with tf.name_scope(
+      name or '_solve_cholesky_factored_system') as scope:
     cholesky_factor = tf.convert_to_tensor(
         value=cholesky_factor, name='cholesky_factor')
     rhs = tf.convert_to_tensor(value=rhs, name='rhs')
     lin_op = tf.linalg.LinearOperatorLowerTriangular(
         cholesky_factor, name=scope)
-    return lin_op.solvevec(lin_op.solvevec(rhs))
+    return lin_op.solvevec(lin_op.solvevec(rhs), adjoint=True)
 
 
 class VariationalGaussianProcess(
@@ -310,16 +310,18 @@ class VariationalGaussianProcess(
   train_op = optimizer.minimize(loss)
 
   num_iters = 10000
+  num_logs = 10
   with tf.Session() as sess:
-    batch_idxs = np.random.randint(num_training_points_, size=[batch_size])
-    x_train_batch_ = x_train_[batch_idxs, ...]
-    y_train_batch_ = y_train_[batch_idxs]
+    for i in range(num_iters):
+      batch_idxs = np.random.randint(num_training_points_, size=[batch_size])
+      x_train_batch_ = x_train_[batch_idxs, ...]
+      y_train_batch_ = y_train_[batch_idxs]
 
-    [_, loss_] = sess.run([train_op,loss],
-                          feed_dict={x_train_batch: x_train_batch_,
-                                     y_train_batch: y_train_batch_})
-    if i % (num_iters / 20) == 0:
-      print(i, loss_)
+      [_, loss_] = sess.run([train_op, loss],
+                            feed_dict={x_train_batch: x_train_batch_,
+                                       y_train_batch: y_train_batch_})
+      if i % (num_iters / num_logs) == 0 or i + 1 == num_iters:
+        print(i, loss_)
 
   # Generate a plot with
   #   - the posterior predictive mean
@@ -565,14 +567,8 @@ class VariationalGaussianProcess(
       ValueError: if `mean_fn` is not `None` and is not callable.
     """
     parameters = dict(locals())
-    with tf.compat.v1.name_scope(
-        name, 'VariationalGaussianProcess', values=[
-            index_points,
-            inducing_index_points,
-            variational_inducing_observations_loc,
-            variational_inducing_observations_scale,
-            observation_noise_variance,
-            jitter]) as name:
+    with tf.name_scope(
+        name or 'VariationalGaussianProcess') as name:
       dtype = dtype_util.common_dtype(
           [kernel,
            index_points,
@@ -629,13 +625,7 @@ class VariationalGaussianProcess(
       self._predictive_noise_variance = predictive_noise_variance
       self._jitter = jitter
 
-      with tf.compat.v1.name_scope(
-          'init', values=[index_points,
-                          inducing_index_points,
-                          variational_inducing_observations_loc,
-                          variational_inducing_observations_scale,
-                          observation_noise_variance,
-                          jitter]):
+      with tf.name_scope('init'):
         # We let t and z denote predictive and inducing index points, resp.
         kzz = _add_diagonal_shift(
             kernel.matrix(inducing_index_points, inducing_index_points),
@@ -778,11 +768,7 @@ class VariationalGaussianProcess(
          https://arxiv.org/abs/1309.6835
     """
 
-    with tf.compat.v1.name_scope(
-        name, 'variational_gp_loss', values=[
-            observations,
-            observation_index_points,
-            kl_weight]):
+    with tf.name_scope(name or 'variational_gp_loss'):
       if observation_index_points is None:
         observation_index_points = self._index_points
       observation_index_points = tf.convert_to_tensor(
@@ -921,12 +907,7 @@ class VariationalGaussianProcess(
          http://proceedings.mlr.press/v5/titsias09a/titsias09a.pdf
     """
 
-    with tf.compat.v1.name_scope(
-        name, 'optimal_variational_posterior',
-        values=[inducing_index_points,
-                observation_index_points,
-                observations,
-                observation_noise_variance]):
+    with tf.name_scope(name or 'optimal_variational_posterior'):
       dtype = dtype_util.common_dtype(
           [inducing_index_points,
            observation_index_points,

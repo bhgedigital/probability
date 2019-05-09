@@ -23,7 +23,6 @@ import functools
 
 
 import tensorflow as tf
-from tensorflow_probability.python.internal import dtype_util
 from tensorflow_probability.python.positive_semidefinite_kernels import positive_semidefinite_kernel as psd_kernel
 from tensorflow_probability.python.positive_semidefinite_kernels.internal import util
 
@@ -124,8 +123,8 @@ class Polynomial(psd_kernel.PositiveSemidefiniteKernel):
     """
     with tf.compat.v1.name_scope(
         name, values=[bias_variance, slope_variance, shift, exponent]):
-      dtype = dtype_util.common_dtype(
-          [bias_variance, slope_variance, shift, exponent], tf.float32)
+      dtype = util.maybe_get_common_dtype(
+          [bias_variance, slope_variance, shift, exponent])
       if bias_variance is not None:
         bias_variance = tf.convert_to_tensor(
             value=bias_variance, name='bias_variance', dtype=dtype)
@@ -144,9 +143,6 @@ class Polynomial(psd_kernel.PositiveSemidefiniteKernel):
             value=exponent, name='exponent', dtype=dtype)
       self._exponent = _validate_arg_if_not_none(
           exponent, tf.compat.v1.assert_positive, validate_args)
-      tf.debugging.assert_same_float_dtype([
-          self._bias_variance, self._slope_variance, self._shift, self._exponent
-      ])
     super(Polynomial, self).__init__(
         feature_ndims, dtype=dtype, name=name)
 
@@ -192,17 +188,17 @@ class Polynomial(psd_kernel.PositiveSemidefiniteKernel):
           ndims=self.feature_ndims)
 
     if self.exponent is not None:
-      exponent = util.pad_shape_right_with_ones(
+      exponent = util.pad_shape_with_ones(
           self.exponent, param_expansion_ndims)
       dot_prod **= exponent
 
     if self.slope_variance is not None:
-      slope_variance = util.pad_shape_right_with_ones(
+      slope_variance = util.pad_shape_with_ones(
           self.slope_variance, param_expansion_ndims)
       dot_prod *= slope_variance ** 2.
 
     if self.bias_variance is not None:
-      bias_variance = util.pad_shape_right_with_ones(
+      bias_variance = util.pad_shape_with_ones(
           self.bias_variance, param_expansion_ndims)
       dot_prod += bias_variance ** 2.
 

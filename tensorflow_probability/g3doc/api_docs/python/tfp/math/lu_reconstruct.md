@@ -5,6 +5,8 @@
 
 # tfp.math.lu_reconstruct
 
+The inverse LU decomposition, `X == lu_reconstruct(*tf.linalg.lu(X))`.
+
 ``` python
 tfp.math.lu_reconstruct(
     lower_upper,
@@ -14,24 +16,28 @@ tfp.math.lu_reconstruct(
 )
 ```
 
-The inverse LU decomposition, `X == lu_reconstruct(*tf.linalg.lu(X))`.
+
+
+Defined in [`python/math/linalg.py`](https://github.com/tensorflow/probability/tree/master/tensorflow_probability/python/math/linalg.py).
+
+<!-- Placeholder for "Used in" -->
 
 #### Args:
 
 * <b>`lower_upper`</b>: `lu` as returned by `tf.linalg.lu`, i.e., if
-    `matmul(P, matmul(L, U)) = X` then `lower_upper = L + U - eye`.
+  `matmul(P, matmul(L, U)) = X` then `lower_upper = L + U - eye`.
 * <b>`perm`</b>: `p` as returned by `tf.linag.lu`, i.e., if
-    `matmul(P, matmul(L, U)) = X` then `perm = argmax(P)`.
+  `matmul(P, matmul(L, U)) = X` then `perm = argmax(P)`.
 * <b>`validate_args`</b>: Python `bool` indicating whether arguments should be checked
-    for correctness.
-    Default value: `False` (i.e., don't validate arguments).
+  for correctness.
+  Default value: `False` (i.e., don't validate arguments).
 * <b>`name`</b>: Python `str` name given to ops managed by this object.
-    Default value: `None` (i.e., "lu_reconstruct").
+  Default value: `None` (i.e., "lu_reconstruct").
 
 
 #### Returns:
 
-* <b>`x`</b>: The original input to `tf.linalg.lu`, i.e., `x` as in,
+  x: The original input to `tf.linalg.lu`, i.e., `x` as in,
     `lu_reconstruct(*tf.linalg.lu(x))`.
 
 #### Examples

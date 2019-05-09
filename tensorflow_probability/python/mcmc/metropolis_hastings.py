@@ -25,7 +25,7 @@ import tensorflow as tf
 
 from tensorflow_probability.python import distributions
 from tensorflow_probability.python.mcmc import kernel as kernel_base
-from tensorflow_probability.python.mcmc import util as mcmc_util
+from tensorflow_probability.python.mcmc.internal import util as mcmc_util
 
 
 __all__ = [
@@ -81,7 +81,7 @@ class MetropolisHastings(kernel_base.TransitionKernel):
   Metropolis-Hastings algorithm, i.e.,
 
   ```none
-  accept_prob(x' | x) = p(x') / p(x) (g(x|x') / g(x|x'))
+  accept_prob(x' | x) = p(x') / p(x) (g(x|x') / g(x'|x))
 
   where,
     p  represents the target distribution,

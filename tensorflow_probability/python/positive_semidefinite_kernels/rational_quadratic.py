@@ -21,7 +21,6 @@ from __future__ import print_function
 import functools
 
 import tensorflow as tf
-from tensorflow_probability.python.internal import dtype_util
 from tensorflow_probability.python.positive_semidefinite_kernels import positive_semidefinite_kernel as psd_kernel
 from tensorflow_probability.python.positive_semidefinite_kernels.internal import util
 
@@ -111,8 +110,8 @@ class RationalQuadratic(psd_kernel.PositiveSemidefiniteKernel):
     """
     with tf.compat.v1.name_scope(
         name, values=[amplitude, scale_mixture_rate, length_scale]) as name:
-      dtype = dtype_util.common_dtype([
-          amplitude, scale_mixture_rate, length_scale], tf.float32)
+      dtype = util.maybe_get_common_dtype(
+          [amplitude, scale_mixture_rate, length_scale])
 
       if amplitude is not None:
         amplitude = tf.convert_to_tensor(
@@ -132,7 +131,8 @@ class RationalQuadratic(psd_kernel.PositiveSemidefiniteKernel):
       self._length_scale = _validate_arg_if_not_none(
           length_scale, tf.compat.v1.assert_positive, validate_args)
 
-    super(RationalQuadratic, self).__init__(feature_ndims, name)
+    super(RationalQuadratic, self).__init__(
+        feature_ndims, dtype=dtype, name=name)
 
   def _apply(self, x1, x2, param_expansion_ndims=0):
     difference = util.sum_rightmost_ndims_preserving_shape(
@@ -140,20 +140,20 @@ class RationalQuadratic(psd_kernel.PositiveSemidefiniteKernel):
     difference /= 2
 
     if self.length_scale is not None:
-      length_scale = util.pad_shape_right_with_ones(
+      length_scale = util.pad_shape_with_ones(
           self.length_scale, ndims=param_expansion_ndims)
       difference /= length_scale ** 2
 
     scale_mixture_rate = 1.
     if self.scale_mixture_rate is not None:
-      scale_mixture_rate = util.pad_shape_right_with_ones(
+      scale_mixture_rate = util.pad_shape_with_ones(
           self.scale_mixture_rate, ndims=param_expansion_ndims)
       difference /= scale_mixture_rate
 
     result = (1. + difference) ** -scale_mixture_rate
 
     if self.amplitude is not None:
-      amplitude = util.pad_shape_right_with_ones(
+      amplitude = util.pad_shape_with_ones(
           self.amplitude, ndims=param_expansion_ndims)
       result *= amplitude ** 2
     return result
@@ -175,7 +175,7 @@ class RationalQuadratic(psd_kernel.PositiveSemidefiniteKernel):
 
   def _batch_shape(self):
     shape_list = [
-        x.shape for x in [
+        x.shape for x in [  # pylint: disable=g-complex-comprehension
             self.amplitude,
             self.scale_mixture_rate,
             self.length_scale

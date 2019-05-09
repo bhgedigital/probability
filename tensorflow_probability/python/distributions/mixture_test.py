@@ -25,6 +25,8 @@ import numpy as np
 from scipy import stats
 import tensorflow as tf
 import tensorflow_probability as tfp
+
+from tensorflow_probability.python.internal import tensorshape_util
 from tensorflow_probability.python.internal import test_util as tfp_test_util
 from tensorflow.python.framework import test_util  # pylint: disable=g-direct-tensorflow-import
 
@@ -70,37 +72,36 @@ def _mixture_stddev_np(pi_vector, mu_vector, sigma_vector):
 
 @contextlib.contextmanager
 def _test_capture_mvndiag_sample_outputs():
-  """Use monkey-patching to capture the output of an MVNDiag _call_sample_n."""
+  """Use monkey-patching to capture the output of an MVNDiag sample."""
   data_container = []
-  true_mvndiag_call_sample_n = (tfd.MultivariateNormalDiag._call_sample_n)
+  true_mvndiag_sample = tfd.MultivariateNormalDiag.sample
 
-  def _capturing_mvndiag_call_sample_n(
-      self, sample_shape, seed, name, **kwargs):
-    samples = true_mvndiag_call_sample_n(
-        self, sample_shape, seed, name, **kwargs)
+  def _capturing_mvndiag_sample(
+      self, sample_shape=(), seed=None, name="sample", **kwargs):
+    samples = true_mvndiag_sample(self, sample_shape, seed, name, **kwargs)
     data_container.append(samples)
     return samples
 
-  tfd.MultivariateNormalDiag._call_sample_n = (_capturing_mvndiag_call_sample_n)
+  tfd.MultivariateNormalDiag.sample = _capturing_mvndiag_sample
   yield data_container
-  tfd.MultivariateNormalDiag._call_sample_n = (true_mvndiag_call_sample_n)
+  tfd.MultivariateNormalDiag.sample = true_mvndiag_sample
 
 
 @contextlib.contextmanager
 def _test_capture_normal_sample_outputs():
-  """Use monkey-patching to capture the output of an Normal _call_sample_n."""
+  """Use monkey-patching to capture the output of an Normal sample."""
   data_container = []
-  true_normal_call_sample_n = tfd.Normal._call_sample_n
+  true_normal_sample = tfd.Normal.sample
 
-  def _capturing_normal_call_sample_n(self, sample_shape, seed, name, **kwargs):
-    samples = true_normal_call_sample_n(
-        self, sample_shape, seed, name, **kwargs)
+  def _capturing_normal_sample(
+      self, sample_shape=(), seed=None, name="sample", **kwargs):
+    samples = true_normal_sample(self, sample_shape, seed, name, **kwargs)
     data_container.append(samples)
     return samples
 
-  tfd.Normal._call_sample_n = _capturing_normal_call_sample_n
+  tfd.Normal.sample = _capturing_normal_sample
   yield data_container
-  tfd.Normal._call_sample_n = true_normal_call_sample_n
+  tfd.Normal.sample = true_normal_sample
 
 
 def make_univariate_mixture(batch_shape, num_components, use_static_graph):
@@ -111,9 +112,8 @@ def make_univariate_mixture(batch_shape, num_components, use_static_graph):
       1,
       dtype=tf.float32) - 50.
   components = [
-      tfd.Normal(
-          loc=tf.random.normal(batch_shape),
-          scale=10 * tf.random.uniform(batch_shape))
+      tfd.Normal(loc=tf.random.normal(batch_shape),
+                 scale=10 * tf.random.uniform(batch_shape))
       for _ in range(num_components)
   ]
   cat = tfd.Categorical(logits, dtype=tf.int32)
@@ -131,7 +131,8 @@ def make_multivariate_mixture(batch_shape, num_components, event_shape,
       -1,
       1,
       dtype=tf.float32) - 50.
-  logits.set_shape(tf.TensorShape(batch_shape).concatenate(num_components))
+  tensorshape_util.set_shape(
+      logits, tensorshape_util.concatenate(batch_shape, num_components))
   static_batch_and_event_shape = (
       tf.TensorShape(batch_shape).concatenate(event_shape))
   event_shape = tf.convert_to_tensor(value=event_shape, dtype=tf.int32)
@@ -140,8 +141,8 @@ def make_multivariate_mixture(batch_shape, num_components, event_shape,
   def create_component():
     loc = tf.random.normal(batch_and_event_shape)
     scale_diag = 10 * tf.random.uniform(batch_and_event_shape)
-    loc.set_shape(static_batch_and_event_shape)
-    scale_diag.set_shape(static_batch_and_event_shape)
+    tensorshape_util.set_shape(loc, static_batch_and_event_shape)
+    tensorshape_util.set_shape(scale_diag, static_batch_and_event_shape)
     return tfd.MultivariateNormalDiag(loc=loc, scale_diag=scale_diag)
   components = [create_component() for _ in range(num_components)]
   cat = tfd.Categorical(logits, dtype=tf.int32)
@@ -648,7 +649,7 @@ class MixtureTest(tf.test.TestCase):
     if fully_known_batch_shape:
       self.assertEqual((5, 2, 3, 4), samples.shape)
     else:
-      self.assertEqual([5, None, 3, 4], samples.shape.as_list())
+      self.assertEqual([5, None, 3, 4], tensorshape_util.as_list(samples.shape))
     cat_samples = dist.cat.sample(n, seed=_set_seed(123))
     sample_values, cat_sample_values, dist_sample_values = self.evaluate(
         [samples, cat_samples, component_samples])
@@ -810,15 +811,6 @@ class MixtureTest(tf.test.TestCase):
         use_static_graph=self.use_static_graph)
     x_ = self.evaluate(gm.sample())
     self.assertAllEqual([], x_.shape)
-
-  # TODO(b/117098119): Remove tf.distribution references once they're gone.
-  def testBackwardsCompatibility(self):
-    tfd.Mixture(
-        cat=tf.compat.v1.distributions.Categorical(probs=[.3, .7]),
-        components=[
-            tf.compat.v1.distributions.Normal(1., 2.),
-            tf.compat.v1.distributions.Normal(2., 1.)
-        ])
 
 
 class MixtureStaticSampleTest(MixtureTest):

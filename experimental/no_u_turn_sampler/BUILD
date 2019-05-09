@@ -15,6 +15,8 @@
 # Description:
 #   TensorFlow Eager kernel for one No U-Turn Sampler trajectory.
 
+# [internal] load python3.bzl
+
 licenses(["notice"])  # Apache 2.0
 
 package(
@@ -28,6 +30,7 @@ exports_files(["LICENSE"])
 py_binary(
     name = "logistic_regression",
     srcs = ["logistic_regression.py"],
+    python_version = "PY2",
     srcs_version = "PY2AND3",
     deps = [":logistic_regression_lib"],
 )

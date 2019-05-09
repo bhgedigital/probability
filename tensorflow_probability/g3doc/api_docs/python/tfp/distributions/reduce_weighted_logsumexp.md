@@ -5,6 +5,8 @@
 
 # tfp.distributions.reduce_weighted_logsumexp
 
+Computes `log(abs(sum(weight * exp(elements across tensor dimensions))))`.
+
 ``` python
 tfp.distributions.reduce_weighted_logsumexp(
     logx,
@@ -16,7 +18,11 @@ tfp.distributions.reduce_weighted_logsumexp(
 )
 ```
 
-Computes `log(abs(sum(weight * exp(elements across tensor dimensions))))`.
+
+
+Defined in [`python/internal/distribution_util.py`](https://github.com/tensorflow/probability/tree/master/tensorflow_probability/python/internal/distribution_util.py).
+
+<!-- Placeholder for "Used in" -->
 
 If all weights `w` are known to be positive, it is more efficient to directly
 use `reduce_logsumexp`, i.e., `tf.reduce_logsumexp(logx + tf.log(w))` is more
@@ -34,7 +40,8 @@ This function is more numerically stable than log(sum(w * exp(input))). It
 avoids overflows caused by taking the exp of large inputs and underflows
 caused by taking the log of small inputs.
 
-For example:
+#### For example:
+
 
 ```python
 x = tf.constant([[0., 0, 0],
@@ -59,13 +66,14 @@ du.reduce_weighted_logsumexp(x, w, axis=[0, 1])
 # ==> log(-1+5)
 ```
 
+
 #### Args:
 
 * <b>`logx`</b>: The tensor to reduce. Should have numeric type.
 * <b>`w`</b>: The weight tensor. Should have numeric type identical to `logx`.
 * <b>`axis`</b>: The dimensions to reduce. If `None` (the default), reduces all
-    dimensions. Must be in the range `[-rank(input_tensor),
-    rank(input_tensor))`.
+  dimensions. Must be in the range `[-rank(input_tensor),
+  rank(input_tensor))`.
 * <b>`keep_dims`</b>: If true, retains reduced dimensions with length 1.
 * <b>`return_sign`</b>: If `True`, returns the sign of the result.
 * <b>`name`</b>: A name for the operation (optional).

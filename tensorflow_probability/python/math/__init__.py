@@ -18,16 +18,20 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+from tensorflow_probability.python.math import ode
 from tensorflow_probability.python.math.custom_gradient import custom_gradient
 from tensorflow_probability.python.math.diag_jacobian import diag_jacobian
 from tensorflow_probability.python.math.gradient import value_and_gradient
 from tensorflow_probability.python.math.interpolation import batch_interp_regular_1d_grid
+from tensorflow_probability.python.math.interpolation import batch_interp_regular_nd_grid
 from tensorflow_probability.python.math.interpolation import interp_regular_1d_grid
+from tensorflow_probability.python.math.linalg import cholesky_concat
 from tensorflow_probability.python.math.linalg import lu_matrix_inverse
 from tensorflow_probability.python.math.linalg import lu_reconstruct
 from tensorflow_probability.python.math.linalg import lu_solve
 from tensorflow_probability.python.math.linalg import matrix_rank
 from tensorflow_probability.python.math.linalg import pinv
+from tensorflow_probability.python.math.linalg import pivoted_cholesky
 from tensorflow_probability.python.math.linalg import sparse_or_dense_matmul
 from tensorflow_probability.python.math.linalg import sparse_or_dense_matvecmul
 from tensorflow_probability.python.math.numeric import clip_by_value_preserve_gradient
@@ -42,6 +46,8 @@ from tensorflow.python.util.all_util import remove_undocumented  # pylint: disab
 
 _allowed_symbols = [
     'batch_interp_regular_1d_grid',
+    'batch_interp_regular_nd_grid',
+    'cholesky_concat',
     'clip_by_value_preserve_gradient',
     'custom_gradient',
     'dense_to_sparse',
@@ -52,7 +58,9 @@ _allowed_symbols = [
     'lu_reconstruct',
     'lu_solve',
     'matrix_rank',
+    'ode',
     'pinv',
+    'pivoted_cholesky',
     'random_rademacher',
     'random_rayleigh',
     'secant_root',

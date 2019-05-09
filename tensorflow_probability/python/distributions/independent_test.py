@@ -25,6 +25,7 @@ import numpy as np
 import tensorflow as tf
 import tensorflow_probability as tfp
 
+from tensorflow_probability.python.internal import tensorshape_util
 from tensorflow_probability.python.internal import test_util as tfp_test_util
 from tensorflow.python.framework import test_util  # pylint: disable=g-direct-tensorflow-import,g-import-not-at-top
 
@@ -43,7 +44,7 @@ tfd = tfp.distributions
 
 
 @test_util.run_all_in_graph_and_eager_modes
-class ProductDistributionTest(tf.test.TestCase):
+class IndependentDistributionTest(tf.test.TestCase):
 
   def setUp(self):
     self._rng = np.random.RandomState(42)
@@ -155,8 +156,8 @@ class ProductDistributionTest(tf.test.TestCase):
             scale=tf.compat.v1.placeholder_with_default(input=1., shape=None)),
         reinterpreted_batch_ndims=1)
     # Even though `event_shape` is not static, event_ndims must equal
-    # `reinterpreted_batch_ndims + distribution.event_shape.ndims`.
-    self.assertEqual(ind.event_shape.ndims, 1)
+    # `reinterpreted_batch_ndims + rank(distribution.event_shape)`.
+    self.assertEqual(tensorshape_util.rank(ind.event_shape), 1)
 
   def testKLRaises(self):
     ind1 = tfd.Independent(
@@ -288,6 +289,67 @@ class ProductDistributionTest(tf.test.TestCase):
 
   def testMnistLikeDynamicShape(self):
     self._testMnistLike(static_shape=False)
+
+  def testSlicingScalarDistZeroReinterpretedDims(self):
+    """Verifies a failure scenario identified by hypothesis testing.
+
+    Calling self.copy(distribution=sliced_underlying) without explicitly
+    specifying reinterpreted_batch_ndims allowed the default fallback logic of
+    rank(underlying.batch_shape)-1 to take over, which we don't want in the
+    slice case.
+    """
+    d = tfd.Independent(tfd.Bernoulli(logits=0))
+    self.assertAllEqual([], d[...].batch_shape)
+    self.assertAllEqual([], d[...].event_shape)
+    self.assertAllEqual([1], d[tf.newaxis].batch_shape)
+    self.assertAllEqual([], d[tf.newaxis].event_shape)
+    self.assertAllEqual([1], d[..., tf.newaxis].batch_shape)
+    self.assertAllEqual([], d[..., tf.newaxis].event_shape)
+    self.assertAllEqual([1, 1], d[tf.newaxis, ..., tf.newaxis].batch_shape)
+    self.assertAllEqual([], d[tf.newaxis, ..., tf.newaxis].event_shape)
+
+  def testSlicingGeneral(self):
+    d = tfd.Independent(tfd.Bernoulli(logits=tf.zeros([5, 6])))
+    self.assertAllEqual([5], d.batch_shape)
+    self.assertAllEqual([6], d.event_shape)
+    self.assertAllEqual([1, 5], d[tf.newaxis].batch_shape)
+    self.assertAllEqual([6], d[tf.newaxis].event_shape)
+
+    d = tfd.Independent(tfd.Bernoulli(logits=tf.zeros([4, 5, 6])))
+    self.assertAllEqual([4], d.batch_shape)
+    self.assertAllEqual([5, 6], d.event_shape)
+    self.assertAllEqual([1, 3], d[tf.newaxis, ..., :3].batch_shape)
+    self.assertAllEqual([5, 6], d[tf.newaxis, ..., :3].event_shape)
+
+    d = tfd.Independent(tfd.Bernoulli(logits=tf.zeros([4, 5, 6])),
+                        reinterpreted_batch_ndims=1)
+    self.assertAllEqual([4, 5], d.batch_shape)
+    self.assertAllEqual([6], d.event_shape)
+    self.assertAllEqual([1, 4, 3], d[tf.newaxis, ..., :3].batch_shape)
+    self.assertAllEqual([6], d[tf.newaxis, ..., :3].event_shape)
+
+  def testSlicingSubclasses(self):
+    class IndepBern1d(tfd.Independent):
+
+      def __init__(self, logits):
+        super(IndepBern1d, self).__init__(tfd.Bernoulli(logits=logits,
+                                                        dtype=tf.float32),
+                                          reinterpreted_batch_ndims=1)
+        self._parameters = {"logits": logits}
+
+    d = IndepBern1d(tf.zeros([4, 5, 6]))
+    with self.assertRaisesRegexp(NotImplementedError,
+                                 "does not support batch slicing"):
+      d[:3]  # pylint: disable=pointless-statement
+
+    class IndepBern1dSliceable(IndepBern1d):
+
+      def _params_event_ndims(self):
+        return dict(logits=1)
+
+    d_sliceable = IndepBern1dSliceable(tf.zeros([4, 5, 6]))
+    self.assertAllEqual([3, 5], d_sliceable[:3].batch_shape)
+    self.assertAllEqual([6], d_sliceable[:3].event_shape)
 
 
 if __name__ == "__main__":

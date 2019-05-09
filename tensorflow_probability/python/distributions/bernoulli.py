@@ -18,11 +18,13 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import tensorflow as tf
+import tensorflow.compat.v2 as tf
+
 from tensorflow_probability.python.distributions import distribution
 from tensorflow_probability.python.distributions import kullback_leibler
-from tensorflow_probability.python.internal import distribution_util as util
+from tensorflow_probability.python.internal import distribution_util
 from tensorflow_probability.python.internal import reparameterization
+from tensorflow_probability.python.internal import tensorshape_util
 
 
 class Bernoulli(distribution.Distribution):
@@ -65,8 +67,8 @@ class Bernoulli(distribution.Distribution):
       ValueError: If p and logits are passed, or if neither are passed.
     """
     parameters = dict(locals())
-    with tf.compat.v1.name_scope(name) as name:
-      self._logits, self._probs = util.get_logits_and_probs(
+    with tf.name_scope(name) as name:
+      self._logits, self._probs = distribution_util.get_logits_and_probs(
           logits=logits,
           probs=probs,
           validate_args=validate_args,
@@ -84,7 +86,8 @@ class Bernoulli(distribution.Distribution):
   def _param_shapes(sample_shape):
     return {"logits": tf.convert_to_tensor(value=sample_shape, dtype=tf.int32)}
 
-  def _params_event_ndims(self):
+  @classmethod
+  def _params_event_ndims(cls):
     return dict(logits=0, probs=0)
 
   @property
@@ -117,7 +120,7 @@ class Bernoulli(distribution.Distribution):
 
   def _log_prob(self, event):
     if self.validate_args:
-      event = util.embed_check_integer_casting_closed(
+      event = distribution_util.embed_check_integer_casting_closed(
           event, target_dtype=tf.bool)
 
     # TODO(jaana): The current sigmoid_cross_entropy_with_logits has
@@ -131,8 +134,8 @@ class Bernoulli(distribution.Distribution):
       return (tf.ones_like(event) * logits,
               tf.ones_like(logits) * event)
 
-    if not (event.shape.is_fully_defined() and
-            logits.shape.is_fully_defined() and
+    if not (tensorshape_util.is_fully_defined(event.shape) and
+            tensorshape_util.is_fully_defined(logits.shape) and
             event.shape == logits.shape):
       logits, event = _broadcast(logits, event)
     return -tf.nn.sigmoid_cross_entropy_with_logits(labels=event, logits=logits)
@@ -152,9 +155,6 @@ class Bernoulli(distribution.Distribution):
     return tf.cast(self.probs > 0.5, self.dtype)
 
 
-# TODO(b/117098119): Remove tf.distribution references once they're gone.
-@kullback_leibler.RegisterKL(Bernoulli, tf.compat.v1.distributions.Bernoulli)
-@kullback_leibler.RegisterKL(tf.compat.v1.distributions.Bernoulli, Bernoulli)
 @kullback_leibler.RegisterKL(Bernoulli, Bernoulli)
 def _kl_bernoulli_bernoulli(a, b, name=None):
   """Calculate the batched KL divergence KL(a || b) with a and b Bernoulli.
@@ -168,8 +168,7 @@ def _kl_bernoulli_bernoulli(a, b, name=None):
   Returns:
     Batchwise KL(a || b)
   """
-  with tf.compat.v1.name_scope(
-      name, "kl_bernoulli_bernoulli", values=[a.logits, b.logits]):
+  with tf.name_scope(name or "kl_bernoulli_bernoulli"):
     delta_probs0 = tf.nn.softplus(-b.logits) - tf.nn.softplus(-a.logits)
     delta_probs1 = tf.nn.softplus(b.logits) - tf.nn.softplus(a.logits)
     return (tf.sigmoid(a.logits) * delta_probs0

@@ -5,15 +5,21 @@
 
 # tfp.trainable_distributions.bernoulli
 
+Constructs a trainable `tfd.Bernoulli` distribution.
+
 ``` python
 tfp.trainable_distributions.bernoulli(
     x,
-    layer_fn=tf.layers.dense,
+    layer_fn=tf.compat.v1.layers.dense,
     name=None
 )
 ```
 
-Constructs a trainable `tfd.Bernoulli` distribution.
+
+
+Defined in [`python/trainable_distributions/trainable_distributions_lib.py`](https://github.com/tensorflow/probability/tree/master/tensorflow_probability/python/trainable_distributions/trainable_distributions_lib.py).
+
+<!-- Placeholder for "Used in" -->
 
 This function creates a Bernoulli distribution parameterized by logits.
 Using default args, this function is mathematically equivalent to:
@@ -80,13 +86,13 @@ with tf.Session() as sess:
 #### Args:
 
 * <b>`x`</b>: `Tensor` with floating type. Must have statically defined rank and
-    statically known right-most dimension.
+  statically known right-most dimension.
 * <b>`layer_fn`</b>: Python `callable` which takes input `x` and `int` scalar `d` and
-    returns a transformation of `x` with shape
-    `tf.concat([tf.shape(x)[:-1], [1]], axis=0)`.
-    Default value: `tf.layers.dense`.
+  returns a transformation of `x` with shape
+  `tf.concat([tf.shape(x)[:-1], [1]], axis=0)`.
+  Default value: `tf.layers.dense`.
 * <b>`name`</b>: A `name_scope` name for operations created by this function.
-    Default value: `None` (i.e., "bernoulli").
+  Default value: `None` (i.e., "bernoulli").
 
 
 #### Returns:

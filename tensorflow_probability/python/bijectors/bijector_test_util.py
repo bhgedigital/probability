@@ -20,9 +20,13 @@ from __future__ import print_function
 
 # Dependency imports
 import numpy as np
-import tensorflow as tf
-from tensorflow_probability.python.bijectors import identity as identity_bijector
+
+import tensorflow.compat.v2 as tf
+
+from tensorflow_probability.python.bijectors import reshape as reshape_bijector
 from tensorflow_probability.python.distributions import uniform as uniform_distribution
+from tensorflow_probability.python.internal import dtype_util
+from tensorflow_probability.python.internal import tensorshape_util
 
 
 def assert_finite(array):
@@ -82,7 +86,7 @@ def assert_scalar_congruency(bijector,
   # Should be monotonic over this interval
   ten_x_pts = np.linspace(lower_x, upper_x, num=10).astype(np.float32)
   if bijector.dtype is not None:
-    ten_x_pts = ten_x_pts.astype(bijector.dtype.as_numpy_dtype)
+    ten_x_pts = ten_x_pts.astype(dtype_util.as_numpy_dtype(bijector.dtype))
   forward_on_10_pts = bijector.forward(ten_x_pts)
 
   # Set the lower/upper limits in the range of the bijector.
@@ -252,26 +256,31 @@ def get_fldj_theoretical(bijector,
   Args:
     bijector: the bijector whose Jacobian we wish to approximate
     x: the value for which we want to approximate the Jacobian.  x must have
-      a batch dimension for compatibility with tape.batch_jacobian.
+      a a single batch dimension for compatibility with tape.batch_jacobian.
     event_ndims: number of dimensions in an event
     input_to_unconstrained: bijector that maps the input to the above bijector
-      to an unconstrained 1-D vector.  If the inputs are already unconstrained
-      vectors, use None.
+      to an unconstrained 1-D vector.  If unspecified, flatten the input into
+      a 1-D vector according to its event_ndims.
     output_to_unconstrained: bijector that maps the output of the above bijector
-      to an unconstrained 1-D vector.  If the outputs are unconstrained
-      vectors, use None.
+      to an unconstrained 1-D vector.  If unspecified, flatten the input into
+      a 1-D vector according to its event_ndims.
 
   Returns:
     A numerical approximation to the log det Jacobian of bijector.forward
     evaluated at x.
   """
   if input_to_unconstrained is None:
-    input_to_unconstrained = identity_bijector.Identity()
+    input_to_unconstrained = reshape_bijector.Reshape(
+        event_shape_in=x.shape[tensorshape_util.rank(x.shape) - event_ndims:],
+        event_shape_out=[-1])
   if output_to_unconstrained is None:
-    output_to_unconstrained = identity_bijector.Identity()
+    output_to_unconstrained = reshape_bijector.Reshape(
+        event_shape_in=x.shape[tensorshape_util.rank(x.shape) - event_ndims:],
+        event_shape_out=[-1])
 
   x = tf.convert_to_tensor(value=x)
-  x_unconstrained = input_to_unconstrained.forward(x)
+  x_unconstrained = 1 * input_to_unconstrained.forward(x)
+
   with tf.GradientTape(persistent=True) as tape:
     tape.watch(x_unconstrained)
     f_x = bijector.forward(input_to_unconstrained.inverse(x_unconstrained))

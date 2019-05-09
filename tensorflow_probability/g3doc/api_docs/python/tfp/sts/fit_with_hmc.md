@@ -5,6 +5,8 @@
 
 # tfp.sts.fit_with_hmc
 
+Draw posterior samples using Hamiltonian Monte Carlo (HMC).
+
 ``` python
 tfp.sts.fit_with_hmc(
     model,
@@ -22,7 +24,11 @@ tfp.sts.fit_with_hmc(
 )
 ```
 
-Draw posterior samples using Hamiltonian Monte Carlo (HMC).
+
+
+Defined in [`python/sts/fitting.py`](https://github.com/tensorflow/probability/tree/master/tensorflow_probability/python/sts/fitting.py).
+
+<!-- Placeholder for "Used in" -->
 
 Markov chain Monte Carlo (MCMC) methods are considered the gold standard of
 Bayesian inference; under suitable conditions and in the limit of infinitely
@@ -43,57 +49,59 @@ which is thought to be in the desirable range for optimal mixing [2].
 #### Args:
 
 * <b>`model`</b>: An instance of `StructuralTimeSeries` representing a
-    time-series model. This represents a joint distribution over
-    time-series and their parameters with batch shape `[b1, ..., bN]`.
+  time-series model. This represents a joint distribution over
+  time-series and their parameters with batch shape `[b1, ..., bN]`.
 * <b>`observed_time_series`</b>: `float` `Tensor` of shape
-    `concat([sample_shape, model.batch_shape, [num_timesteps, 1]]) where
-    `sample_shape` corresponds to i.i.d. observations, and the trailing `[1]`
-    dimension may (optionally) be omitted if `num_timesteps > 1`.
+  `concat([sample_shape, model.batch_shape, [num_timesteps, 1]]) where
+  `sample_shape` corresponds to i.i.d. observations, and the trailing `[1]`
+  dimension may (optionally) be omitted if `num_timesteps > 1`. May
+  optionally be an instance of <a href="../../tfp/sts/MaskedTimeSeries.md"><code>tfp.sts.MaskedTimeSeries</code></a>, which includes
+  a mask `Tensor` to specify timesteps with missing observations.
 * <b>`num_results`</b>: Integer number of Markov chain draws.
-    Default value: `100`.
+  Default value: `100`.
 * <b>`num_warmup_steps`</b>: Integer number of steps to take before starting to
-    collect results. The warmup steps are also used to adapt the step size
-    towards a target acceptance rate of 0.75.
-    Default value: `50`.
+  collect results. The warmup steps are also used to adapt the step size
+  towards a target acceptance rate of 0.75.
+  Default value: `50`.
 * <b>`num_leapfrog_steps`</b>: Integer number of steps to run the leapfrog integrator
-    for. Total progress per HMC step is roughly proportional to
-    `step_size * num_leapfrog_steps`.
-    Default value: `15`.
+  for. Total progress per HMC step is roughly proportional to
+  `step_size * num_leapfrog_steps`.
+  Default value: `15`.
 * <b>`initial_state`</b>: Optional Python `list` of `Tensor`s, one for each model
-    parameter, representing the initial state(s) of the Markov chain(s). These
-    should have shape `concat([chain_batch_shape, param.prior.batch_shape,
-    param.prior.event_shape])`. If `None`, the initial state is set
-    automatically using a sample from a variational posterior.
-    Default value: `None`.
+  parameter, representing the initial state(s) of the Markov chain(s). These
+  should have shape `concat([chain_batch_shape, param.prior.batch_shape,
+  param.prior.event_shape])`. If `None`, the initial state is set
+  automatically using a sample from a variational posterior.
+  Default value: `None`.
 * <b>`initial_step_size`</b>: Python `list` of `Tensor`s, one for each model parameter,
-    representing the step size for the leapfrog integrator. Must
-    broadcast with the shape of `initial_state`. Larger step sizes lead to
-    faster progress, but too-large step sizes make rejection exponentially
-    more likely. If `None`, the step size is set automatically using the
-    standard deviation of a variational posterior.
-    Default value: `None`.
+  representing the step size for the leapfrog integrator. Must
+  broadcast with the shape of `initial_state`. Larger step sizes lead to
+  faster progress, but too-large step sizes make rejection exponentially
+  more likely. If `None`, the step size is set automatically using the
+  standard deviation of a variational posterior.
+  Default value: `None`.
 * <b>`chain_batch_shape`</b>: Batch shape (Python `tuple`, `list`, or `int`) of chains
-    to run in parallel.
-    Default value: `[]` (i.e., a single chain).
+  to run in parallel.
+  Default value: `[]` (i.e., a single chain).
 * <b>`num_variational_steps`</b>: Python `int` number of steps to run the variational
-    optimization to determine the initial state and step sizes.
-    Default value: `200`.
+  optimization to determine the initial state and step sizes.
+  Default value: `150`.
 * <b>`variational_optimizer`</b>: Optional `tf.train.Optimizer` instance to use in
-    the variational optimization. If `None`, defaults to
-    `tf.train.AdamOptimizer(0.1)`.
-    Default value: `None`.
+  the variational optimization. If `None`, defaults to
+  `tf.train.AdamOptimizer(0.1)`.
+  Default value: `None`.
 * <b>`seed`</b>: Python integer to seed the random number generator.
 * <b>`name`</b>: Python `str` name prefixed to ops created by this function.
-    Default value: `None` (i.e., 'fit_with_hmc').
+  Default value: `None` (i.e., 'fit_with_hmc').
 
 
 #### Returns:
 
-* <b>`samples`</b>: Python `list` of `Tensors` representing posterior samples of model
+  samples: Python `list` of `Tensors` representing posterior samples of model
     parameters, with shapes `[concat([[num_results], chain_batch_shape,
     param.prior.batch_shape, param.prior.event_shape]) for param in
     model.parameters]`.
-* <b>`kernel_results`</b>: A (possibly nested) `tuple`, `namedtuple` or `list` of
+  kernel_results: A (possibly nested) `tuple`, `namedtuple` or `list` of
     `Tensor`s representing internal calculations made within the HMC sampler.
 
 #### Examples
@@ -143,7 +151,7 @@ with tf.Session() as sess:
   samples_, kernel_results_ = sess.run((samples, kernel_results))
 
 print("acceptance rate: {}".format(
-  np.mean(kernel_results_.inner_results.is_accepted, axis=0)))
+  np.mean(kernel_results_.inner_results.inner_results.is_accepted, axis=0)))
 
 # Plot the sampled traces for each parameter. If the chains have mixed, their
 # traces should all cover the same region of state space, frequently crossing
@@ -173,14 +181,14 @@ incorporate constraints on the parameter space.
 
 ```python
 transformed_hmc_kernel = mcmc.TransformedTransitionKernel(
-    inner_kernel=mcmc.HamiltonianMonteCarlo(
-        target_log_prob_fn=model.joint_log_prob(observed_time_series),
-        step_size=step_size,
-        num_leapfrog_steps=num_leapfrog_steps,
-        step_size_update_fn=tfp.mcmc.make_simple_step_size_update_policy(
-          num_adaptation_steps=num_adaptation_steps),
-        state_gradients_are_stopped=True,
-        seed=seed),
+    inner_kernel=mcmc.SimpleStepSizeAdaptation(
+        inner_kernel=mcmc.HamiltonianMonteCarlo(
+            target_log_prob_fn=model.joint_log_prob(observed_time_series),
+            step_size=step_size,
+            num_leapfrog_steps=num_leapfrog_steps,
+            state_gradients_are_stopped=True,
+            seed=seed),
+        num_adaptation_steps = int(0.8 * num_warmup_steps)),
     bijector=[param.bijector for param in model.parameters])
 
 # Initialize from a Uniform[-2, 2] distribution in unconstrained space.

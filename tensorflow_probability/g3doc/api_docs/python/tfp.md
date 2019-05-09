@@ -2,18 +2,24 @@
 <meta itemprop="name" content="tfp" />
 <meta itemprop="path" content="Stable" />
 <meta itemprop="property" content="__version__"/>
-<meta itemprop="property" content="symbol"/>
 </div>
 
 # Module: tfp
 
 Tools for probabilistic reasoning in TensorFlow.
 
+
+
+Defined in [`__init__.py`](https://github.com/tensorflow/probability/tree/master/tensorflow_probability/__init__.py).
+
+<!-- Placeholder for "Used in" -->
+
+
 ## Modules
 
-[`bijectors`](./tfp/bijectors.md) module: Bijector Ops.
+[`bijectors`](./tfp/bijectors.md) module: Bijective transformations.
 
-[`distributions`](./tfp/distributions.md) module: Statistical distributions and bijective transformations.
+[`distributions`](./tfp/distributions.md) module: Statistical distributions.
 
 [`edward2`](./tfp/edward2.md) module: Edward2 probabilistic programming language.
 
@@ -44,6 +50,4 @@ Tools for probabilistic reasoning in TensorFlow.
 ## Other Members
 
 <h3 id="__version__"><code>__version__</code></h3>
-
-<h3 id="symbol"><code>symbol</code></h3>
 

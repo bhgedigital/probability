@@ -20,10 +20,12 @@ from __future__ import print_function
 
 # Dependency imports
 import numpy as np
-import tensorflow as tf
+import tensorflow.compat.v2 as tf
 
 from tensorflow_probability.python.distributions import distribution as distributions
+from tensorflow_probability.python.internal import assert_util
 from tensorflow_probability.python.internal import distribution_util
+from tensorflow_probability.python.internal import dtype_util
 from tensorflow_probability.python.internal import reparameterization
 
 
@@ -43,8 +45,7 @@ def _logsum_expbig_minus_expsmall(big, small):
   Returns:
     `Tensor` of same `dtype` of `big` and broadcast shape.
   """
-  with tf.compat.v1.name_scope(
-      "logsum_expbig_minus_expsmall", values=[small, big]):
+  with tf.name_scope("logsum_expbig_minus_expsmall"):
     return tf.math.log1p(-tf.exp(small - big)) + big
 
 
@@ -264,10 +265,7 @@ class QuantizedDistribution(distributions.Distribution):
       NotImplementedError:  If the base distribution does not implement `cdf`.
     """
     parameters = dict(locals())
-    values = (
-        list(distribution.parameters.values()) +
-        [low, high])
-    with tf.compat.v1.name_scope(name, values=values) as name:
+    with tf.name_scope(name) as name:
       self._dist = distribution
 
       if low is not None:
@@ -276,7 +274,7 @@ class QuantizedDistribution(distributions.Distribution):
       if high is not None:
         high = tf.convert_to_tensor(
             value=high, name="high", dtype=distribution.dtype)
-      tf.debugging.assert_same_float_dtype(
+      dtype_util.assert_same_float_dtype(
           tensors=[self.distribution, low, high])
 
       # We let QuantizedDistribution access _graph_parents since this class is
@@ -286,7 +284,7 @@ class QuantizedDistribution(distributions.Distribution):
       checks = []
       if validate_args and low is not None and high is not None:
         message = "low must be strictly less than high."
-        checks.append(tf.compat.v1.assert_less(low, high, message=message))
+        checks.append(assert_util.assert_less(low, high, message=message))
       self._validate_args = validate_args  # self._check_integer uses this.
       with tf.control_dependencies(checks if validate_args else []):
         if low is not None:
@@ -339,7 +337,7 @@ class QuantizedDistribution(distributions.Distribution):
   def _sample_n(self, n, seed=None):
     low = self._low
     high = self._high
-    with tf.compat.v1.name_scope("transform"):
+    with tf.name_scope("transform"):
       n = tf.convert_to_tensor(value=n, name="n")
       x_samps = self.distribution.sample(n, seed=seed)
       ones = tf.ones_like(x_samps)
@@ -553,7 +551,7 @@ class QuantizedDistribution(distributions.Distribution):
     return result_so_far
 
   def _check_integer(self, value):
-    with tf.compat.v1.name_scope("check_integer", values=[value]):
+    with tf.name_scope("check_integer"):
       value = tf.convert_to_tensor(value=value, name="value")
       if not self.validate_args:
         return value

@@ -21,9 +21,15 @@
 
 ## Class `ExponentiatedQuadratic`
 
+The ExponentiatedQuadratic kernel.
+
 Inherits From: [`PositiveSemidefiniteKernel`](../../tfp/positive_semidefinite_kernels/PositiveSemidefiniteKernel.md)
 
-The ExponentiatedQuadratic kernel.
+
+
+Defined in [`python/positive_semidefinite_kernels/exponentiated_quadratic.py`](https://github.com/tensorflow/probability/tree/master/tensorflow_probability/python/positive_semidefinite_kernels/exponentiated_quadratic.py).
+
+<!-- Placeholder for "Used in" -->
 
 Sometimes called the "squared exponential", "Gaussian" or "radial basis
 function", this kernel function has the form
@@ -51,16 +57,16 @@ Construct an ExponentiatedQuadratic kernel instance.
 #### Args:
 
 * <b>`amplitude`</b>: floating point `Tensor` that controls the maximum value
-    of the kernel. Must be broadcastable with `length_scale` and inputs to
-    `apply` and `matrix` methods. Must be greater than zero.
+  of the kernel. Must be broadcastable with `length_scale` and inputs to
+  `apply` and `matrix` methods. Must be greater than zero.
 * <b>`length_scale`</b>: floating point `Tensor` that controls how sharp or wide the
-    kernel shape is. This provides a characteristic "unit" of length against
-    which `||x - y||` can be compared for scale. Must be broadcastable with
-    `amplitude` and inputs to `apply` and `matrix` methods.
+  kernel shape is. This provides a characteristic "unit" of length against
+  which `||x - y||` can be compared for scale. Must be broadcastable with
+  `amplitude` and inputs to `apply` and `matrix` methods.
 * <b>`feature_ndims`</b>: Python `int` number of rightmost dims to include in the
-    squared difference norm in the exponential.
+  squared difference norm in the exponential.
 * <b>`validate_args`</b>: If `True`, parameters are checked for validity despite
-    possibly degrading runtime performance
+  possibly degrading runtime performance
 * <b>`name`</b>: Python `str` name prefixed to Ops created by this class.
 
 
@@ -182,15 +188,15 @@ Apply the kernel function to a pair of (batches of) inputs.
 #### Args:
 
 * <b>`x1`</b>: `Tensor` input to the first positional parameter of the kernel, of
-    shape `[b1, ..., bB, f1, ..., fF]`, where `B` may be zero (ie, no
-    batching) and `F` (number of feature dimensions) must equal the kernel's
-    `feature_ndims` property. Batch shape must broadcast with the batch
-    shape of `x2` and with the kernel's parameters.
+  shape `[b1, ..., bB, f1, ..., fF]`, where `B` may be zero (ie, no
+  batching) and `F` (number of feature dimensions) must equal the kernel's
+  `feature_ndims` property. Batch shape must broadcast with the batch
+  shape of `x2` and with the kernel's parameters.
 * <b>`x2`</b>: `Tensor` input to the second positional parameter of the kernel,
-    shape `[c1, ..., cC, f1, ..., fF]`, where `C` may be zero (ie, no
-    batching) and `F` (number of feature dimensions) must equal the kernel's
-    `feature_ndims` property. Batch shape must broadcast with the batch
-    shape of `x1` and with the kernel's parameters.
+  shape `[c1, ..., cC, f1, ..., fF]`, where `C` may be zero (ie, no
+  batching) and `F` (number of feature dimensions) must equal the kernel's
+  `feature_ndims` property. Batch shape must broadcast with the batch
+  shape of `x1` and with the kernel's parameters.
 
 
 #### Returns:
@@ -292,19 +298,19 @@ Construct (batched) matrices from (batches of) collections of inputs.
 #### Args:
 
 * <b>`x1`</b>: `Tensor` input to the first positional parameter of the kernel, of
-    shape `[b1, ..., bB, e1, f1, ..., fF]`, where `B` may be zero (ie, no
-    batching), e1 is an integer greater than zero, and `F` (number of
-    feature dimensions) must equal the kernel's `feature_ndims` property.
-    Batch shape must broadcast with the batch shape of `x2` and with the
-    kernel's parameters *after* parameter expansion (see
-    `param_expansion_ndims` argument).
+  shape `[b1, ..., bB, e1, f1, ..., fF]`, where `B` may be zero (ie, no
+  batching), e1 is an integer greater than zero, and `F` (number of
+  feature dimensions) must equal the kernel's `feature_ndims` property.
+  Batch shape must broadcast with the batch shape of `x2` and with the
+  kernel's parameters *after* parameter expansion (see
+  `param_expansion_ndims` argument).
 * <b>`x2`</b>: `Tensor` input to the second positional parameter of the kernel,
-    shape `[c1, ..., cC, e2, f1, ..., fF]`, where `C` may be zero (ie, no
-    batching), e2 is an integer greater than zero,  and `F` (number of
-    feature dimensions) must equal the kernel's `feature_ndims` property.
-    Batch shape must broadcast with the batch shape of `x1` and with the
-    kernel's parameters *after* parameter expansion (see
-    `param_expansion_ndims` argument).
+  shape `[c1, ..., cC, e2, f1, ..., fF]`, where `C` may be zero (ie, no
+  batching), e2 is an integer greater than zero,  and `F` (number of
+  feature dimensions) must equal the kernel's `feature_ndims` property.
+  Batch shape must broadcast with the batch shape of `x1` and with the
+  kernel's parameters *after* parameter expansion (see
+  `param_expansion_ndims` argument).
 
 
 #### Returns:
@@ -346,7 +352,7 @@ a `Tensor` of shape `[e1, e2, e3, e4]`. To do this, one should instead
 reshape the inputs and pass them to `apply`, e.g.:
 
 ```python
-k = psd_kernels.SomeKernel()
+k = tfpk.SomeKernel()
 t1 = tf.placeholder([4, 4, 3], tf.float32)
 t2 = tf.placeholder([5, 5, 3], tf.float32)
 k.apply(

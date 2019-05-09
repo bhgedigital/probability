@@ -42,14 +42,13 @@ py_library(
         ":cauchy",
         ":chi",
         ":chi2",
-        ":conditional_distribution",
-        ":conditional_transformed_distribution",
         ":deterministic",
         ":dirichlet",
         ":dirichlet_multinomial",
         ":distribution",
         ":empirical",
         ":exponential",
+        ":finite_discrete",
         ":gamma",
         ":gamma_gamma",
         ":gaussian_process",
@@ -63,6 +62,10 @@ py_library(
         ":independent",
         ":inverse_gamma",
         ":inverse_gaussian",
+        ":joint_distribution",
+        ":joint_distribution_coroutine",
+        ":joint_distribution_named",
+        ":joint_distribution_sequential",
         ":kullback_leibler",
         ":kumaraswamy",
         ":laplace",
@@ -89,7 +92,7 @@ py_library(
         ":quantized_distribution",
         ":relaxed_bernoulli",
         ":relaxed_onehot_categorical",
-        ":sample_stats",
+        ":sample",
         ":seed_stream",
         ":sinh_arcsinh",
         ":student_t",
@@ -107,7 +110,7 @@ py_library(
         ":von_mises_fisher",
         ":wishart",
         ":zipf",
-        "//tensorflow_probability/python/distributions/internal",
+        "//tensorflow_probability/python/distributions/internal:moving_stats",
         "//tensorflow_probability/python/internal:distribution_util",
         "//tensorflow_probability/python/internal:reparameterization",
     ],
@@ -120,6 +123,7 @@ py_library(
         ":distribution",
         ":seed_stream",
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:tensorshape_util",
     ],
 )
 
@@ -130,6 +134,8 @@ py_library(
         ":distribution",
         # numpy dep,
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:assert_util",
+        "//tensorflow_probability/python/internal:tensorshape_util",
     ],
 )
 
@@ -142,6 +148,7 @@ py_library(
         # tensorflow dep,
         "//tensorflow_probability/python/internal:distribution_util",
         "//tensorflow_probability/python/internal:reparameterization",
+        "//tensorflow_probability/python/internal:tensorshape_util",
     ],
 )
 
@@ -154,6 +161,7 @@ py_library(
         ":seed_stream",
         # numpy dep,
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:assert_util",
         "//tensorflow_probability/python/internal:distribution_util",
         "//tensorflow_probability/python/internal:dtype_util",
         "//tensorflow_probability/python/internal:reparameterization",
@@ -165,10 +173,13 @@ py_library(
     srcs = ["binomial.py"],
     deps = [
         ":distribution",
+        ":multinomial",
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:assert_util",
         "//tensorflow_probability/python/internal:distribution_util",
         "//tensorflow_probability/python/internal:dtype_util",
         "//tensorflow_probability/python/internal:reparameterization",
+        "//tensorflow_probability/python/internal:tensorshape_util",
     ],
 )
 
@@ -177,9 +188,13 @@ py_library(
     srcs = ["blockwise.py"],
     deps = [
         ":distribution",
+        ":kullback_leibler",
         ":seed_stream",
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:assert_util",
+        "//tensorflow_probability/python/internal:dtype_util",
         "//tensorflow_probability/python/internal:reparameterization",
+        "//tensorflow_probability/python/internal:tensorshape_util",
     ],
 )
 
@@ -191,7 +206,9 @@ py_library(
         ":kullback_leibler",
         # tensorflow dep,
         "//tensorflow_probability/python/internal:distribution_util",
+        "//tensorflow_probability/python/internal:dtype_util",
         "//tensorflow_probability/python/internal:reparameterization",
+        "//tensorflow_probability/python/internal:tensorshape_util",
     ],
 )
 
@@ -202,6 +219,7 @@ py_library(
         ":distribution",
         # numpy dep,
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:assert_util",
         "//tensorflow_probability/python/internal:dtype_util",
         "//tensorflow_probability/python/internal:reparameterization",
     ],
@@ -218,6 +236,7 @@ py_library(
         # tensorflow dep,
         "//tensorflow_probability/python/bijectors:invert",
         "//tensorflow_probability/python/bijectors:square",
+        "//tensorflow_probability/python/internal:assert_util",
         "//tensorflow_probability/python/internal:dtype_util",
     ],
 )
@@ -228,27 +247,8 @@ py_library(
     deps = [
         ":gamma",
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:assert_util",
         "//tensorflow_probability/python/internal:dtype_util",
-    ],
-)
-
-py_library(
-    name = "conditional_distribution",
-    srcs = ["conditional_distribution.py"],
-    deps = [
-        ":distribution",
-        "//tensorflow_probability/python/internal:distribution_util",
-    ],
-)
-
-py_library(
-    name = "conditional_transformed_distribution",
-    srcs = ["conditional_transformed_distribution.py"],
-    deps = [
-        ":conditional_distribution",
-        ":transformed_distribution",
-        # tensorflow dep,
-        "//tensorflow_probability/python/internal:distribution_util",
     ],
 )
 
@@ -260,8 +260,11 @@ py_library(
         ":kullback_leibler",
         # six dep,
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:assert_util",
+        "//tensorflow_probability/python/internal:distribution_util",
         "//tensorflow_probability/python/internal:dtype_util",
         "//tensorflow_probability/python/internal:reparameterization",
+        "//tensorflow_probability/python/internal:tensorshape_util",
     ],
 )
 
@@ -273,9 +276,11 @@ py_library(
         ":kullback_leibler",
         # numpy dep,
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:assert_util",
         "//tensorflow_probability/python/internal:distribution_util",
         "//tensorflow_probability/python/internal:dtype_util",
         "//tensorflow_probability/python/internal:reparameterization",
+        "//tensorflow_probability/python/internal:tensorshape_util",
     ],
 )
 
@@ -287,9 +292,11 @@ py_library(
         ":multinomial",
         ":seed_stream",
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:assert_util",
         "//tensorflow_probability/python/internal:distribution_util",
         "//tensorflow_probability/python/internal:dtype_util",
         "//tensorflow_probability/python/internal:reparameterization",
+        "//tensorflow_probability/python/internal:tensorshape_util",
     ],
 )
 
@@ -298,11 +305,14 @@ py_library(
     srcs = ["distribution.py"],
     deps = [
         ":kullback_leibler",
+        # decorator dep,
         # numpy dep,
         # six dep,
         # tensorflow dep,
         "//tensorflow_probability/python/distributions/internal:slicing",
         "//tensorflow_probability/python/internal:distribution_util",
+        "//tensorflow_probability/python/internal:dtype_util",
+        "//tensorflow_probability/python/internal:tensorshape_util",
     ],
 )
 
@@ -312,7 +322,11 @@ py_library(
     deps = [
         ":distribution",
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:assert_util",
+        "//tensorflow_probability/python/internal:distribution_util",
+        "//tensorflow_probability/python/internal:dtype_util",
         "//tensorflow_probability/python/internal:reparameterization",
+        "//tensorflow_probability/python/internal:tensorshape_util",
     ],
 )
 
@@ -328,6 +342,16 @@ py_library(
 )
 
 py_library(
+    name = "finite_discrete",
+    srcs = ["finite_discrete.py"],
+    deps = [
+        ":transformed_distribution",
+        # tensorflow dep,
+        "//tensorflow_probability/python/bijectors:categorical_to_discrete",
+    ],
+)
+
+py_library(
     name = "gamma",
     srcs = ["gamma.py"],
     deps = [
@@ -335,6 +359,7 @@ py_library(
         ":kullback_leibler",
         # numpy dep,
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:assert_util",
         "//tensorflow_probability/python/internal:distribution_util",
         "//tensorflow_probability/python/internal:dtype_util",
         "//tensorflow_probability/python/internal:reparameterization",
@@ -349,6 +374,7 @@ py_library(
         ":seed_stream",
         # numpy dep,
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:assert_util",
         "//tensorflow_probability/python/internal:distribution_util",
         "//tensorflow_probability/python/internal:dtype_util",
         "//tensorflow_probability/python/internal:reparameterization",
@@ -359,7 +385,9 @@ py_library(
     name = "gaussian_process",
     srcs = ["gaussian_process.py"],
     deps = [
+        ":kullback_leibler",
         ":mvn_linear_operator",
+        ":normal",
         # tensorflow dep,
         "//tensorflow_probability/python/internal:dtype_util",
     ],
@@ -372,6 +400,8 @@ py_library(
         ":mvn_linear_operator",
         # tensorflow dep,
         "//tensorflow_probability/python/internal:dtype_util",
+        "//tensorflow_probability/python/internal:tensorshape_util",
+        "//tensorflow_probability/python/positive_semidefinite_kernels",
     ],
 )
 
@@ -382,7 +412,9 @@ py_library(
         ":distribution",
         # numpy dep,
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:assert_util",
         "//tensorflow_probability/python/internal:distribution_util",
+        "//tensorflow_probability/python/internal:dtype_util",
         "//tensorflow_probability/python/internal:reparameterization",
     ],
 )
@@ -391,12 +423,14 @@ py_library(
     name = "gumbel",
     srcs = ["gumbel.py"],
     deps = [
+        ":kullback_leibler",
         ":transformed_distribution",
         ":uniform",
         # numpy dep,
         # tensorflow dep,
         "//tensorflow_probability/python/bijectors:gumbel",
         "//tensorflow_probability/python/bijectors:invert",
+        "//tensorflow_probability/python/internal:assert_util",
         "//tensorflow_probability/python/internal:distribution_util",
         "//tensorflow_probability/python/internal:dtype_util",
     ],
@@ -409,6 +443,7 @@ py_library(
         ":distribution",
         # numpy dep,
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:assert_util",
         "//tensorflow_probability/python/internal:dtype_util",
         "//tensorflow_probability/python/internal:reparameterization",
     ],
@@ -419,8 +454,10 @@ py_library(
     srcs = ["half_normal.py"],
     deps = [
         ":distribution",
+        ":kullback_leibler",
         # numpy dep,
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:assert_util",
         "//tensorflow_probability/python/internal:dtype_util",
         "//tensorflow_probability/python/internal:reparameterization",
         "//tensorflow_probability/python/internal:special_math",
@@ -433,8 +470,12 @@ py_library(
     deps = [
         ":categorical",
         ":distribution",
-        # numpy dep,
+        ":seed_stream",
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:assert_util",
+        "//tensorflow_probability/python/internal:distribution_util",
+        "//tensorflow_probability/python/internal:reparameterization",
+        "//tensorflow_probability/python/internal:tensorshape_util",
     ],
 )
 
@@ -443,8 +484,11 @@ py_library(
     srcs = ["horseshoe.py"],
     deps = [
         ":distribution",
+        ":half_cauchy",
+        ":seed_stream",
         # numpy dep,
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:assert_util",
         "//tensorflow_probability/python/internal:dtype_util",
         "//tensorflow_probability/python/internal:reparameterization",
     ],
@@ -456,8 +500,10 @@ py_library(
     deps = [
         ":distribution",
         ":kullback_leibler",
-        # numpy dep,
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:assert_util",
+        "//tensorflow_probability/python/internal:prefer_static",
+        "//tensorflow_probability/python/internal:tensorshape_util",
     ],
 )
 
@@ -468,6 +514,7 @@ py_library(
         ":distribution",
         # numpy dep,
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:assert_util",
         "//tensorflow_probability/python/internal:distribution_util",
         "//tensorflow_probability/python/internal:dtype_util",
         "//tensorflow_probability/python/internal:reparameterization",
@@ -482,10 +529,61 @@ py_library(
         ":seed_stream",
         # numpy dep,
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:assert_util",
         "//tensorflow_probability/python/internal:distribution_util",
         "//tensorflow_probability/python/internal:dtype_util",
         "//tensorflow_probability/python/internal:reparameterization",
         "//tensorflow_probability/python/internal:special_math",
+    ],
+)
+
+py_library(
+    name = "joint_distribution",
+    srcs = ["joint_distribution.py"],
+    deps = [
+        ":distribution",
+        # six dep,
+        # tensorflow dep,
+        "//tensorflow_probability/python/internal:assert_util",
+        "//tensorflow_probability/python/internal:tensorshape_util",
+    ],
+)
+
+py_library(
+    name = "joint_distribution_coroutine",
+    srcs = ["joint_distribution_coroutine.py"],
+    deps = [
+        ":distribution",
+        # six dep,
+        # tensorflow dep,
+        "//tensorflow_probability/python/internal:assert_util",
+        "//tensorflow_probability/python/internal:tensorshape_util",
+    ],
+)
+
+py_library(
+    name = "joint_distribution_named",
+    srcs = ["joint_distribution_named.py"],
+    deps = [
+        ":joint_distribution_sequential",
+        ":kullback_leibler",
+        ":seed_stream",
+        # numpy dep,
+        "//tensorflow_probability/python/internal:distribution_util",
+        "//tensorflow_probability/python/internal:dtype_util",
+        "//tensorflow_probability/python/internal:reparameterization",
+    ],
+)
+
+py_library(
+    name = "joint_distribution_sequential",
+    srcs = ["joint_distribution_sequential.py"],
+    deps = [
+        ":joint_distribution",
+        ":kullback_leibler",
+        ":seed_stream",
+        # tensorflow dep,
+        "//tensorflow_probability/python/internal:distribution_util",
     ],
 )
 
@@ -506,9 +604,9 @@ py_library(
         # numpy dep,
         # tensorflow dep,
         "//tensorflow_probability/python/bijectors:kumaraswamy",
+        "//tensorflow_probability/python/internal:assert_util",
         "//tensorflow_probability/python/internal:distribution_util",
         "//tensorflow_probability/python/internal:dtype_util",
-        "//tensorflow_probability/python/internal:reparameterization",
     ],
 )
 
@@ -517,8 +615,10 @@ py_library(
     srcs = ["laplace.py"],
     deps = [
         ":distribution",
+        ":kullback_leibler",
         # numpy dep,
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:assert_util",
         "//tensorflow_probability/python/internal:dtype_util",
         "//tensorflow_probability/python/internal:reparameterization",
         "//tensorflow_probability/python/internal:special_math",
@@ -530,11 +630,16 @@ py_library(
     srcs = ["linear_gaussian_ssm.py"],
     deps = [
         ":distribution",
+        ":independent",
         ":mvn_tril",
+        ":normal",
         ":seed_stream",
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:assert_util",
         "//tensorflow_probability/python/internal:distribution_util",
+        "//tensorflow_probability/python/internal:dtype_util",
         "//tensorflow_probability/python/internal:reparameterization",
+        "//tensorflow_probability/python/internal:tensorshape_util",
     ],
 )
 
@@ -548,9 +653,10 @@ py_library(
         ":seed_stream",
         # numpy dep,
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:assert_util",
         "//tensorflow_probability/python/internal:dtype_util",
         "//tensorflow_probability/python/internal:reparameterization",
-        "//tensorflow_probability/python/internal:test_case",
+        "//tensorflow_probability/python/internal:tensorshape_util",
     ],
 )
 
@@ -561,6 +667,7 @@ py_library(
         ":distribution",
         # numpy dep,
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:assert_util",
         "//tensorflow_probability/python/internal:dtype_util",
         "//tensorflow_probability/python/internal:reparameterization",
     ],
@@ -588,8 +695,11 @@ py_library(
         ":seed_stream",
         # numpy dep,
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:assert_util",
         "//tensorflow_probability/python/internal:distribution_util",
+        "//tensorflow_probability/python/internal:dtype_util",
         "//tensorflow_probability/python/internal:reparameterization",
+        "//tensorflow_probability/python/internal:tensorshape_util",
     ],
 )
 
@@ -598,11 +708,14 @@ py_library(
     srcs = ["mixture_same_family.py"],
     deps = [
         ":distribution",
+        ":independent",
         ":seed_stream",
-        # numpy dep,
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:assert_util",
         "//tensorflow_probability/python/internal:distribution_util",
+        "//tensorflow_probability/python/internal:dtype_util",
         "//tensorflow_probability/python/internal:reparameterization",
+        "//tensorflow_probability/python/internal:tensorshape_util",
     ],
 )
 
@@ -633,6 +746,8 @@ py_library(
     deps = [
         ":mvn_tril",
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:assert_util",
+        "//tensorflow_probability/python/internal:distribution_util",
         "//tensorflow_probability/python/internal:dtype_util",
     ],
 )
@@ -647,6 +762,8 @@ py_library(
         # tensorflow dep,
         "//tensorflow_probability/python/bijectors:affine_linear_operator",
         "//tensorflow_probability/python/internal:distribution_util",
+        "//tensorflow_probability/python/internal:dtype_util",
+        "//tensorflow_probability/python/internal:tensorshape_util",
     ],
 )
 
@@ -671,6 +788,7 @@ py_library(
         ":seed_stream",
         # numpy dep,
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:assert_util",
         "//tensorflow_probability/python/internal:distribution_util",
         "//tensorflow_probability/python/internal:dtype_util",
         "//tensorflow_probability/python/internal:reparameterization",
@@ -684,9 +802,11 @@ py_library(
     deps = [
         ":distribution",
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:assert_util",
         "//tensorflow_probability/python/internal:distribution_util",
         "//tensorflow_probability/python/internal:dtype_util",
         "//tensorflow_probability/python/internal:reparameterization",
+        "//tensorflow_probability/python/internal:tensorshape_util",
     ],
 )
 
@@ -697,6 +817,7 @@ py_library(
         ":distribution",
         ":seed_stream",
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:assert_util",
         "//tensorflow_probability/python/internal:distribution_util",
         "//tensorflow_probability/python/internal:dtype_util",
         "//tensorflow_probability/python/internal:reparameterization",
@@ -709,7 +830,9 @@ py_library(
     deps = [
         ":distribution",
         ":kullback_leibler",
+        # numpy dep,
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:assert_util",
         "//tensorflow_probability/python/internal:dtype_util",
         "//tensorflow_probability/python/internal:reparameterization",
         "//tensorflow_probability/python/internal:special_math",
@@ -732,8 +855,10 @@ py_library(
         ":distribution",
         ":kullback_leibler",
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:assert_util",
         "//tensorflow_probability/python/internal:distribution_util",
         "//tensorflow_probability/python/internal:reparameterization",
+        "//tensorflow_probability/python/internal:tensorshape_util",
     ],
 )
 
@@ -742,8 +867,10 @@ py_library(
     srcs = ["pareto.py"],
     deps = [
         ":distribution",
+        ":kullback_leibler",
         # numpy dep,
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:assert_util",
         "//tensorflow_probability/python/internal:distribution_util",
         "//tensorflow_probability/python/internal:dtype_util",
         "//tensorflow_probability/python/internal:reparameterization",
@@ -755,7 +882,9 @@ py_library(
     srcs = ["poisson.py"],
     deps = [
         ":distribution",
+        # numpy dep,
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:assert_util",
         "//tensorflow_probability/python/internal:distribution_util",
         "//tensorflow_probability/python/internal:dtype_util",
         "//tensorflow_probability/python/internal:reparameterization",
@@ -778,6 +907,7 @@ py_library(
         "//tensorflow_probability/python/internal:distribution_util",
         "//tensorflow_probability/python/internal:dtype_util",
         "//tensorflow_probability/python/internal:reparameterization",
+        "//tensorflow_probability/python/internal:tensorshape_util",
     ],
 )
 
@@ -788,7 +918,9 @@ py_library(
         ":distribution",
         # numpy dep,
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:assert_util",
         "//tensorflow_probability/python/internal:distribution_util",
+        "//tensorflow_probability/python/internal:dtype_util",
         "//tensorflow_probability/python/internal:reparameterization",
     ],
 )
@@ -801,6 +933,7 @@ py_library(
         ":transformed_distribution",
         # tensorflow dep,
         "//tensorflow_probability/python/bijectors:sigmoid",
+        "//tensorflow_probability/python/internal:assert_util",
         "//tensorflow_probability/python/internal:distribution_util",
         "//tensorflow_probability/python/internal:dtype_util",
     ],
@@ -815,20 +948,26 @@ py_library(
         # numpy dep,
         # tensorflow dep,
         "//tensorflow_probability/python/bijectors:exp",
+        "//tensorflow_probability/python/internal:assert_util",
         "//tensorflow_probability/python/internal:distribution_util",
         "//tensorflow_probability/python/internal:dtype_util",
         "//tensorflow_probability/python/internal:reparameterization",
+        "//tensorflow_probability/python/internal:tensorshape_util",
     ],
 )
 
 py_library(
-    name = "sample_stats",
-    srcs = ["sample_stats.py"],
+    name = "sample",
+    srcs = ["sample.py"],
     deps = [
+        ":distribution",
+        ":kullback_leibler",
         # numpy dep,
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:assert_util",
         "//tensorflow_probability/python/internal:distribution_util",
-        "//tensorflow_probability/python/stats",
+        "//tensorflow_probability/python/internal:prefer_static",
+        "//tensorflow_probability/python/internal:tensorshape_util",
     ],
 )
 
@@ -860,6 +999,7 @@ py_library(
         ":seed_stream",
         # numpy dep,
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:assert_util",
         "//tensorflow_probability/python/internal:distribution_util",
         "//tensorflow_probability/python/internal:dtype_util",
         "//tensorflow_probability/python/internal:reparameterization",
@@ -872,6 +1012,7 @@ py_library(
     deps = [
         ":multivariate_student_t",
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:assert_util",
         "//tensorflow_probability/python/internal:dtype_util",
     ],
 )
@@ -884,6 +1025,7 @@ py_library(
         ":seed_stream",
         # numpy dep,
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:assert_util",
         "//tensorflow_probability/python/internal:dtype_util",
         "//tensorflow_probability/python/internal:reparameterization",
     ],
@@ -894,9 +1036,12 @@ py_library(
     srcs = ["transformed_distribution.py"],
     deps = [
         ":distribution",
-        # numpy dep,
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:assert_util",
         "//tensorflow_probability/python/internal:distribution_util",
+        "//tensorflow_probability/python/internal:dtype_util",
+        "//tensorflow_probability/python/internal:prefer_static",
+        "//tensorflow_probability/python/internal:tensorshape_util",
     ],
 )
 
@@ -907,6 +1052,7 @@ py_library(
         ":distribution",
         # numpy dep,
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:assert_util",
         "//tensorflow_probability/python/internal:distribution_util",
         "//tensorflow_probability/python/internal:dtype_util",
         "//tensorflow_probability/python/internal:reparameterization",
@@ -919,7 +1065,11 @@ py_library(
     srcs = ["uniform.py"],
     deps = [
         ":distribution",
+        ":kullback_leibler",
+        # numpy dep,
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:assert_util",
+        "//tensorflow_probability/python/internal:distribution_util",
         "//tensorflow_probability/python/internal:dtype_util",
         "//tensorflow_probability/python/internal:reparameterization",
     ],
@@ -930,10 +1080,10 @@ py_library(
     srcs = ["variational_gaussian_process.py"],
     deps = [
         ":gaussian_process",
+        ":independent",
         ":kullback_leibler",
         ":mvn_linear_operator",
         ":normal",
-        # numpy dep,
         # tensorflow dep,
         "//tensorflow_probability/python/internal:dtype_util",
     ],
@@ -951,8 +1101,11 @@ py_library(
         # tensorflow dep,
         "//tensorflow_probability/python/bijectors:affine_linear_operator",
         "//tensorflow_probability/python/bijectors:softmax_centered",
+        "//tensorflow_probability/python/internal:assert_util",
         "//tensorflow_probability/python/internal:distribution_util",
+        "//tensorflow_probability/python/internal:dtype_util",
         "//tensorflow_probability/python/internal:reparameterization",
+        "//tensorflow_probability/python/internal:tensorshape_util",
     ],
 )
 
@@ -975,6 +1128,8 @@ py_library(
         # tensorflow dep,
         "//tensorflow_probability/python/bijectors:affine_linear_operator",
         "//tensorflow_probability/python/internal:distribution_util",
+        "//tensorflow_probability/python/internal:dtype_util",
+        "//tensorflow_probability/python/internal:tensorshape_util",
     ],
 )
 
@@ -999,6 +1154,8 @@ py_library(
         # tensorflow dep,
         "//tensorflow_probability/python/bijectors:affine_linear_operator",
         "//tensorflow_probability/python/internal:distribution_util",
+        "//tensorflow_probability/python/internal:dtype_util",
+        "//tensorflow_probability/python/internal:tensorshape_util",
     ],
 )
 
@@ -1040,6 +1197,7 @@ py_library(
         ":seed_stream",
         # numpy dep,
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:assert_util",
         "//tensorflow_probability/python/internal:distribution_util",
         "//tensorflow_probability/python/internal:dtype_util",
         "//tensorflow_probability/python/internal:reparameterization",
@@ -1056,8 +1214,10 @@ py_library(
         ":seed_stream",
         # numpy dep,
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:assert_util",
         "//tensorflow_probability/python/internal:dtype_util",
         "//tensorflow_probability/python/internal:reparameterization",
+        "//tensorflow_probability/python/internal:tensorshape_util",
     ],
 )
 
@@ -1069,9 +1229,11 @@ py_library(
         ":seed_stream",
         # numpy dep,
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:assert_util",
         "//tensorflow_probability/python/internal:distribution_util",
         "//tensorflow_probability/python/internal:dtype_util",
         "//tensorflow_probability/python/internal:reparameterization",
+        "//tensorflow_probability/python/internal:tensorshape_util",
     ],
 )
 
@@ -1080,9 +1242,13 @@ py_library(
     srcs = ["zipf.py"],
     deps = [
         ":distribution",
+        ":seed_stream",
+        # numpy dep,
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:assert_util",
         "//tensorflow_probability/python/internal:distribution_util",
         "//tensorflow_probability/python/internal:dtype_util",
+        "//tensorflow_probability/python/internal:reparameterization",
     ],
 )
 
@@ -1118,6 +1284,7 @@ py_test(
         # numpy dep,
         # tensorflow dep,
         "//tensorflow_probability",
+        "//tensorflow_probability/python/internal:tensorshape_util",
         "//tensorflow_probability/python/internal:test_util",
     ],
 )
@@ -1142,6 +1309,7 @@ py_test(
         # scipy dep,
         # tensorflow dep,
         "//tensorflow_probability",
+        "//tensorflow_probability/python/internal:test_util",
     ],
 )
 
@@ -1149,8 +1317,10 @@ py_test(
     name = "blockwise_test",
     srcs = ["blockwise_test.py"],
     deps = [
+        # numpy dep,
         # tensorflow dep,
         "//tensorflow_probability",
+        "//tensorflow_probability/python/internal:test_case",
     ],
 )
 
@@ -1162,6 +1332,7 @@ py_test(
         # numpy dep,
         # tensorflow dep,
         "//tensorflow_probability",
+        "//tensorflow_probability/python/internal:tensorshape_util",
         "//tensorflow_probability/python/internal:test_util",
     ],
 )
@@ -1214,7 +1385,7 @@ py_test(
         # numpy dep,
         # tensorflow dep,
         "//tensorflow_probability",
-        "//tensorflow_probability/python/internal:test_util",
+        "//tensorflow_probability/python/internal:tensorshape_util",
     ],
 )
 
@@ -1233,6 +1404,7 @@ py_test(
         # scipy dep,
         # tensorflow dep,
         "//tensorflow_probability",
+        "//tensorflow_probability/python/internal:tensorshape_util",
         "//tensorflow_probability/python/internal:test_util",
     ],
 )
@@ -1245,7 +1417,6 @@ py_test(
         # numpy dep,
         # tensorflow dep,
         "//tensorflow_probability",
-        "//tensorflow_probability/python/internal:test_util",
     ],
 )
 
@@ -1280,7 +1451,7 @@ py_test(
         # numpy dep,
         # tensorflow dep,
         "//tensorflow_probability",
-        "//tensorflow_probability/python/internal:test_util",
+        "//tensorflow_probability/python/internal:tensorshape_util",
     ],
 )
 
@@ -1304,6 +1475,17 @@ py_test(
         # tensorflow dep,
         "//tensorflow_probability",
         "//tensorflow_probability/python/internal:test_util",
+    ],
+)
+
+py_test(
+    name = "finite_discrete_test",
+    srcs = ["finite_discrete_test.py"],
+    deps = [
+        ":finite_discrete",
+        # numpy dep,
+        # tensorflow dep,
+        "//tensorflow_probability",
     ],
 )
 
@@ -1335,9 +1517,10 @@ py_test(
     size = "small",
     srcs = ["gaussian_process_test.py"],
     deps = [
+        ":distributions",
         # numpy dep,
         # tensorflow dep,
-        "//tensorflow_probability",
+        "//tensorflow_probability/python/internal:tensorshape_util",
         "//tensorflow_probability/python/positive_semidefinite_kernels",
     ],
 )
@@ -1347,9 +1530,10 @@ py_test(
     size = "small",
     srcs = ["gaussian_process_regression_model_test.py"],
     deps = [
+        ":distributions",
         # numpy dep,
         # tensorflow dep,
-        "//tensorflow_probability",
+        "//tensorflow_probability/python/internal:tensorshape_util",
         "//tensorflow_probability/python/positive_semidefinite_kernels",
     ],
 )
@@ -1391,7 +1575,6 @@ py_test(
         # tensorflow dep,
         "//tensorflow_probability",
         "//tensorflow_probability/python/internal:test_case",
-        "//tensorflow_probability/python/internal:test_util",
     ],
 )
 
@@ -1443,6 +1626,7 @@ py_test(
         # numpy dep,
         # tensorflow dep,
         "//tensorflow_probability",
+        "//tensorflow_probability/python/internal:tensorshape_util",
         "//tensorflow_probability/python/internal:test_util",
     ],
 )
@@ -1476,15 +1660,45 @@ py_test(
     name = "kullback_leibler_test",
     srcs = ["kullback_leibler_test.py"],
     deps = [
-        ":bernoulli",
-        ":beta",
-        ":categorical",
-        ":deterministic",
-        ":dirichlet",
-        ":gamma",
+        ":distribution",
         ":kullback_leibler",
         ":normal",
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:reparameterization",
+    ],
+)
+
+py_test(
+    name = "joint_distribution_coroutine_test",
+    size = "small",
+    srcs = ["joint_distribution_coroutine_test.py"],
+    deps = [
+        # tensorflow dep,
+        "//tensorflow_probability",
+        "//tensorflow_probability/python/internal:test_util",
+    ],
+)
+
+py_test(
+    name = "joint_distribution_named_test",
+    size = "small",
+    srcs = ["joint_distribution_named_test.py"],
+    deps = [
+        # tensorflow dep,
+        "//tensorflow_probability",
+        "//tensorflow_probability/python/internal:test_util",
+    ],
+)
+
+py_test(
+    name = "joint_distribution_sequential_test",
+    size = "small",
+    srcs = ["joint_distribution_sequential_test.py"],
+    deps = [
+        # absl/testing:parameterized dep,
+        # tensorflow dep,
+        "//tensorflow_probability",
+        "//tensorflow_probability/python/internal:test_util",
     ],
 )
 
@@ -1516,9 +1730,12 @@ py_test(
     srcs = ["linear_gaussian_ssm_test.py"],
     shard_count = 4,
     deps = [
+        ":linear_gaussian_ssm",
         # numpy dep,
         # tensorflow dep,
         "//tensorflow_probability",
+        "//tensorflow_probability/python/internal:tensorshape_util",
+        "//tensorflow_probability/python/internal:test_case",
     ],
 )
 
@@ -1534,6 +1751,7 @@ py_test(
         # tensorflow dep,
         "//tensorflow_probability",
         "//tensorflow_probability/python/distributions/internal:statistical_testing",
+        "//tensorflow_probability/python/internal:assert_util",
         "//tensorflow_probability/python/internal:test_util",
     ],
 )
@@ -1572,6 +1790,7 @@ py_test(
         # scipy dep,
         # tensorflow dep,
         "//tensorflow_probability",
+        "//tensorflow_probability/python/internal:tensorshape_util",
         "//tensorflow_probability/python/internal:test_util",
     ],
 )
@@ -1583,6 +1802,7 @@ py_test(
         # numpy dep,
         # tensorflow dep,
         "//tensorflow_probability",
+        "//tensorflow_probability/python/internal:tensorshape_util",
         "//tensorflow_probability/python/internal:test_case",
         "//tensorflow_probability/python/internal:test_util",
     ],
@@ -1633,6 +1853,7 @@ py_test(
         # scipy dep,
         # tensorflow dep,
         "//tensorflow_probability",
+        "//tensorflow_probability/python/internal:tensorshape_util",
         "//tensorflow_probability/python/internal:test_case",
         "//tensorflow_probability/python/internal:test_util",
     ],
@@ -1647,7 +1868,7 @@ py_test(
         # scipy dep,
         # tensorflow dep,
         "//tensorflow_probability",
-        "//tensorflow_probability/python/internal:test_util",
+        "//tensorflow_probability/python/internal:tensorshape_util",
     ],
 )
 
@@ -1660,7 +1881,7 @@ py_test(
         # scipy dep,
         # tensorflow dep,
         "//tensorflow_probability",
-        "//tensorflow_probability/python/internal:test_util",
+        "//tensorflow_probability/python/internal:tensorshape_util",
     ],
 )
 
@@ -1676,6 +1897,7 @@ py_test(
         # scipy dep,
         # tensorflow dep,
         "//tensorflow_probability",
+        "//tensorflow_probability/python/internal:tensorshape_util",
         "//tensorflow_probability/python/internal:test_util",
     ],
 )
@@ -1723,6 +1945,7 @@ py_test(
         # numpy dep,
         # tensorflow dep,
         "//tensorflow_probability",
+        "//tensorflow_probability/python/internal:tensorshape_util",
         "//tensorflow_probability/python/internal:test_util",
     ],
 )
@@ -1750,6 +1973,7 @@ py_test(
         # scipy dep,
         # tensorflow dep,
         "//tensorflow_probability",
+        "//tensorflow_probability/python/internal:dtype_util",
         "//tensorflow_probability/python/internal:test_case",
         "//tensorflow_probability/python/internal:test_util",
     ],
@@ -1789,6 +2013,7 @@ py_test(
         # scipy dep,
         # tensorflow dep,
         "//tensorflow_probability",
+        "//tensorflow_probability/python/internal:tensorshape_util",
         "//tensorflow_probability/python/internal:test_util",
     ],
 )
@@ -1802,18 +2027,20 @@ py_test(
         # scipy dep,
         # tensorflow dep,
         "//tensorflow_probability",
+        "//tensorflow_probability/python/internal:tensorshape_util",
     ],
 )
 
 py_test(
-    name = "sample_stats_test",
-    size = "medium",
-    srcs = ["sample_stats_test.py"],
-    tags = ["nomsan"],  # disable to avoid false positives from scipy.
+    name = "sample_test",
+    size = "small",
+    srcs = ["sample_test.py"],
     deps = [
+        # absl/testing:parameterized dep,
         # numpy dep,
         # tensorflow dep,
         "//tensorflow_probability",
+        "//tensorflow_probability/python/internal:test_util",
     ],
 )
 
@@ -1846,7 +2073,6 @@ py_test(
         # numpy dep,
         # tensorflow dep,
         "//tensorflow_probability",
-        "//tensorflow_probability/python/internal:dtype_util",
         "//tensorflow_probability/python/internal:test_util",
     ],
 )
@@ -1856,9 +2082,10 @@ py_test(
     size = "small",
     srcs = ["student_t_process_test.py"],
     deps = [
+        ":distributions",
         # numpy dep,
         # tensorflow dep,
-        "//tensorflow_probability",
+        "//tensorflow_probability/python/internal:tensorshape_util",
         "//tensorflow_probability/python/positive_semidefinite_kernels",
     ],
 )
@@ -1872,6 +2099,7 @@ py_test(
         # scipy dep,
         # tensorflow dep,
         "//tensorflow_probability",
+        "//tensorflow_probability/python/internal:tensorshape_util",
         "//tensorflow_probability/python/internal:test_util",
     ],
 )
@@ -1881,6 +2109,7 @@ py_test(
     srcs = ["triangular_test.py"],
     deps = [
         # numpy dep,
+        # scipy dep,
         # tensorflow dep,
         "//tensorflow_probability",
         "//tensorflow_probability/python/distributions/internal:statistical_testing",
@@ -1924,6 +2153,7 @@ py_test(
         # numpy dep,
         # tensorflow dep,
         "//tensorflow_probability",
+        "//tensorflow_probability/python/internal:tensorshape_util",
     ],
 )
 
@@ -1992,10 +2222,12 @@ py_test(
     size = "medium",
     srcs = ["von_mises_fisher_test.py"],
     deps = [
+        ":von_mises_fisher",
         # numpy dep,
-        # scipy dep,
         # tensorflow dep,
         "//tensorflow_probability",
+        "//tensorflow_probability/python/internal:dtype_util",
+        "//tensorflow_probability/python/internal:tensorshape_util",
         "//tensorflow_probability/python/internal:test_util",
     ],
 )
@@ -2006,9 +2238,9 @@ py_test(
     srcs = ["von_mises_test.py"],
     deps = [
         # numpy dep,
-        # scipy dep,
         # tensorflow dep,
         "//tensorflow_probability",
+        "//tensorflow_probability/python/internal:dtype_util",
         "//tensorflow_probability/python/internal:test_case",
         "//tensorflow_probability/python/internal:test_util",
     ],
@@ -2023,6 +2255,7 @@ py_test(
         # scipy dep,
         # tensorflow dep,
         "//tensorflow_probability",
+        "//tensorflow_probability/python/internal:tensorshape_util",
         "//tensorflow_probability/python/internal:test_util",
     ],
 )
@@ -2033,9 +2266,55 @@ py_test(
     srcs = ["zipf_test.py"],
     deps = [
         # numpy dep,
+        # scipy dep,
         # tensorflow dep,
         "//tensorflow_probability",
         "//tensorflow_probability/python/internal:test_case",
         "//tensorflow_probability/python/internal:test_util",
     ],
+)
+
+py_library(
+    name = "distribution_properties_testlib",
+    testonly = 1,
+    srcs = ["distribution_properties_test.py"],
+    srcs_version = "PY2AND3",
+    deps = [
+        # absl/flags dep,
+        # absl/logging dep,
+        # hypothesis dep,
+        # numpy dep,
+        # six dep,
+        # tensorflow dep,
+        "//tensorflow_probability",
+        "//tensorflow_probability/python/bijectors:hypothesis_testlib",
+        "//tensorflow_probability/python/internal:assert_util",
+        "//tensorflow_probability/python/internal:tensorshape_util",
+        "//tensorflow_probability/python/internal:test_util",
+    ],
+)
+
+py_test(
+    name = "distribution_properties_test_eager",
+    size = "medium",
+    srcs = ["distribution_properties_test.py"],
+    args = ["--tf_mode=eager"],
+    main = "distribution_properties_test.py",
+    tags = ["hypothesis"],
+    deps = [":distribution_properties_testlib"],
+)
+
+py_test(
+    name = "distribution_properties_test_graph",
+    size = "medium",
+    srcs = ["distribution_properties_test.py"],
+    args = ["--tf_mode=graph"],
+    main = "distribution_properties_test.py",
+    tags = ["hypothesis"],
+    deps = [":distribution_properties_testlib"],
+)
+
+test_suite(
+    name = "distribution_properties_test",
+    tags = ["hypothesis"],
 )

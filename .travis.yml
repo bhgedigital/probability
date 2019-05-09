@@ -37,14 +37,17 @@ jobs:
 # of python versions x SHARD will be expanded and run in parallel.
 python:
   - "2.7"
-  - "3.6"
+  - "3.4"
+virtualenv:
+  system_site_packages: true
 env:
   global:
-    - NUM_SHARDS=2
+    - NUM_SHARDS=3
   matrix:
     # We shard our tests to avoid timeouts. The run_tests.sh script uses the
     # $NUM_SHARDS and $SHARD environment variables to select a partition of the
     # set of all tests.
     - SHARD=0
     - SHARD=1
+    - SHARD=2
 script: ./testing/run_tests.sh

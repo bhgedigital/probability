@@ -5,11 +5,17 @@
 
 # tfp.edward2.make_value_setter
 
+Creates a value-setting interceptor.
+
 ``` python
 tfp.edward2.make_value_setter(**model_kwargs)
 ```
 
-Creates a value-setting interceptor.
+
+
+Defined in [`python/edward2/program_transformations.py`](https://github.com/tensorflow/probability/tree/master/tensorflow_probability/python/edward2/program_transformations.py).
+
+<!-- Placeholder for "Used in" -->
 
 This function creates an interceptor that sets values of Edward2 random
 variable objects. This is useful for a range of tasks, including conditioning
@@ -20,15 +26,15 @@ probabilities (see examples below).
 #### Args:
 
 * <b>`**model_kwargs`</b>: dict of str to Tensor. Keys are the names of random
-    variables in the model to which this interceptor is being applied. Values
-    are Tensors to set their value to. Variables not included in this dict
-    will not be set and will maintain their existing value semantics (by
-    default, a sample from the parent-conditional distribution).
+  variables in the model to which this interceptor is being applied. Values
+  are Tensors to set their value to. Variables not included in this dict
+  will not be set and will maintain their existing value semantics (by
+  default, a sample from the parent-conditional distribution).
 
 
 #### Returns:
 
-* <b>`set_values`</b>: function that sets the value of intercepted ops.
+  set_values: function that sets the value of intercepted ops.
 
 #### Examples
 

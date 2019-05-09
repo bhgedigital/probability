@@ -37,6 +37,7 @@ py_library(
         ":dense_variational_v2",
         ":distribution_layer",
         ":initializers",
+        ":masked_autoregressive",
         ":util",
         ":variable_input",
     ],
@@ -123,6 +124,7 @@ py_library(
     srcs = ["distribution_layer.py"],
     srcs_version = "PY2AND3",
     deps = [
+        # cloudpickle dep,
         # tensorflow dep,
         "//tensorflow_probability/python/bijectors",
         "//tensorflow_probability/python/distributions",
@@ -132,7 +134,7 @@ py_library(
 
 py_test(
     name = "distribution_layer_test",
-    size = "medium",
+    size = "large",
     srcs = ["distribution_layer_test.py"],
     deps = [
         # numpy dep,
@@ -162,6 +164,28 @@ py_test(
 )
 
 py_library(
+    name = "masked_autoregressive",
+    srcs = ["masked_autoregressive.py"],
+    srcs_version = "PY2AND3",
+    deps = [
+        # tensorflow dep,
+        "//tensorflow_probability/python/bijectors",
+        "//tensorflow_probability/python/distributions",
+    ],
+)
+
+py_test(
+    name = "masked_autoregressive_test",
+    size = "medium",
+    srcs = ["masked_autoregressive_test.py"],
+    deps = [
+        # numpy dep,
+        # tensorflow dep,
+        "//tensorflow_probability",
+    ],
+)
+
+py_library(
     name = "util",
     srcs = [
         "util.py",
@@ -181,7 +205,6 @@ py_library(
     srcs_version = "PY2AND3",
     deps = [
         # tensorflow dep,
-        "//tensorflow_probability/python/layers/internal",
     ],
 )
 

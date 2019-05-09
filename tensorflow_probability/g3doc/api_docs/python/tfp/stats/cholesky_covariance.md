@@ -5,6 +5,8 @@
 
 # tfp.stats.cholesky_covariance
 
+Cholesky factor of the covariance matrix of vector-variate random samples.
+
 ``` python
 tfp.stats.cholesky_covariance(
     x,
@@ -14,7 +16,11 @@ tfp.stats.cholesky_covariance(
 )
 ```
 
-Cholesky factor of the covariance matrix of vector-variate random samples.
+
+
+Defined in [`python/stats/sample_stats.py`](https://github.com/tensorflow/probability/tree/master/tensorflow_probability/python/stats/sample_stats.py).
+
+<!-- Placeholder for "Used in" -->
 
 This function can be use to fit a multivariate normal to data.
 
@@ -66,16 +72,16 @@ fake_data = tf.linalg.matvec(L, uncorrelated_normal)
 #### Args:
 
 * <b>`x`</b>:  Numeric `Tensor`.  The rightmost dimension of `x` indexes events. E.g.
-    dimensions of a random vector.
+  dimensions of a random vector.
 * <b>`sample_axis`</b>: Scalar or vector `Tensor` designating axis holding samples.
-    Default value: `0` (leftmost dimension). Cannot be the rightmost dimension
-      (since this indexes events).
+  Default value: `0` (leftmost dimension). Cannot be the rightmost dimension
+    (since this indexes events).
 * <b>`keepdims`</b>:  Boolean.  Whether to keep the sample axis as singletons.
 * <b>`name`</b>: Python `str` name prefixed to Ops created by this function.
-        Default value: `None` (i.e., `'covariance'`).
+      Default value: `None` (i.e., `'covariance'`).
 
 
 #### Returns:
 
 * <b>`chol`</b>:  `Tensor` of same `dtype` as `x`.  The last two dimensions hold
-    lower triangular matrices (the Cholesky factors).
+  lower triangular matrices (the Cholesky factors).

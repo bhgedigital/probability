@@ -20,7 +20,7 @@ from __future__ import print_function
 
 # Dependency imports
 import numpy as np
-import tensorflow as tf
+import tensorflow.compat.v2 as tf
 from tensorflow_probability.python import bijectors as tfb
 
 from tensorflow_probability.python.bijectors import bijector_test_util
@@ -63,6 +63,13 @@ class ExpBijectorTest(tf.test.TestCase):
 
   def testJacobian(self):
     bijector = tfb.Exp()
+    x = tf.constant([22.])
+    fldj = bijector.forward_log_det_jacobian(x, event_ndims=0)
+    fldj_theoretical = bijector_test_util.get_fldj_theoretical(
+        bijector, x, event_ndims=0)
+    fldj_, fldj_theoretical_ = self.evaluate([fldj, fldj_theoretical])
+    self.assertAllClose(fldj_, fldj_theoretical_)
+
     x = np.expand_dims(np.linspace(-1, 1, num=10), -1)
     fldj = bijector.forward_log_det_jacobian(x, event_ndims=1)
     fldj_theoretical = bijector_test_util.get_fldj_theoretical(

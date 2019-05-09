@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Trains a Bayesian logistic regression model using No-U-Turn Sampler."""
+"""Trains a Bayesian logistic regression model using the No-U-Turn Sampler."""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -28,7 +28,7 @@ import numpy as np
 import tensorflow as tf
 
 from tensorflow_probability import edward2 as ed
-from tensorflow_probability.opensource.experimental import no_u_turn_sampler
+from experimental import no_u_turn_sampler
 
 flags.DEFINE_integer(
     "max_steps",
@@ -110,7 +110,7 @@ def main(argv):
   def target_log_prob_fn(coeffs):
     return log_joint(features=features, coeffs=coeffs, labels=labels)
 
-  # Initialize using a sample from 20 steps of NUTS. It is roughly a MAP
+  # Initialize using a sample from 20 steps of NUTS. This is roughly a MAP
   # estimate and is written explicitly to avoid differences in warm-starts
   # between different implementations (e.g., Stan, PyMC3).
   coeffs = tf.constant(

@@ -18,9 +18,10 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import tensorflow as tf
+# Dependency imports
+import numpy as np
 
-from tensorflow_probability.python.internal import distribution_util as dist_util
+import tensorflow as tf
 
 
 class VariableLayer(tf.keras.layers.Layer):
@@ -29,8 +30,8 @@ class VariableLayer(tf.keras.layers.Layer):
   This layer implements the mathematical function `f(x) = c` where `c` is a
   constant, i.e., unchanged for all `x`. Like other Keras layers, the constant
   is `trainable`.  This layer can also be interpretted as the special case of
-  `tf.keras.layers.Dense` when the `kernel` is forced to be the identity matrix
-  (`tf.eye`).
+  `tf.keras.layers.Dense` when the `kernel` is forced to be the zero matrix
+  (`tf.zeros`).
 
   #### Examples
 
@@ -113,9 +114,14 @@ class VariableLayer(tf.keras.layers.Layer):
     self.regularizer = tf.keras.regularizers.get(regularizer)
     self.constraint = tf.keras.constraints.get(constraint)
 
-    shape = tf.get_static_value(dist_util.expand_to_vector(shape))
+    shape = tf.get_static_value(shape)
     if shape is None:
       raise ValueError('Shape must be known statically.')
+    shape = np.array(shape, dtype=np.int32)
+    ndims = len(shape.shape)
+    if ndims > 1:
+      raise ValueError('Shape must be scalar or vector.')
+    shape = shape.reshape(-1)  # Ensures vector shape.
 
     self._var = self.add_weight(
         'constant',

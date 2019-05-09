@@ -5,6 +5,8 @@
 
 # tfp.vi.log1p_abs
 
+The log1p-abs Csiszar-function in log-space.
+
 ``` python
 tfp.vi.log1p_abs(
     logu,
@@ -12,7 +14,11 @@ tfp.vi.log1p_abs(
 )
 ```
 
-The log1p-abs Csiszar-function in log-space.
+
+
+Defined in [`python/vi/csiszar_divergence.py`](https://github.com/tensorflow/probability/tree/master/tensorflow_probability/python/vi/csiszar_divergence.py).
+
+<!-- Placeholder for "Used in" -->
 
 A Csiszar-function is a member of,
 
@@ -50,4 +56,4 @@ numerically unstable for `|logu| >> 0`.
 #### Returns:
 
 * <b>`log1p_abs_of_u`</b>: `float`-like `Tensor` of the Csiszar-function evaluated
-    at `u = exp(logu)`.
+  at `u = exp(logu)`.

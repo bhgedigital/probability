@@ -9,7 +9,10 @@
 <meta itemprop="property" content="parameters"/>
 <meta itemprop="property" content="reparameterization_type"/>
 <meta itemprop="property" content="validate_args"/>
+<meta itemprop="property" content="__getitem__"/>
 <meta itemprop="property" content="__init__"/>
+<meta itemprop="property" content="__iter__"/>
+<meta itemprop="property" content="__new__"/>
 <meta itemprop="property" content="batch_shape_tensor"/>
 <meta itemprop="property" content="cdf"/>
 <meta itemprop="property" content="copy"/>
@@ -39,9 +42,15 @@
 
 ## Class `ConditionalDistribution`
 
+Distribution that supports intrinsic parameters (local latents).
+
 Inherits From: [`Distribution`](../../tfp/distributions/Distribution.md)
 
-Distribution that supports intrinsic parameters (local latents).
+
+
+Defined in [`python/distributions/distribution.py`](https://github.com/tensorflow/probability/tree/master/tensorflow_probability/python/distributions/distribution.py).
+
+<!-- Placeholder for "Used in" -->
 
 Subclasses of this distribution may have additional keyword arguments passed
 to their sample-based methods (i.e. `sample`, `log_prob`, etc.).
@@ -68,30 +77,46 @@ Constructs the `Distribution`.
 
 * <b>`dtype`</b>: The type of the event samples. `None` implies no type-enforcement.
 * <b>`reparameterization_type`</b>: Instance of `ReparameterizationType`.
-    If `tfd.FULLY_REPARAMETERIZED`, this
-    `Distribution` can be reparameterized in terms of some standard
-    distribution with a function whose Jacobian is constant for the support
-    of the standard distribution. If `tfd.NOT_REPARAMETERIZED`,
-    then no such reparameterization is available.
+  If `tfd.FULLY_REPARAMETERIZED`, this
+  `Distribution` can be reparameterized in terms of some standard
+  distribution with a function whose Jacobian is constant for the support
+  of the standard distribution. If `tfd.NOT_REPARAMETERIZED`,
+  then no such reparameterization is available.
 * <b>`validate_args`</b>: Python `bool`, default `False`. When `True` distribution
-    parameters are checked for validity despite possibly degrading runtime
-    performance. When `False` invalid inputs may silently render incorrect
-    outputs.
+  parameters are checked for validity despite possibly degrading runtime
+  performance. When `False` invalid inputs may silently render incorrect
+  outputs.
 * <b>`allow_nan_stats`</b>: Python `bool`, default `True`. When `True`, statistics
-    (e.g., mean, mode, variance) use the value "`NaN`" to indicate the
-    result is undefined. When `False`, an exception is raised if one or
-    more of the statistic's batch members are undefined.
+  (e.g., mean, mode, variance) use the value "`NaN`" to indicate the
+  result is undefined. When `False`, an exception is raised if one or
+  more of the statistic's batch members are undefined.
 * <b>`parameters`</b>: Python `dict` of parameters used to instantiate this
-    `Distribution`.
+  `Distribution`.
 * <b>`graph_parents`</b>: Python `list` of graph prerequisites of this
-    `Distribution`.
+  `Distribution`.
 * <b>`name`</b>: Python `str` name prefixed to Ops created by this class. Default:
-    subclass name.
+  subclass name.
 
 
 #### Raises:
 
 * <b>`ValueError`</b>: if any member of graph_parents is `None` or not a `Tensor`.
+
+<h2 id="__new__"><code>__new__</code></h2>
+
+``` python
+@staticmethod
+__new__(
+    *args,
+    **kwargs
+)
+```
+
+DEPRECATED FUNCTION
+
+Warning: THIS FUNCTION IS DEPRECATED. It will be removed after 2019-07-01.
+Instructions for updating:
+`ConditionalDistribution` is no longer required; `Distribution` top-level functions now pass-through `**kwargs`.
 
 
 
@@ -167,6 +192,49 @@ Python `bool` indicating possibly expensive checks are enabled.
 
 ## Methods
 
+<h3 id="__getitem__"><code>__getitem__</code></h3>
+
+``` python
+__getitem__(slices)
+```
+
+Slices the batch axes of this distribution, returning a new instance.
+
+```python
+b = tfd.Bernoulli(logits=tf.zeros([3, 5, 7, 9]))
+b.batch_shape  # => [3, 5, 7, 9]
+b2 = b[:, tf.newaxis, ..., -2:, 1::2]
+b2.batch_shape  # => [3, 1, 5, 2, 4]
+
+x = tf.random.normal([5, 3, 2, 2])
+cov = tf.matmul(x, x, transpose_b=True)
+chol = tf.cholesky(cov)
+loc = tf.random.normal([4, 1, 3, 1])
+mvn = tfd.MultivariateNormalTriL(loc, chol)
+mvn.batch_shape  # => [4, 5, 3]
+mvn.event_shape  # => [2]
+mvn2 = mvn[:, 3:, ..., ::-1, tf.newaxis]
+mvn2.batch_shape  # => [4, 2, 3, 1]
+mvn2.event_shape  # => [2]
+```
+
+#### Args:
+
+* <b>`slices`</b>: slices from the [] operator
+
+
+#### Returns:
+
+* <b>`dist`</b>: A new `tfd.Distribution` instance with sliced parameters.
+
+<h3 id="__iter__"><code>__iter__</code></h3>
+
+``` python
+__iter__()
+```
+
+
+
 <h3 id="batch_shape_tensor"><code>batch_shape_tensor</code></h3>
 
 ``` python
@@ -191,14 +259,31 @@ parameterizations of this distribution.
 
 ``` python
 cdf(
-    *args,
+    value,
+    name='cdf',
     **kwargs
 )
 ```
 
-##### `kwargs`:
+Cumulative distribution function.
 
-*  `**condition_kwargs`: Named arguments forwarded to subclass implementation.
+Given random variable `X`, the cumulative distribution function `cdf` is:
+
+```none
+cdf(x) := P[X <= x]
+```
+
+#### Args:
+
+* <b>`value`</b>: `float` or `double` `Tensor`.
+* <b>`name`</b>: Python `str` prepended to names of ops created by this function.
+* <b>`**kwargs`</b>: Named arguments forwarded to subclass implementation.
+
+
+#### Returns:
+
+* <b>`cdf`</b>: a `Tensor` of shape `sample_shape(x) + self.batch_shape` with
+  values of type `self.dtype`.
 
 <h3 id="copy"><code>copy</code></h3>
 
@@ -214,19 +299,22 @@ initialization arguments.
 #### Args:
 
 * <b>`**override_parameters_kwargs`</b>: String/value dictionary of initialization
-    arguments to override with new values.
+  arguments to override with new values.
 
 
 #### Returns:
 
 * <b>`distribution`</b>: A new instance of `type(self)` initialized from the union
-    of self.parameters and override_parameters_kwargs, i.e.,
-    `dict(self.parameters, **override_parameters_kwargs)`.
+  of self.parameters and override_parameters_kwargs, i.e.,
+  `dict(self.parameters, **override_parameters_kwargs)`.
 
 <h3 id="covariance"><code>covariance</code></h3>
 
 ``` python
-covariance(name='covariance')
+covariance(
+    name='covariance',
+    **kwargs
+)
 ```
 
 Covariance.
@@ -259,13 +347,14 @@ length-`k'` vector.
 #### Args:
 
 * <b>`name`</b>: Python `str` prepended to names of ops created by this function.
+* <b>`**kwargs`</b>: Named arguments forwarded to subclass implementation.
 
 
 #### Returns:
 
 * <b>`covariance`</b>: Floating-point `Tensor` with shape `[B1, ..., Bn, k', k']`
-    where the first `n` dimensions are batch coordinates and
-    `k' = reduce_prod(self.event_shape)`.
+  where the first `n` dimensions are batch coordinates and
+  `k' = reduce_prod(self.event_shape)`.
 
 <h3 id="cross_entropy"><code>cross_entropy</code></h3>
 
@@ -298,12 +387,15 @@ where `F` denotes the support of the random variable `X ~ P`.
 #### Returns:
 
 * <b>`cross_entropy`</b>: `self.dtype` `Tensor` with shape `[B1, ..., Bn]`
-    representing `n` different calculations of (Shannon) cross entropy.
+  representing `n` different calculations of (Shannon) cross entropy.
 
 <h3 id="entropy"><code>entropy</code></h3>
 
 ``` python
-entropy(name='entropy')
+entropy(
+    name='entropy',
+    **kwargs
+)
 ```
 
 Shannon entropy in nats.
@@ -392,52 +484,109 @@ denotes (Shannon) cross entropy, and `H[.]` denotes (Shannon) entropy.
 #### Returns:
 
 * <b>`kl_divergence`</b>: `self.dtype` `Tensor` with shape `[B1, ..., Bn]`
-    representing `n` different calculations of the Kullback-Leibler
-    divergence.
+  representing `n` different calculations of the Kullback-Leibler
+  divergence.
 
 <h3 id="log_cdf"><code>log_cdf</code></h3>
 
 ``` python
 log_cdf(
-    *args,
+    value,
+    name='log_cdf',
     **kwargs
 )
 ```
 
-##### `kwargs`:
+Log cumulative distribution function.
 
-*  `**condition_kwargs`: Named arguments forwarded to subclass implementation.
+Given random variable `X`, the cumulative distribution function `cdf` is:
+
+```none
+log_cdf(x) := Log[ P[X <= x] ]
+```
+
+Often, a numerical approximation can be used for `log_cdf(x)` that yields
+a more accurate answer than simply taking the logarithm of the `cdf` when
+`x << -1`.
+
+#### Args:
+
+* <b>`value`</b>: `float` or `double` `Tensor`.
+* <b>`name`</b>: Python `str` prepended to names of ops created by this function.
+* <b>`**kwargs`</b>: Named arguments forwarded to subclass implementation.
+
+
+#### Returns:
+
+* <b>`logcdf`</b>: a `Tensor` of shape `sample_shape(x) + self.batch_shape` with
+  values of type `self.dtype`.
 
 <h3 id="log_prob"><code>log_prob</code></h3>
 
 ``` python
 log_prob(
-    *args,
+    value,
+    name='log_prob',
     **kwargs
 )
 ```
 
-##### `kwargs`:
+Log probability density/mass function.
 
-*  `**condition_kwargs`: Named arguments forwarded to subclass implementation.
+#### Args:
+
+* <b>`value`</b>: `float` or `double` `Tensor`.
+* <b>`name`</b>: Python `str` prepended to names of ops created by this function.
+* <b>`**kwargs`</b>: Named arguments forwarded to subclass implementation.
+
+
+#### Returns:
+
+* <b>`log_prob`</b>: a `Tensor` of shape `sample_shape(x) + self.batch_shape` with
+  values of type `self.dtype`.
 
 <h3 id="log_survival_function"><code>log_survival_function</code></h3>
 
 ``` python
 log_survival_function(
-    *args,
+    value,
+    name='log_survival_function',
     **kwargs
 )
 ```
 
-##### `kwargs`:
+Log survival function.
 
-*  `**condition_kwargs`: Named arguments forwarded to subclass implementation.
+Given random variable `X`, the survival function is defined:
+
+```none
+log_survival_function(x) = Log[ P[X > x] ]
+                         = Log[ 1 - P[X <= x] ]
+                         = Log[ 1 - cdf(x) ]
+```
+
+Typically, different numerical approximations can be used for the log
+survival function, which are more accurate than `1 - cdf(x)` when `x >> 1`.
+
+#### Args:
+
+* <b>`value`</b>: `float` or `double` `Tensor`.
+* <b>`name`</b>: Python `str` prepended to names of ops created by this function.
+* <b>`**kwargs`</b>: Named arguments forwarded to subclass implementation.
+
+
+#### Returns:
+
+`Tensor` of shape `sample_shape(x) + self.batch_shape` with values of type
+  `self.dtype`.
 
 <h3 id="mean"><code>mean</code></h3>
 
 ``` python
-mean(name='mean')
+mean(
+    name='mean',
+    **kwargs
+)
 ```
 
 Mean.
@@ -445,7 +594,10 @@ Mean.
 <h3 id="mode"><code>mode</code></h3>
 
 ``` python
-mode(name='mode')
+mode(
+    name='mode',
+    **kwargs
+)
 ```
 
 Mode.
@@ -471,7 +623,7 @@ Subclasses should override class method `_param_shapes`.
 #### Args:
 
 * <b>`sample_shape`</b>: `Tensor` or python list/tuple. Desired shape of a call to
-    `sample()`.
+  `sample()`.
 * <b>`name`</b>: name to prepend ops with.
 
 
@@ -501,7 +653,7 @@ constant-valued tensors when constant values are fed.
 #### Args:
 
 * <b>`sample_shape`</b>: `TensorShape` or python list/tuple. Desired shape of a call
-    to `sample()`.
+  to `sample()`.
 
 
 #### Returns:
@@ -517,21 +669,33 @@ constant-valued tensors when constant values are fed.
 
 ``` python
 prob(
-    *args,
+    value,
+    name='prob',
     **kwargs
 )
 ```
 
-##### `kwargs`:
+Probability density/mass function.
 
-*  `**condition_kwargs`: Named arguments forwarded to subclass implementation.
+#### Args:
+
+* <b>`value`</b>: `float` or `double` `Tensor`.
+* <b>`name`</b>: Python `str` prepended to names of ops created by this function.
+* <b>`**kwargs`</b>: Named arguments forwarded to subclass implementation.
+
+
+#### Returns:
+
+* <b>`prob`</b>: a `Tensor` of shape `sample_shape(x) + self.batch_shape` with
+  values of type `self.dtype`.
 
 <h3 id="quantile"><code>quantile</code></h3>
 
 ``` python
 quantile(
     value,
-    name='quantile'
+    name='quantile',
+    **kwargs
 )
 ```
 
@@ -547,30 +711,49 @@ quantile(p) := x such that P[X <= x] == p
 
 * <b>`value`</b>: `float` or `double` `Tensor`.
 * <b>`name`</b>: Python `str` prepended to names of ops created by this function.
+* <b>`**kwargs`</b>: Named arguments forwarded to subclass implementation.
 
 
 #### Returns:
 
 * <b>`quantile`</b>: a `Tensor` of shape `sample_shape(x) + self.batch_shape` with
-    values of type `self.dtype`.
+  values of type `self.dtype`.
 
 <h3 id="sample"><code>sample</code></h3>
 
 ``` python
 sample(
-    *args,
+    sample_shape=(),
+    seed=None,
+    name='sample',
     **kwargs
 )
 ```
 
-##### `kwargs`:
+Generate samples of the specified shape.
 
-*  `**condition_kwargs`: Named arguments forwarded to subclass implementation.
+Note that a call to `sample()` without arguments will generate a single
+sample.
+
+#### Args:
+
+* <b>`sample_shape`</b>: 0D or 1D `int32` `Tensor`. Shape of the generated samples.
+* <b>`seed`</b>: Python integer seed for RNG
+* <b>`name`</b>: name to give to the op.
+* <b>`**kwargs`</b>: Named arguments forwarded to subclass implementation.
+
+
+#### Returns:
+
+* <b>`samples`</b>: a `Tensor` with prepended dimensions `sample_shape`.
 
 <h3 id="stddev"><code>stddev</code></h3>
 
 ``` python
-stddev(name='stddev')
+stddev(
+    name='stddev',
+    **kwargs
+)
 ```
 
 Standard deviation.
@@ -587,30 +770,53 @@ denotes expectation, and `stddev.shape = batch_shape + event_shape`.
 #### Args:
 
 * <b>`name`</b>: Python `str` prepended to names of ops created by this function.
+* <b>`**kwargs`</b>: Named arguments forwarded to subclass implementation.
 
 
 #### Returns:
 
 * <b>`stddev`</b>: Floating-point `Tensor` with shape identical to
-    `batch_shape + event_shape`, i.e., the same shape as `self.mean()`.
+  `batch_shape + event_shape`, i.e., the same shape as `self.mean()`.
 
 <h3 id="survival_function"><code>survival_function</code></h3>
 
 ``` python
 survival_function(
-    *args,
+    value,
+    name='survival_function',
     **kwargs
 )
 ```
 
-##### `kwargs`:
+Survival function.
 
-*  `**condition_kwargs`: Named arguments forwarded to subclass implementation.
+Given random variable `X`, the survival function is defined:
+
+```none
+survival_function(x) = P[X > x]
+                     = 1 - P[X <= x]
+                     = 1 - cdf(x).
+```
+
+#### Args:
+
+* <b>`value`</b>: `float` or `double` `Tensor`.
+* <b>`name`</b>: Python `str` prepended to names of ops created by this function.
+* <b>`**kwargs`</b>: Named arguments forwarded to subclass implementation.
+
+
+#### Returns:
+
+`Tensor` of shape `sample_shape(x) + self.batch_shape` with values of type
+  `self.dtype`.
 
 <h3 id="variance"><code>variance</code></h3>
 
 ``` python
-variance(name='variance')
+variance(
+    name='variance',
+    **kwargs
+)
 ```
 
 Variance.
@@ -627,12 +833,13 @@ denotes expectation, and `Var.shape = batch_shape + event_shape`.
 #### Args:
 
 * <b>`name`</b>: Python `str` prepended to names of ops created by this function.
+* <b>`**kwargs`</b>: Named arguments forwarded to subclass implementation.
 
 
 #### Returns:
 
 * <b>`variance`</b>: Floating-point `Tensor` with shape identical to
-    `batch_shape + event_shape`, i.e., the same shape as `self.mean()`.
+  `batch_shape + event_shape`, i.e., the same shape as `self.mean()`.
 
 
 

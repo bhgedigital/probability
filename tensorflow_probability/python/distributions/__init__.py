@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Statistical distributions and bijective transformations."""
+"""Statistical distributions."""
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-# pylint: disable=unused-import,line-too-long,g-importing-member
+# pylint: disable=unused-import,line-too-long,g-importing-member,g-bad-import-order
 
 from tensorflow_probability.python.distributions.autoregressive import Autoregressive
 from tensorflow_probability.python.distributions.batch_reshape import BatchReshape
@@ -30,15 +30,15 @@ from tensorflow_probability.python.distributions.cauchy import Cauchy
 from tensorflow_probability.python.distributions.chi import Chi
 from tensorflow_probability.python.distributions.chi2 import Chi2
 from tensorflow_probability.python.distributions.chi2 import Chi2WithAbsDf  # deprecated, remove 6/5/19
-from tensorflow_probability.python.distributions.conditional_distribution import ConditionalDistribution
-from tensorflow_probability.python.distributions.conditional_transformed_distribution import ConditionalTransformedDistribution
 from tensorflow_probability.python.distributions.deterministic import Deterministic
 from tensorflow_probability.python.distributions.deterministic import VectorDeterministic
 from tensorflow_probability.python.distributions.dirichlet import Dirichlet
 from tensorflow_probability.python.distributions.dirichlet_multinomial import DirichletMultinomial
+from tensorflow_probability.python.distributions.distribution import ConditionalDistribution
 from tensorflow_probability.python.distributions.distribution import Distribution
 from tensorflow_probability.python.distributions.empirical import Empirical
 from tensorflow_probability.python.distributions.exponential import Exponential
+from tensorflow_probability.python.distributions.finite_discrete import FiniteDiscrete
 from tensorflow_probability.python.distributions.gamma import Gamma
 from tensorflow_probability.python.distributions.gamma_gamma import GammaGamma
 from tensorflow_probability.python.distributions.gaussian_process import GaussianProcess
@@ -57,8 +57,13 @@ from tensorflow_probability.python.distributions.inverse_gamma import InverseGam
 from tensorflow_probability.python.distributions.inverse_gamma import InverseGammaWithSoftplusConcentrationRate  # deprecated, remove 6/5/19
 from tensorflow_probability.python.distributions.inverse_gamma import InverseGammaWithSoftplusConcentrationScale  # deprecated, remove 6/5/19
 from tensorflow_probability.python.distributions.inverse_gaussian import InverseGaussian
+from tensorflow_probability.python.distributions.joint_distribution import JointDistribution
+from tensorflow_probability.python.distributions.joint_distribution_coroutine import JointDistributionCoroutine
+from tensorflow_probability.python.distributions.joint_distribution_named import JointDistributionNamed
+from tensorflow_probability.python.distributions.joint_distribution_sequential import JointDistributionSequential
 from tensorflow_probability.python.distributions.kullback_leibler import kl_divergence
 from tensorflow_probability.python.distributions.kullback_leibler import RegisterKL
+from tensorflow_probability.python.distributions.kullback_leibler import augment_kl_xent_docs
 from tensorflow_probability.python.distributions.kumaraswamy import Kumaraswamy
 from tensorflow_probability.python.distributions.laplace import Laplace
 from tensorflow_probability.python.distributions.linear_gaussian_ssm import LinearGaussianStateSpaceModel
@@ -89,12 +94,12 @@ from tensorflow_probability.python.distributions.quantized_distribution import Q
 from tensorflow_probability.python.distributions.relaxed_bernoulli import RelaxedBernoulli
 from tensorflow_probability.python.distributions.relaxed_onehot_categorical import ExpRelaxedOneHotCategorical
 from tensorflow_probability.python.distributions.relaxed_onehot_categorical import RelaxedOneHotCategorical
-from tensorflow_probability.python.distributions.sample_stats import auto_correlation
-from tensorflow_probability.python.distributions.sample_stats import percentile
+from tensorflow_probability.python.distributions.sample import Sample
 from tensorflow_probability.python.distributions.seed_stream import SeedStream
 from tensorflow_probability.python.distributions.sinh_arcsinh import SinhArcsinh
 from tensorflow_probability.python.distributions.student_t import StudentT
 from tensorflow_probability.python.distributions.student_t_process import StudentTProcess
+from tensorflow_probability.python.distributions.transformed_distribution import ConditionalTransformedDistribution
 from tensorflow_probability.python.distributions.transformed_distribution import TransformedDistribution
 from tensorflow_probability.python.distributions.triangular import Triangular
 from tensorflow_probability.python.distributions.truncated_normal import TruncatedNormal
@@ -121,10 +126,14 @@ from tensorflow_probability.python.internal.reparameterization import FULLY_REPA
 from tensorflow_probability.python.internal.reparameterization import NOT_REPARAMETERIZED
 from tensorflow_probability.python.internal.reparameterization import ReparameterizationType
 
-# pylint: enable=unused-import,wildcard-import,line-too-long,g-importing-member
+import sys as _sys
+augment_kl_xent_docs(_sys.modules[__name__])
+del augment_kl_xent_docs
+del _sys
+
+# pylint: enable=unused-import,wildcard-import,line-too-long,g-importing-member,g-bad-import-order
 
 __all__ = [
-    'auto_correlation',
     'Cauchy',
     'ConditionalDistribution',
     'ConditionalTransformedDistribution',
@@ -163,6 +172,10 @@ __all__ = [
     'InverseGamma',
     'InverseGammaWithSoftplusConcentrationRate',
     'InverseGammaWithSoftplusConcentrationScale',
+    'JointDistribution',
+    'JointDistributionCoroutine',
+    'JointDistributionNamed',
+    'JointDistributionSequential',
     'Kumaraswamy',
     'LinearGaussianStateSpaceModel',
     'Laplace',
@@ -173,6 +186,7 @@ __all__ = [
     'Normal',
     'Poisson',
     'PoissonLogNormalQuadratureCompound',
+    'Sample',
     'SeedStream',
     'SinhArcsinh',
     'StudentT',
@@ -216,7 +230,6 @@ __all__ = [
     'tridiag',
     'normal_conjugates_known_scale_posterior',
     'normal_conjugates_known_scale_predictive',
-    'percentile',
     'assign_moving_mean_variance',
     'assign_log_moving_mean_exp',
     'moving_mean_variance',

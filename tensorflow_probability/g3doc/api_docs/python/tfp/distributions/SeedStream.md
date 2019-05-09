@@ -11,9 +11,15 @@
 
 ## Class `SeedStream`
 
-
-
 Local PRNG for amplifying seed entropy into seeds for base operations.
+
+
+
+
+
+Defined in [`python/distributions/seed_stream.py`](https://github.com/tensorflow/probability/tree/master/tensorflow_probability/python/distributions/seed_stream.py).
+
+<!-- Placeholder for "Used in" -->
 
 Writing sampling code which correctly sets the pseudo-random number
 generator (PRNG) seed is surprisingly difficult.  This class serves as
@@ -160,13 +166,13 @@ Initializes a `SeedStream`.
 #### Args:
 
 * <b>`seed`</b>: Any Python object convertible to string, supplying the
-    initial entropy.  If `None`, operations seeded with seeds
-    drawn from this `SeedStream` will follow TensorFlow semantics
-    for not being seeded.
+  initial entropy.  If `None`, operations seeded with seeds
+  drawn from this `SeedStream` will follow TensorFlow semantics
+  for not being seeded.
 * <b>`salt`</b>: Any Python object convertible to string, supplying
-    auxiliary entropy.  Must be unique across the Distributions
-    and TensorFlow Probability code base.  See class docstring for
-    rationale.
+  auxiliary entropy.  Must be unique across the Distributions
+  and TensorFlow Probability code base.  See class docstring for
+  rationale.
 
 
 
@@ -206,7 +212,7 @@ the given seed modulo `2**31 - 1` (see
 #### Returns:
 
 * <b>`seed`</b>: A fresh integer usable as a seed in downstream operations,
-    or `None`.
+  or `None`.
 
 
 

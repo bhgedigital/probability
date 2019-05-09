@@ -5,6 +5,8 @@
 
 # tfp.stats.percentile
 
+Compute the `q`-th percentile(s) of `x`.
+
 ``` python
 tfp.stats.percentile(
     x,
@@ -18,7 +20,11 @@ tfp.stats.percentile(
 )
 ```
 
-Compute the `q`-th percentile(s) of `x`.
+
+
+Defined in [`python/stats/quantiles.py`](https://github.com/tensorflow/probability/tree/master/tensorflow_probability/python/stats/quantiles.py).
+
+<!-- Placeholder for "Used in" -->
 
 Given a vector `x`, the `q`-th percentile of `x` is the value `q / 100` of the
 way from the minimum to the maximum in a sorted copy of `x`.
@@ -33,6 +39,51 @@ if `q = 0` and the same as the maximum if `q = 100`.
 Multiple percentiles can be computed at once by using `1-D` vector `q`.
 Dimension zero of the returned `Tensor` will index the different percentiles.
 
+Compare to `numpy.percentile`.
+
+#### Args:
+
+* <b>`x`</b>:  Numeric `N-D` `Tensor` with `N > 0`.  If `axis` is not `None`,
+  `x` must have statically known number of dimensions.
+* <b>`q`</b>:  Scalar or vector `Tensor` with values in `[0, 100]`. The percentile(s).
+* <b>`axis`</b>:  Optional `0-D` or `1-D` integer `Tensor` with constant values. The
+  axis that index independent samples over which to return the desired
+  percentile.  If `None` (the default), treat every dimension as a sample
+  dimension, returning a scalar.
+* <b>`interpolation `</b>: {'nearest', 'linear', 'lower', 'higher', 'midpoint'}.
+  Default value: 'nearest'.  This specifies the interpolation method to
+  use when the desired quantile lies between two data points `i < j`:
+    * linear: i + (j - i) * fraction, where fraction is the fractional part
+      of the index surrounded by i and j.
+    * lower: `i`.
+    * higher: `j`.
+    * nearest: `i` or `j`, whichever is nearest.
+    * midpoint: (i + j) / 2.
+  `linear` and `midpoint` interpolation do not work with integer dtypes.
+* <b>`keep_dims`</b>:  Python `bool`. If `True`, the last dimension is kept with size 1
+  If `False`, the last dimension is removed from the output shape.
+* <b>`validate_args`</b>:  Whether to add runtime checks of argument validity. If
+  False, and arguments are incorrect, correct behavior is not guaranteed.
+* <b>`preserve_gradients`</b>:  Python `bool`.  If `True`, ensure that gradient w.r.t
+  the percentile `q` is preserved in the case of linear interpolation.
+  If `False`, the gradient will be (incorrectly) zero when `q` corresponds
+  to a point in `x`.
+* <b>`name`</b>:  A Python string name to give this `Op`.  Default is 'percentile'
+
+
+#### Returns:
+
+A `(rank(q) + N - len(axis))` dimensional `Tensor` of same dtype as `x`, or,
+  if `axis` is `None`, a `rank(q)` `Tensor`.  The first `rank(q)` dimensions
+  index quantiles for different values of `q`.
+
+
+#### Raises:
+
+  ValueError:  If argument 'interpolation' is not an allowed type.
+  ValueError:  If interpolation type not compatible with `dtype`.
+
+#### Examples
 
 ```python
 # Get 30th percentile with default ('nearest') interpolation.
@@ -63,47 +114,3 @@ x = [[1., 2.]
 tfp.stats.percentile(x, q=100., axis=[0])
 ==> [3., 4.]
 ```
-
-Compare to `numpy.percentile`.
-
-#### Args:
-
-* <b>`x`</b>:  Floating point `N-D` `Tensor` with `N > 0`.  If `axis` is not `None`,
-    `x` must have statically known number of dimensions.
-* <b>`q`</b>:  Scalar or vector `Tensor` with values in `[0, 100]`. The percentile(s).
-* <b>`axis`</b>:  Optional `0-D` or `1-D` integer `Tensor` with constant values. The
-    axis that hold independent samples over which to return the desired
-    percentile.  If `None` (the default), treat every dimension as a sample
-    dimension, returning a scalar.
-* <b>`interpolation `</b>: {'nearest', 'linear', 'lower', 'higher', 'midpoint'}.
-    Default value: 'nearest'.  This specifies the interpolation method to
-    use when the desired quantile lies between two data points `i < j`:
-      * linear: i + (j - i) * fraction, where fraction is the fractional part
-        of the index surrounded by i and j.
-      * lower: `i`.
-      * higher: `j`.
-      * nearest: `i` or `j`, whichever is nearest.
-      * midpoint: (i + j) / 2.
-    `linear` and `midpoint` interpolation do not work with integer dtypes.
-* <b>`keep_dims`</b>:  Python `bool`. If `True`, the last dimension is kept with size 1
-    If `False`, the last dimension is removed from the output shape.
-* <b>`validate_args`</b>:  Whether to add runtime checks of argument validity. If
-    False, and arguments are incorrect, correct behavior is not guaranteed.
-* <b>`preserve_gradients`</b>:  Python `bool`.  If `True`, ensure that gradient w.r.t
-    the percentile `q` is preserved in the case of linear interpolation.
-    If `False`, the gradient will be (incorrectly) zero when `q` corresponds
-    to a point in `x`.
-* <b>`name`</b>:  A Python string name to give this `Op`.  Default is 'percentile'
-
-
-#### Returns:
-
-A `(rank(q) + N - len(axis))` dimensional `Tensor` of same dtype as `x`, or,
-  if `axis` is `None`, a `rank(q)` `Tensor`.  The first `rank(q)` dimensions
-  index quantiles for different values of `q`.
-
-
-#### Raises:
-
-* <b>`ValueError`</b>:  If argument 'interpolation' is not an allowed type.
-* <b>`ValueError`</b>:  If interpolation type not compatible with `dtype`.
