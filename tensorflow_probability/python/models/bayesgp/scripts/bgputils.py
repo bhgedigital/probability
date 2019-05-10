@@ -7,7 +7,7 @@ import tensorflow as tf
 # import tensorflow.compat.v1 as tf
 # tf.disable_v2_behavior()
 import math
-from tensorflow_probability.python.mcmc import util as mcmc_util
+from tensorflow_probability.python.mcmc.internal import util as mcmc_util
 
 
 #------------------------------------------------------------------------------

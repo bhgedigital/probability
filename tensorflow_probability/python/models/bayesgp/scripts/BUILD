@@ -122,7 +122,7 @@ py_library(
     srcs = ["bgputils.py"],
     srcs_version = "PY2AND3",
     deps = [
-        "//tensorflow_probability/python/mcmc",
+        "//tensorflow_probability/python/mcmc/internal"
     ],
 )
 
