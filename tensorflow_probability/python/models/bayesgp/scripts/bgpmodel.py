@@ -778,7 +778,7 @@ class BGP_model():
             ybase = sensitivity.allEffect(self.model, self.Rangenorm, nx_samples, hyperpar_samples)
             ey_square = sensitivity.direct_samples(self.model, self.Rangenorm, nx_samples, hyperpar_samples)
             if n_subset <= batch_size:
-                y_higher_order = sensitivity.mainHigherOrder(self.model, self.Rangenorm, subsets_list, nx_samples, hyperpar_samples)
+                y_higher_order = sensitivity.mainHigherOrder(self.model, self.Rangenorm, variable_subsets, nx_samples, hyperpar_samples)
             else:
                 y_higher_order = {}
                 completed = 0
