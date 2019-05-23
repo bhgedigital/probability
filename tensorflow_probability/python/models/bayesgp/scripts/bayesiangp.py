@@ -235,7 +235,7 @@ class BayesianGP():
 
 
 
-	def mcmc(self, mcmc_samples, num_burnin_steps, step_size, num_leapfrog_steps = 3, initial_state = None):
+	def mcmc(self, mcmc_samples, num_burnin_steps, step_size, num_leapfrog_steps = 3, initial_state = None, thinning = 2):
 		# Function used to perform the sampling for the posterior distributions of the hyperparameters
 
 		# Inputs:
@@ -268,7 +268,7 @@ class BayesianGP():
 			loc_samples
 		], kernel_results = sample_chain(num_results= mcmc_samples, num_burnin_steps= num_burnin_steps,
 																current_state=initial_state,
-																num_steps_between_results = 4,
+																num_steps_between_results = thinning,
 																kernel= TransformedTransitionKernel(
 																	inner_kernel= HamiltonianMonteCarlo(
 			    																target_log_prob_fn=unnormalized_posterior_log_prob,

@@ -113,7 +113,7 @@ class BGP_model():
 
         return
 
-    def run_mcmc(self, mcmc_samples,num_leapfrog_steps = 3, estimate_noise = False, em_iters = 400, learning_rate = 0.01, warm_up = True, step_size = 0.01):
+    def run_mcmc(self, mcmc_samples,num_leapfrog_steps = 3, estimate_noise = False, em_iters = 400, learning_rate = 0.01, warm_up = True, step_size = 0.01, thinning = 2):
         # Inputs:
         #   mcmc_samples := number of desired samples for the hyperparameters
         # num_leap_frog_steps = number of leap frog steps for the HMC sampler
@@ -141,7 +141,7 @@ class BGP_model():
                         warnings.warn("Estimated step size is low. (less than 1e-4)")
                     print('Sampling in progress.')
                     hyperpar_samples, acceptance_rate = self.model.mcmc(mcmc_samples = mcmc_samples, num_burnin_steps =burn_in,step_size = 0.9*step_size,
-                                                                    num_leapfrog_steps = num_leapfrog_steps, initial_state = next_state)
+                                                                    num_leapfrog_steps = num_leapfrog_steps, initial_state = next_state, thinning = thinning)
                     if acceptance_rate < 0.1:
                         warnings.warn("Acceptance rate was low  (less than 0.1)")
                 except Exception as e:
@@ -152,7 +152,7 @@ class BGP_model():
                     burn_in  = mcmc_samples
                     print('Sampling in progress.')
                     hyperpar_samples, acceptance_rate = self.model.mcmc(mcmc_samples = mcmc_samples, num_burnin_steps =burn_in,step_size = step_size,
-                                                                    num_leapfrog_steps = num_leapfrog_steps)
+                                                                    num_leapfrog_steps = num_leapfrog_steps, thinning = thinning)
                     if acceptance_rate < 0.1:
                         warnings.warn("Acceptance rate was low  (less than 0.1)")
                 except Exception as e:
@@ -778,7 +778,7 @@ class BGP_model():
             ybase = sensitivity.allEffect(self.model, self.Rangenorm, nx_samples, hyperpar_samples)
             ey_square = sensitivity.direct_samples(self.model, self.Rangenorm, nx_samples, hyperpar_samples)
             if n_subset <= batch_size:
-                y_higher_order = sensitivity.mainHigherOrder(self.model, self.Rangenorm, subsets_list, nx_samples, hyperpar_samples)
+                y_higher_order = sensitivity.mainHigherOrder(self.model, self.Rangenorm, variable_subsets, nx_samples, hyperpar_samples)
             else:
                 y_higher_order = {}
                 completed = 0
