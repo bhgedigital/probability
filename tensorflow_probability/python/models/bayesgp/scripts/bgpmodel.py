@@ -237,6 +237,26 @@ class BGP_model():
         plt.close()
         return
 
+    def plot_local_sensitivity(self, directory_path = None):
+        # Function used to plot the local sensitivty  boxplot
+
+        if self.n_inputs == 1:
+            print('Not enough variables to perform sensitivity analysis.')
+            return
+        if len(self.hyperpar_samples) == 0:
+            raise Exception('Hyperparameter samples must be generated or retrieved first.')
+        if directory_path == None:
+            directory_path = os.getcwd()
+        if not(os.path.isdir(directory_path)):
+            raise Exception('Invalid directory path ', directory_path)
+
+        beta_samples = self.hyperpar_samples['kernel_inverse_lengthscales']
+        figpath = 'local_sensitivity.png'
+        figpath = os.path.join(directory_path, figpath)
+        sensitivity.generateBetaBoxPlots(bounds=self.Rangenorm, beta_samples_list=[beta_samples], labels=self.labels, figpath = figpath)
+        return
+
+
     def predict(self, Xtest, with_point_samples = False):
         # Computes approximate values of the full posterior mean and variance of the Gaussian process
 		# by using samples of the posterior distribution of the hyperparameters
