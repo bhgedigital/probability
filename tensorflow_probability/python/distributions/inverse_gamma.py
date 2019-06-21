@@ -20,6 +20,7 @@ from __future__ import print_function
 
 # Dependency imports
 import numpy as np
+import tensorflow.compat.v1 as tf1
 import tensorflow.compat.v2 as tf
 
 from tensorflow_probability.python.distributions import distribution
@@ -156,7 +157,7 @@ class InverseGamma(distribution.Distribution):
     parameters = dict(locals())
     with tf.name_scope(name) as name:
       dtype = dtype_util.common_dtype([concentration, scale],
-                                      preferred_dtype=tf.float32)
+                                      dtype_hint=tf.float32)
       concentration = tf.convert_to_tensor(
           value=concentration, name="concentration", dtype=dtype)
       scale = tf.convert_to_tensor(value=scale, name="scale", dtype=dtype)
@@ -267,7 +268,7 @@ class InverseGamma(distribution.Distribution):
           self.batch_shape_tensor(),
           dtype_util.as_numpy_dtype(self.dtype)(np.nan),
           name="nan")
-      return tf.where(self.concentration > 1., mean, nan)
+      return tf1.where(self.concentration > 1., mean, nan)
     else:
       return distribution_util.with_dependencies([
           assert_util.assert_less(
@@ -289,7 +290,7 @@ class InverseGamma(distribution.Distribution):
           self.batch_shape_tensor(),
           dtype_util.as_numpy_dtype(self.dtype)(np.nan),
           name="nan")
-      return tf.where(self.concentration > 2., var, nan)
+      return tf1.where(self.concentration > 2., var, nan)
     else:
       return distribution_util.with_dependencies([
           assert_util.assert_less(

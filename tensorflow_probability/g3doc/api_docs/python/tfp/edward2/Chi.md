@@ -24,14 +24,15 @@ See Chi for more details.
 
 #### Returns:
 
-  RandomVariable.
+RandomVariable.
+
 
 #### Original Docstring for Distribution
 
 Construct Chi distributions with parameter `df`.
 
-
 #### Args:
+
 
 * <b>`df`</b>: Floating point tensor, the degrees of freedom of the
   distribution(s). `df` must contain only positive values.

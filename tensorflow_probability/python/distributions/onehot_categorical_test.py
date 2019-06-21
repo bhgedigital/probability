@@ -68,7 +68,7 @@ class OneHotCategoricalTest(tf.test.TestCase):
       self.assertAllEqual([10], self.evaluate(dist.event_shape_tensor()))
       # event_shape is available as a constant because the shape is
       # known at graph build time.
-      self.assertEqual(10, tf.get_static_value(dist.event_shape_tensor()))
+      self.assertEqual(10, dist.event_shape)
 
     for batch_shape in ([], [1], [2, 3, 4]):
       dist = make_onehot_categorical(batch_shape, tf.constant(
@@ -234,6 +234,26 @@ class OneHotCategoricalTest(tf.test.TestCase):
     self.assertAllEqual([3, 3], sample_covariance.shape)
     self.assertAllClose(
         actual_covariance_, sample_covariance_, atol=0., rtol=0.1)
+
+  def testParamTensorFromLogits(self):
+    x = tf.constant([-1., 0.5, 1.])
+    d = tfd.OneHotCategorical(logits=x, validate_args=True)
+    self.assertAllClose(
+        *self.evaluate([x, d.logits_parameter()]),
+        atol=0, rtol=1e-4)
+    self.assertAllClose(
+        *self.evaluate([tf.nn.softmax(x), d.probs_parameter()]),
+        atol=0, rtol=1e-4)
+
+  def testParamTensorFromProbs(self):
+    x = tf.constant([0.1, 0.5, 0.4])
+    d = tfd.OneHotCategorical(probs=x, validate_args=True)
+    self.assertAllClose(
+        *self.evaluate([tf.math.log(x), d.logits_parameter()]),
+        atol=0, rtol=1e-4)
+    self.assertAllClose(
+        *self.evaluate([x, d.probs_parameter()]),
+        atol=0, rtol=1e-4)
 
 
 if __name__ == "__main__":

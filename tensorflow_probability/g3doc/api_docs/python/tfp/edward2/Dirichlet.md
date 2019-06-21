@@ -24,14 +24,15 @@ See Dirichlet for more details.
 
 #### Returns:
 
-  RandomVariable.
+RandomVariable.
+
 
 #### Original Docstring for Distribution
 
 Initialize a batch of Dirichlet distributions.
 
-
 #### Args:
+
 
 * <b>`concentration`</b>: Positive floating-point `Tensor` indicating mean number
   of class occurrences; aka "alpha". Implies `self.dtype`, and

@@ -53,8 +53,8 @@ py_library(
         # numpy dep,
         # tensorflow dep,
         "//tensorflow_probability/python/distributions:seed_stream",
+        "//tensorflow_probability/python/internal:docstring_util",
         "//tensorflow_probability/python/math",
-        "//tensorflow_probability/python/util:docstring",
     ],
 )
 
@@ -66,6 +66,7 @@ py_test(
         # numpy dep,
         # tensorflow dep,
         "//tensorflow_probability",
+        "//tensorflow_probability/python/internal:test_case",
     ],
 )
 
@@ -79,8 +80,8 @@ py_library(
         ":util",
         # tensorflow dep,
         "//tensorflow_probability/python/distributions:seed_stream",
+        "//tensorflow_probability/python/internal:docstring_util",
         "//tensorflow_probability/python/math",
-        "//tensorflow_probability/python/util:docstring",
     ],
 )
 
@@ -92,6 +93,7 @@ py_test(
         # numpy dep,
         # tensorflow dep,
         "//tensorflow_probability",
+        "//tensorflow_probability/python/internal:test_case",
     ],
 )
 

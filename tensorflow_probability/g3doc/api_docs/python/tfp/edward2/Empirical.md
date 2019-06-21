@@ -24,14 +24,15 @@ See Empirical for more details.
 
 #### Returns:
 
-  RandomVariable.
+RandomVariable.
+
 
 #### Original Docstring for Distribution
 
 Initialize `Empirical` distributions.
 
-
 #### Args:
+
 
 * <b>`samples`</b>: Numeric `Tensor` of shape [B1, ..., Bk, S, E1, ..., En]`,
   `k, n >= 0`. Samples or batches of samples on which the distribution
@@ -54,5 +55,6 @@ Initialize `Empirical` distributions.
 
 
 #### Raises:
+
 
 * <b>`ValueError`</b>: if the rank of `samples` < event_ndims + 1.

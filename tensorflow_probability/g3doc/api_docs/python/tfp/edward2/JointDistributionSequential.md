@@ -24,14 +24,15 @@ See JointDistributionSequential for more details.
 
 #### Returns:
 
-  RandomVariable.
+RandomVariable.
+
 
 #### Original Docstring for Distribution
 
 Construct the `JointDistributionSequential` distribution.
 
-
 #### Args:
+
 
 * <b>`model`</b>: Python list of either tfd.Distribution instances and/or
   lambda functions which take the `k` previous distributions and returns a

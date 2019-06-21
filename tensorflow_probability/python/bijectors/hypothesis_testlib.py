@@ -31,6 +31,7 @@ from tensorflow_probability.python.internal import dtype_util
 from tensorflow_probability.python.internal import tensorshape_util
 
 tfb = tfp.bijectors
+tfd = tfp.distributions
 
 SPECIAL_BIJECTORS = ['Invert']
 
@@ -80,10 +81,12 @@ class Support(object):
   SCALAR_IN_NEG1_1 = 'SCALAR_IN_NEG1_1'
   SCALAR_IN_0_1 = 'SCALAR_IN_0_1'
   VECTOR_UNCONSTRAINED = 'VECTOR_UNCONSTRAINED'
+  VECTOR_SIZE_TRIANGULAR = 'VECTOR_SIZE_TRIANGULAR'
   VECTOR_WITH_L1_NORM_1_SIZE_GT1 = 'VECTOR_WITH_L1_NORM_1_SIZE_GT1'
   VECTOR_STRICTLY_INCREASING = 'VECTOR_STRICTLY_INCREASING'
   MATRIX_LOWER_TRIL_POSITIVE_DEFINITE = 'MATRIX_LOWER_TRIL_POSITIVE_DEFINITE'
   MATRIX_POSITIVE_DEFINITE = 'MATRIX_POSITIVE_DEFINITE'
+  CORRELATION_CHOLESKY = 'CORRELATION_CHOLESKY'
   OTHER = 'OTHER'
 
 
@@ -104,6 +107,9 @@ def bijector_supports():
       'CholeskyToInvCholesky':
           BijectorSupport(Support.MATRIX_LOWER_TRIL_POSITIVE_DEFINITE,
                           Support.MATRIX_LOWER_TRIL_POSITIVE_DEFINITE),
+      'CorrelationCholesky':
+          BijectorSupport(Support.VECTOR_SIZE_TRIANGULAR,
+                          Support.CORRELATION_CHOLESKY),
       'MatrixInverseTriL':
           BijectorSupport(Support.MATRIX_LOWER_TRIL_POSITIVE_DEFINITE,
                           Support.MATRIX_LOWER_TRIL_POSITIVE_DEFINITE),
@@ -153,8 +159,7 @@ def bijector_supports():
   return BIJECTOR_SUPPORTS
 
 
-# TODO(b/128974935): Use hps.composite
-# @hps.composite
+@hps.composite
 def unconstrained_bijectors(draw):
   """Draws bijectors which can act on [numerically] unconstrained events."""
   bijector_names = hps.one_of(map(hps.just, instantiable_bijectors().keys()))
@@ -177,6 +182,10 @@ def distribution_filter_for(bijector):
     def additional_check(dist):
       return (tensorshape_util.rank(dist.event_shape) == 2 and
               int(dist.event_shape[0]) == int(dist.event_shape[1]))
+  elif isinstance(bijector, tfb.CorrelationCholesky):
+
+    def additional_check(dist):
+      return isinstance(dist, tfd.LKJ) and dist.input_output_cholesky
   else:
     additional_check = lambda dist: True
 

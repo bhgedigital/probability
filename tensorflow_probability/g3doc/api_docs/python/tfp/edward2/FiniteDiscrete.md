@@ -24,14 +24,15 @@ See FiniteDiscrete for more details.
 
 #### Returns:
 
-  RandomVariable.
+RandomVariable.
+
 
 #### Original Docstring for Distribution
 
 Construct a finite discrete contribution.
 
-
 #### Args:
+
 
 * <b>`outcomes`</b>: A 1-D floating or integer `Tensor`, representing a list of
   possible outcomes in strictly ascending order.

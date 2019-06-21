@@ -24,14 +24,15 @@ See BatchReshape for more details.
 
 #### Returns:
 
-  RandomVariable.
+RandomVariable.
+
 
 #### Original Docstring for Distribution
 
 Construct BatchReshape distribution.
 
-
 #### Args:
+
 
 * <b>`distribution`</b>: The base distribution instance to reshape. Typically an
   instance of `Distribution`.
@@ -51,6 +52,7 @@ Construct BatchReshape distribution.
 
 
 #### Raises:
+
 
 * <b>`ValueError`</b>: if `batch_shape` is not a vector.
 * <b>`ValueError`</b>: if `batch_shape` has non-positive elements.

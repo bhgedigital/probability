@@ -24,14 +24,15 @@ See GaussianProcess for more details.
 
 #### Returns:
 
-  RandomVariable.
+RandomVariable.
+
 
 #### Original Docstring for Distribution
 
 Instantiate a GaussianProcess Distribution.
 
-
 #### Args:
+
 
 * <b>`kernel`</b>: `PositiveSemidefiniteKernel`-like instance representing the
   GP's covariance function.
@@ -72,5 +73,6 @@ Instantiate a GaussianProcess Distribution.
 
 
 #### Raises:
+
 
 * <b>`ValueError`</b>: if `mean_fn` is not `None` and is not callable.

@@ -47,11 +47,9 @@ def _interp_regular_1d_grid_impl(x,
                                  grid_regularizing_transform=None,
                                  name=None):
   """1-D interpolation that works with/without batching."""
-  # To understand the implemention differences between the batch/no-batch
-  # versions of this function, you should probably understand the difference
-  # between tf.gather and tf.batch_gather.  In particular, we do *not* make the
-  # no-batch version a special case of the batch version, because that would
-  # an inefficient use of batch_gather with unnecessarily broadcast args.
+  # Note: we do *not* make the no-batch version a special case of the batch
+  # version, because that would an inefficient use of batch_gather with
+  # unnecessarily broadcast args.
   with tf.compat.v1.name_scope(
       name,
       values=[
@@ -79,7 +77,7 @@ def _interp_regular_1d_grid_impl(x,
       fill_value_below = fill_value
 
     dtype = dtype_util.common_dtype([x, x_ref_min, x_ref_max, y_ref],
-                                    preferred_dtype=tf.float32)
+                                    dtype_hint=tf.float32)
     x = tf.convert_to_tensor(value=x, name='x', dtype=dtype)
 
     x_ref_min = tf.convert_to_tensor(
@@ -121,8 +119,9 @@ def _interp_regular_1d_grid_impl(x,
     # Keep track of the nan indices here (so we can impute NaN later).
     # Also eliminate any NaN indices, since there is not NaN in 32bit.
     nan_idx = tf.math.is_nan(x_idx_unclipped)
-    x_idx_unclipped = tf.where(nan_idx, tf.zeros_like(x_idx_unclipped),
-                               x_idx_unclipped)
+    x_idx_unclipped = tf.compat.v1.where(nan_idx,
+                                         tf.zeros_like(x_idx_unclipped),
+                                         x_idx_unclipped)
 
     x_idx = tf.clip_by_value(x_idx_unclipped, tf.zeros((), dtype=dtype), ny - 1)
 
@@ -178,15 +177,16 @@ def _interp_regular_1d_grid_impl(x,
     # Now begins a long excursion to fill values outside [x_min, x_max].
 
     # Re-insert NaN wherever x was NaN.
-    y = tf.where(nan_idx,
-                 tf.fill(tf.shape(input=y), tf.constant(np.nan, y.dtype)), y)
+    y = tf.compat.v1.where(
+        nan_idx, tf.fill(tf.shape(input=y), tf.constant(np.nan, y.dtype)), y)
 
     if not need_separate_fills:
       if fill_value == 'constant_extension':
         pass  # Already handled by clipping x_idx_unclipped.
       else:
-        y = tf.where((x_idx_unclipped < 0) | (x_idx_unclipped > ny - 1),
-                     fill_value + tf.zeros_like(y), y)
+        y = tf.compat.v1.where(
+            (x_idx_unclipped < 0) | (x_idx_unclipped > ny - 1),
+            fill_value + tf.zeros_like(y), y)
     else:
       # Fill values below x_ref_min <==> x_idx_unclipped < 0.
       if fill_value_below == 'constant_extension':
@@ -208,10 +208,11 @@ def _interp_regular_1d_grid_impl(x,
               y_ref, tf.ones(tf.shape(input=x), dtype=tf.int32), axis=axis)
         x_delta = (x_ref_max - x_ref_min) / (ny - 1)
         x_factor = expand_x_fn((x - x_ref_min) / x_delta, broadcast=True)
-        y = tf.where(x_idx_unclipped < 0, y_0 + x_factor * (y_1 - y_0), y)
+        y = tf.compat.v1.where(x_idx_unclipped < 0,
+                               y_0 + x_factor * (y_1 - y_0), y)
       else:
-        y = tf.where(x_idx_unclipped < 0, fill_value_below + tf.zeros_like(y),
-                     y)
+        y = tf.compat.v1.where(x_idx_unclipped < 0,
+                               fill_value_below + tf.zeros_like(y), y)
       # Fill values above x_ref_min <==> x_idx_unclipped > ny - 1.
       if fill_value_above == 'constant_extension':
         pass  # Already handled by the clipping that created x_idx_unclipped.
@@ -227,12 +228,11 @@ def _interp_regular_1d_grid_impl(x,
               y_ref, tf.fill(tf.shape(input=x), ny_int32 - 2), axis=axis)
         x_delta = (x_ref_max - x_ref_min) / (ny - 1)
         x_factor = expand_x_fn((x - x_ref_max) / x_delta, broadcast=True)
-        y = tf.where(x_idx_unclipped > ny - 1,
-                     y_n1 + x_factor * (y_n1 - y_n2),
-                     y)
+        y = tf.compat.v1.where(x_idx_unclipped > ny - 1,
+                               y_n1 + x_factor * (y_n1 - y_n2), y)
       else:
-        y = tf.where(x_idx_unclipped > ny - 1,
-                     fill_value_above + tf.zeros_like(y), y)
+        y = tf.compat.v1.where(x_idx_unclipped > ny - 1,
+                               fill_value_above + tf.zeros_like(y), y)
 
     return y
 
@@ -598,7 +598,7 @@ def batch_interp_regular_nd_grid(x,
       default_name='interp_regular_nd_grid',
       values=[x, x_ref_min, x_ref_max, y_ref, fill_value]):
     dtype = dtype_util.common_dtype([x, x_ref_min, x_ref_max, y_ref],
-                                    preferred_dtype=tf.float32)
+                                    dtype_hint=tf.float32)
 
     # Arg checking.
     if isinstance(fill_value, str):
@@ -710,8 +710,8 @@ def _batch_interp_with_gather_nd(x, x_ref_min, x_ref_max, y_ref, nd, fill_value,
   # Keep track of the nan indices here (so we can impute NaN later).
   # Also eliminate any NaN indices, since there is not NaN in 32bit.
   nan_idx = tf.math.is_nan(x_idx_unclipped)
-  x_idx_unclipped = tf.where(nan_idx, tf.zeros_like(x_idx_unclipped),
-                             x_idx_unclipped)
+  x_idx_unclipped = tf.compat.v1.where(nan_idx, tf.zeros_like(x_idx_unclipped),
+                                       x_idx_unclipped)
 
   # x_idx.shape = [A1, ..., An, D, nd]
   x_idx = tf.clip_by_value(x_idx_unclipped, tf.zeros((), dtype=dtype), ny - 1)
@@ -758,9 +758,9 @@ def _batch_interp_with_gather_nd(x, x_ref_min, x_ref_max, y_ref, nd, fill_value,
 
   # Re-insert NaN wherever x was NaN.
   nan_idx = _expand_x_fn(nan_idx)
-  t = tf.where(nan_idx,
-               tf.fill(tf.shape(input=t), tf.constant(np.nan, dtype)),
-               t)
+  t = tf.compat.v1.where(nan_idx,
+                         tf.fill(tf.shape(input=t), tf.constant(np.nan, dtype)),
+                         t)
 
   terms = []
   # Our work above has located x's fractional index inside a cube of above/below
@@ -832,7 +832,7 @@ def _batch_interp_with_gather_nd(x, x_ref_min, x_ref_max, y_ref, nd, fill_value,
 
     oob_idx = _expand_x_fn(oob_idx)  # Shape [D, 1,...,1]
     oob_idx |= tf.fill(tf.shape(input=y), False)
-    y = tf.where(oob_idx, tf.fill(tf.shape(input=y), fill_value), y)
+    y = tf.compat.v1.where(oob_idx, tf.fill(tf.shape(input=y), fill_value), y)
   return y
 
 
@@ -951,7 +951,7 @@ def _batch_gather_with_broadcast(params, indices, axis):
   indices += tf.zeros(
       tf.concat((leading_bcast_shape, tf.shape(input=indices)[-1:]), axis=0),
       dtype=indices.dtype)
-  return tf.compat.v1.batch_gather(params, indices)
+  return tf.gather(params, indices, batch_dims=indices.shape.ndims-1)
 
 
 def _binary_count(n):

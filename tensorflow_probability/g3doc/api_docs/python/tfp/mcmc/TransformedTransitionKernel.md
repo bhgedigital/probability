@@ -117,7 +117,9 @@ __init__(
 
 Instantiates this object.
 
+
 #### Args:
+
 
 * <b>`inner_kernel`</b>: `TransitionKernel`-like object which has a
   `target_log_prob_fn` argument.
@@ -131,6 +133,7 @@ Instantiates this object.
 
 #### Returns:
 
+
 * <b>`transformed_kernel`</b>: Instance of `TransitionKernel` which copies the input
   transition kernel then modifies its `target_log_prob_fn` by applying the
   provided bijector(s).
@@ -143,7 +146,9 @@ Instantiates this object.
 
 
 
+
 <h3 id="inner_kernel"><code>inner_kernel</code></h3>
+
 
 
 
@@ -158,9 +163,11 @@ composing them with the <a href="../../tfp/mcmc/MetropolisHastings.md"><code>tfp
 
 
 
+
 <h3 id="parameters"><code>parameters</code></h3>
 
 Return `dict` of ``__init__`` arguments and their values.
+
 
 
 
@@ -187,6 +194,7 @@ transformed state.
 
 #### Args:
 
+
 * <b>`init_state`</b>: `Tensor` or Python `list` of `Tensor`s representing the a
   state(s) of the Markov chain(s). Must specify `init_state` or
   `transformed_init_state` but not both.
@@ -197,14 +205,16 @@ transformed state.
 
 #### Returns:
 
+
 * <b>`kernel_results`</b>: A (possibly nested) `tuple`, `namedtuple` or `list` of
   `Tensor`s representing internal calculations made within this function.
 
 
 #### Raises:
 
-  ValueError: if `inner_kernel` results doesn't contain the member
-    "target_log_prob".
+
+* <b>`ValueError`</b>: if `inner_kernel` results doesn't contain the member
+  "target_log_prob".
 
 #### Examples
 
@@ -235,7 +245,9 @@ one_step(
 
 Runs one iteration of the Transformed Kernel.
 
+
 #### Args:
+
 
 * <b>`current_state`</b>: `Tensor` or Python `list` of `Tensor`s
   representing the current state(s) of the Markov chain(s),
@@ -254,6 +266,7 @@ Runs one iteration of the Transformed Kernel.
 
 
 #### Returns:
+
 
 * <b>`next_state`</b>: Tensor or Python list of `Tensor`s representing the state(s)
   of the Markov chain(s) after taking exactly one step. Has same type and

@@ -42,6 +42,7 @@ The exact number of data points in each interval depends on the size of
 
 #### Args:
 
+
 * <b>`x`</b>:  Numeric `N-D` `Tensor` with `N > 0`.  If `axis` is not `None`,
   `x` must have statically known number of dimensions.
 * <b>`num_quantiles`</b>:  Scalar `integer` `Tensor`.  The number of intervals the
@@ -50,7 +51,7 @@ The exact number of data points in each interval depends on the size of
   axis that index independent samples over which to return the desired
   percentile.  If `None` (the default), treat every dimension as a sample
   dimension, returning a scalar.
-* <b>`interpolation `</b>: {'nearest', 'linear', 'lower', 'higher', 'midpoint'}.
+* <b>`interpolation`</b>: {'nearest', 'linear', 'lower', 'higher', 'midpoint'}.
   Default value: 'nearest'.  This specifies the interpolation method to
   use when the fractions `k / n` lie between two data points `i < j`:
     * linear: i + (j - i) * fraction, where fraction is the fractional part
@@ -69,6 +70,7 @@ The exact number of data points in each interval depends on the size of
 
 #### Returns:
 
+
 * <b>`cut_points`</b>:  A `rank(x) + 1 - len(axis)` dimensional `Tensor` with same
 `dtype` as `x` and shape `[num_quantiles + 1, ...]` where the trailing shape
 is that of `x` without the dimensions in `axis` (unless `keep_dims is True`)
@@ -76,8 +78,9 @@ is that of `x` without the dimensions in `axis` (unless `keep_dims is True`)
 
 #### Raises:
 
-  ValueError:  If argument 'interpolation' is not an allowed type.
-  ValueError:  If interpolation type not compatible with `dtype`.
+
+* <b>`ValueError`</b>:  If argument 'interpolation' is not an allowed type.
+* <b>`ValueError`</b>:  If interpolation type not compatible with `dtype`.
 
 #### Examples
 

@@ -24,7 +24,8 @@ See MultivariateNormalTriL for more details.
 
 #### Returns:
 
-  RandomVariable.
+RandomVariable.
+
 
 #### Original Docstring for Distribution
 
@@ -47,8 +48,8 @@ diagonal, i.e., `tf.diag_part(scale_tril) != 0`.
 
 Additional leading dimensions (if any) will index batches.
 
-
 #### Args:
+
 
 * <b>`loc`</b>: Floating-point `Tensor`. If this is set to `None`, `loc` is
   implicitly `0`. When specified, may have shape `[B1, ..., Bb, k]` where
@@ -68,5 +69,6 @@ Additional leading dimensions (if any) will index batches.
 
 
 #### Raises:
+
 
 * <b>`ValueError`</b>: if neither `loc` nor `scale_tril` are specified.

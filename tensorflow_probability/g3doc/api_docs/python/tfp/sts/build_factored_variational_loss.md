@@ -46,6 +46,7 @@ divergence encourages choosing a single mode) or dependence between variables.
 
 #### Args:
 
+
 * <b>`model`</b>: An instance of `StructuralTimeSeries` representing a
   time-series model. This represents a joint distribution over
   time-series and their parameters with batch shape `[b1, ..., bN]`.
@@ -65,21 +66,22 @@ divergence encourages choosing a single mode) or dependence between variables.
 
 #### Returns:
 
-  variational_loss: `float` `Tensor` of shape
-    `concat([init_batch_shape, model.batch_shape])`, encoding a stochastic
-    estimate of an upper bound on the negative model evidence `-log p(y)`.
-    Minimizing this loss performs variational inference; the gap between the
-    variational bound and the true (generally unknown) model evidence
-    corresponds to the divergence `KL[q||p]` between the approximate and true
-    posterior.
-  variational_distributions: `collections.OrderedDict` giving
-    the approximate posterior for each model parameter. The keys are
-    Python `str` parameter names in order, corresponding to
-    `[param.name for param in model.parameters]`. The values are
-    `tfd.Distribution` instances with batch shape
-    `concat([init_batch_shape, model.batch_shape])`; these will typically be
-    of the form `tfd.TransformedDistribution(tfd.Normal(...),
-    bijector=param.bijector)`.
+
+* <b>`variational_loss`</b>: `float` `Tensor` of shape
+  `concat([init_batch_shape, model.batch_shape])`, encoding a stochastic
+  estimate of an upper bound on the negative model evidence `-log p(y)`.
+  Minimizing this loss performs variational inference; the gap between the
+  variational bound and the true (generally unknown) model evidence
+  corresponds to the divergence `KL[q||p]` between the approximate and true
+  posterior.
+* <b>`variational_distributions`</b>: `collections.OrderedDict` giving
+  the approximate posterior for each model parameter. The keys are
+  Python `str` parameter names in order, corresponding to
+  `[param.name for param in model.parameters]`. The values are
+  `tfd.Distribution` instances with batch shape
+  `concat([init_batch_shape, model.batch_shape])`; these will typically be
+  of the form `tfd.TransformedDistribution(tfd.Normal(...),
+  bijector=param.bijector)`.
 
 #### Examples
 
@@ -98,7 +100,8 @@ Assume we've built a structural time-series model:
 ```
 
 To run variational inference, we simply construct the loss and optimize
-* <b>`it`</b>: 
+it:
+
 ```python
   (variational_loss,
    variational_distributions) = tfp.sts.build_factored_variational_loss(

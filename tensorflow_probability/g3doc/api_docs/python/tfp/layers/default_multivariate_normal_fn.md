@@ -28,7 +28,9 @@ Defined in [`python/layers/util.py`](https://github.com/tensorflow/probability/t
 
 <!-- Placeholder for "Used in" -->
 
+
 #### Args:
+
 
 * <b>`dtype`</b>: Type of parameter's event.
 * <b>`shape`</b>: Python `list`-like representing the parameter's event shape.

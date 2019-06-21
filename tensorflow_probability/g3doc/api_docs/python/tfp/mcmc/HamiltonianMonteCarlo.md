@@ -270,6 +270,7 @@ The `step_size_update_fn` argument is deprecated. Use <a href="../../tfp/mcmc/Si
 
 #### Args:
 
+
 * <b>`target_log_prob_fn`</b>: Python callable which takes an argument like
   `current_state` (or `*current_state` if it's a list) and returns its
   (possibly unnormalized) log-density under the target distribution.
@@ -315,6 +316,7 @@ composing them with the <a href="../../tfp/mcmc/MetropolisHastings.md"><code>tfp
 
 
 
+
 <h3 id="num_leapfrog_steps"><code>num_leapfrog_steps</code></h3>
 
 Returns the num_leapfrog_steps parameter.
@@ -327,17 +329,21 @@ the kernel results by the `bootstrap_results` method. The actual
 
 #### Returns:
 
+
 * <b>`num_leapfrog_steps`</b>: An integer `Tensor`.
 
 <h3 id="parameters"><code>parameters</code></h3>
 
 Return `dict` of ``__init__`` arguments and their values.
 
+
 <h3 id="seed"><code>seed</code></h3>
 
 
 
+
 <h3 id="state_gradients_are_stopped"><code>state_gradients_are_stopped</code></h3>
+
 
 
 
@@ -353,13 +359,16 @@ situation is governed by the `previous_kernel_results` argument to
 
 #### Returns:
 
+
 * <b>`step_size`</b>: A floating point `Tensor` or a list of such `Tensors`.
 
 <h3 id="step_size_update_fn"><code>step_size_update_fn</code></h3>
 
 
 
+
 <h3 id="target_log_prob_fn"><code>target_log_prob_fn</code></h3>
+
 
 
 
@@ -375,6 +384,7 @@ bootstrap_results(init_state)
 
 Creates initial `previous_kernel_results` using a supplied `state`.
 
+
 <h3 id="one_step"><code>one_step</code></h3>
 
 ``` python
@@ -386,7 +396,9 @@ one_step(
 
 Runs one iteration of Hamiltonian Monte Carlo.
 
+
 #### Args:
+
 
 * <b>`current_state`</b>: `Tensor` or Python `list` of `Tensor`s representing the
   current state(s) of the Markov chain(s). The first `r` dimensions index
@@ -398,6 +410,7 @@ Runs one iteration of Hamiltonian Monte Carlo.
 
 #### Returns:
 
+
 * <b>`next_state`</b>: Tensor or Python list of `Tensor`s representing the state(s)
   of the Markov chain(s) after taking exactly one step. Has same type and
   shape as `current_state`.
@@ -406,6 +419,7 @@ Runs one iteration of Hamiltonian Monte Carlo.
 
 
 #### Raises:
+
 
 * <b>`ValueError`</b>: if there isn't one `step_size` or a list with same length as
   `current_state`.

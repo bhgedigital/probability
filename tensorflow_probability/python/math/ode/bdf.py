@@ -20,6 +20,7 @@ from __future__ import print_function
 
 import collections
 import numpy as np
+import tensorflow.compat.v1 as tf1
 import tensorflow.compat.v2 as tf
 
 from tensorflow_probability.python.math.ode import base
@@ -314,8 +315,8 @@ class BDF(base.Solver):
       distance_to_next_time = next_time - iterand.time
       overstepped = iterand.new_step_size > distance_to_next_time
       iterand = iterand._replace(
-          new_step_size=tf.where(overstepped, distance_to_next_time,
-                                 iterand.new_step_size),
+          new_step_size=tf1.where(overstepped, distance_to_next_time,
+                                  iterand.new_step_size),
           should_update_step_size=overstepped | iterand.should_update_step_size)
 
       if not self._evaluate_jacobian_lazily:
@@ -355,17 +356,17 @@ class BDF(base.Solver):
       backward_differences, order, state_shape, step_size = solver_internal_state
 
       if max_num_steps is not None:
-        status = tf.where(tf.equal(num_steps, max_num_steps), -1, 0)
+        status = tf1.where(tf.equal(num_steps, max_num_steps), -1, 0)
 
-      backward_differences = tf.where(
+      backward_differences = tf1.where(
           should_update_step_size,
           bdf_util.interpolate_backward_differences(backward_differences, order,
                                                     new_step_size / step_size),
           backward_differences)
-      step_size = tf.where(should_update_step_size, new_step_size, step_size)
+      step_size = tf1.where(should_update_step_size, new_step_size, step_size)
       should_update_factorization = should_update_step_size
-      num_steps_same_size = tf.where(should_update_step_size, 0,
-                                     num_steps_same_size)
+      num_steps_same_size = tf1.where(should_update_step_size, 0,
+                                      num_steps_same_size)
 
       def update_factorization():
         return bdf_util.newton_qr(jacobian,
@@ -416,15 +417,15 @@ class BDF(base.Solver):
       # step size.
       newton_failed = tf.logical_not(newton_converged)
       should_update_step_size = newton_failed & jacobian_is_up_to_date
-      new_step_size = step_size * tf.where(should_update_step_size,
-                                           newton_step_size_factor, 1.)
+      new_step_size = step_size * tf1.where(should_update_step_size,
+                                            newton_step_size_factor, 1.)
 
       # If Newton's method failed and the Jacobian was NOT up to date, update
       # the Jacobian.
       should_update_jacobian = newton_failed & tf.logical_not(
           jacobian_is_up_to_date)
 
-      error_ratio = tf.where(
+      error_ratio = tf1.where(
           newton_converged,
           bdf_util.error_ratio(next_backward_difference,
                                error_coefficients_array.read(order), tol),
@@ -434,7 +435,7 @@ class BDF(base.Solver):
 
       # If Newton's method converged but the solution was NOT accepted, decrease
       # the step size.
-      new_step_size = tf.where(
+      new_step_size = tf1.where(
           converged_and_rejected,
           util.next_step_size(step_size, order, error_ratio, safety_factor,
                               min_step_size_factor, max_step_size_factor),
@@ -443,16 +444,16 @@ class BDF(base.Solver):
 
       # If Newton's method converged and the solution was accepted, update the
       # matrix of backward differences.
-      time = tf.where(accepted, time + step_size, time)
-      backward_differences = tf.where(
+      time = tf1.where(accepted, time + step_size, time)
+      backward_differences = tf1.where(
           accepted,
           bdf_util.update_backward_differences(backward_differences,
                                                next_backward_difference,
                                                next_state, order),
           backward_differences)
       jacobian_is_up_to_date = jacobian_is_up_to_date & tf.logical_not(accepted)
-      num_steps_same_size = tf.where(accepted, num_steps_same_size + 1,
-                                     num_steps_same_size)
+      num_steps_same_size = tf1.where(accepted, num_steps_same_size + 1,
+                                      num_steps_same_size)
 
       # Order and step size are only updated if we have taken strictly more than
       # order + 1 steps of the same size. This is to prevent the order from
@@ -474,16 +475,16 @@ class BDF(base.Solver):
             backward_differences_array.read(proposed_order + 1),
             error_coefficients_array.read(proposed_order), tol)
         proposed_error_ratio_is_lower = proposed_error_ratio < new_error_ratio
-        new_order = tf.where(
+        new_order = tf1.where(
             should_update_order_and_step_size & proposed_error_ratio_is_lower,
             proposed_order, new_order)
-        new_error_ratio = tf.where(
+        new_error_ratio = tf1.where(
             should_update_order_and_step_size & proposed_error_ratio_is_lower,
             proposed_error_ratio, new_error_ratio)
       order = new_order
       error_ratio = new_error_ratio
 
-      new_step_size = tf.where(
+      new_step_size = tf1.where(
           should_update_order_and_step_size,
           util.next_step_size(step_size, order, error_ratio, safety_factor,
                               min_step_size_factor, max_step_size_factor),
@@ -541,13 +542,11 @@ class BDF(base.Solver):
       # `real_dtype` is the floating point `dtype` associated with
       # `initial_state.dtype` (recall that the latter can be complex).
       real_dtype = tf.abs(initial_state).dtype
-      initial_time = tf.ensure_shape(
-          tf.convert_to_tensor(initial_time, dtype=real_dtype), [])
+      initial_time = tf.convert_to_tensor(initial_time, dtype=real_dtype)
       num_solution_times = 0
       if solution_times_chosen_by_solver:
         final_time = solution_times.final_time
-        final_time = tf.ensure_shape(
-            tf.convert_to_tensor(final_time, dtype=real_dtype), [])
+        final_time = tf.convert_to_tensor(final_time, dtype=real_dtype)
       else:
         solution_times = tf.convert_to_tensor(solution_times, dtype=real_dtype)
         num_solution_times = tf.size(solution_times)
@@ -562,14 +561,12 @@ class BDF(base.Solver):
           use_pfor=self._use_pfor_to_compute_jacobian)
       rtol = tf.convert_to_tensor(self._rtol, dtype=real_dtype)
       atol = tf.convert_to_tensor(self._atol, dtype=real_dtype)
-      safety_factor = tf.ensure_shape(
-          tf.convert_to_tensor(self._safety_factor, dtype=real_dtype), [])
-      min_step_size_factor = tf.ensure_shape(
-          tf.convert_to_tensor(self._min_step_size_factor, dtype=real_dtype),
-          [])
-      max_step_size_factor = tf.ensure_shape(
-          tf.convert_to_tensor(self._max_step_size_factor, dtype=real_dtype),
-          [])
+      safety_factor = tf.convert_to_tensor(
+          self._safety_factor, dtype=real_dtype)
+      min_step_size_factor = tf.convert_to_tensor(
+          self._min_step_size_factor, dtype=real_dtype)
+      max_step_size_factor = tf.convert_to_tensor(
+          self._max_step_size_factor, dtype=real_dtype)
       max_num_steps = self._max_num_steps
       if max_num_steps is not None:
         max_num_steps = tf.convert_to_tensor(max_num_steps, dtype=tf.int32)
@@ -578,17 +575,31 @@ class BDF(base.Solver):
       if max_num_newton_iters is not None:
         max_num_newton_iters = tf.convert_to_tensor(
             max_num_newton_iters, dtype=tf.int32)
-      newton_tol_factor = tf.ensure_shape(
-          tf.convert_to_tensor(self._newton_tol_factor, dtype=real_dtype), [])
-      newton_step_size_factor = tf.ensure_shape(
-          tf.convert_to_tensor(self._newton_step_size_factor, dtype=real_dtype),
-          [])
+      newton_tol_factor = tf.convert_to_tensor(
+          self._newton_tol_factor, dtype=real_dtype)
+      newton_step_size_factor = tf.convert_to_tensor(
+          self._newton_step_size_factor, dtype=real_dtype)
       bdf_coefficients = tf.cast(
           tf.concat(
               [[0.],
                tf.convert_to_tensor(self._bdf_coefficients, dtype=real_dtype)],
               0), state_dtype)
       util.error_if_not_vector(bdf_coefficients, 'bdf_coefficients')
+      if self._validate_args:
+        initial_time = tf.ensure_shape(initial_time, [])
+        if solution_times_chosen_by_solver:
+          final_time = tf.ensure_shape(final_time, [])
+        safety_factor = tf.ensure_shape(safety_factor, [])
+        min_step_size_factor = tf.ensure_shape(min_step_size_factor, [])
+        max_step_size_factor = tf.ensure_shape(max_step_size_factor, [])
+        if max_num_steps is not None:
+          max_num_steps = tf.ensure_shape(max_num_steps, [])
+        max_order = tf.ensure_shape(max_order, [])
+        if max_num_newton_iters is not None:
+          max_num_newton_iters = tf.ensure_shape(max_num_newton_iters, [])
+        newton_tol_factor = tf.ensure_shape(newton_tol_factor, [])
+        newton_step_size_factor = tf.ensure_shape(newton_step_size_factor, [])
+        bdf_coefficients = tf.ensure_shape(bdf_coefficients, [6])
       newton_coefficients = 1. / (
           (1. - bdf_coefficients) * bdf_util.RECIPROCAL_SUMS)
       newton_coefficients_array = tf.TensorArray(
@@ -613,12 +624,6 @@ class BDF(base.Solver):
                         '`previous_solver_internal_state` was specified.')
       first_step_size = tf.convert_to_tensor(first_step_size, dtype=real_dtype)
       if self._validate_args:
-        if max_num_steps is not None:
-          max_num_steps = tf.ensure_shape(max_num_steps, [])
-        max_order = tf.ensure_shape(max_order, [])
-        if max_num_newton_iters is not None:
-          max_num_newton_iters = tf.ensure_shape(max_num_newton_iters, [])
-        bdf_coefficients = tf.ensure_shape(bdf_coefficients, [6])
         first_step_size = tf.ensure_shape(first_step_size, [])
       solver_internal_state = previous_solver_internal_state
       if solver_internal_state is None:

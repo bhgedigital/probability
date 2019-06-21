@@ -38,7 +38,9 @@ __init__(
 
 Creates the `CustomExponentialFamily`.
 
+
 #### Args:
+
 
 * <b>`distribution_fn`</b>: Python `callable` which returns a
   `tf.distribution.Distribution`-like instance from a single input
@@ -62,17 +64,21 @@ Creates the `CustomExponentialFamily`.
 
 
 
+
 <h3 id="is_canonical"><code>is_canonical</code></h3>
 
 Returns `True` when `variance(r) == grad_mean(r)` for all `r`.
 
+
 <h3 id="linear_model_to_mean_fn"><code>linear_model_to_mean_fn</code></h3>
+
 
 
 
 <h3 id="name"><code>name</code></h3>
 
 Returns TF namescope prefixed to ops created by member functions.
+
 
 
 
@@ -103,6 +109,7 @@ often `T(Y) := Y` and in that case the distinction doesn't matter.
 
 #### Args:
 
+
 * <b>`predicted_linear_response`</b>: `float`-like `Tensor` corresponding to
   `tf.matmul(model_matrix, weights)`.
 * <b>`name`</b>: Python `str` used as TF namescope for ops created by member
@@ -110,6 +117,7 @@ often `T(Y) := Y` and in that case the distinction doesn't matter.
 
 
 #### Returns:
+
 
 * <b>`mean`</b>: `Tensor` with shape and dtype of `predicted_linear_response`
   representing the distribution prescribed mean, given the prescribed
@@ -134,7 +142,9 @@ log_prob(
 
 Computes `D(param=mean(r)).log_prob(response)` for linear response, `r`.
 
+
 #### Args:
+
 
 * <b>`response`</b>: `float`-like `Tensor` representing observed ("actual")
   responses.
@@ -145,6 +155,7 @@ Computes `D(param=mean(r)).log_prob(response)` for linear response, `r`.
 
 
 #### Returns:
+
 
 * <b>`log_prob`</b>: `Tensor` with shape and dtype of `predicted_linear_response`
   representing the distribution prescribed log-probability of the observed

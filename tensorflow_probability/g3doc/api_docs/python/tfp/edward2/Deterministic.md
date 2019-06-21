@@ -24,7 +24,8 @@ See Deterministic for more details.
 
 #### Returns:
 
-  RandomVariable.
+RandomVariable.
+
 
 #### Original Docstring for Distribution
 
@@ -39,8 +40,8 @@ pmf(x; loc)
   = 0, otherwise.
 ```
 
-
 #### Args:
+
 
 * <b>`loc`</b>: Numeric `Tensor` of shape `[B1, ..., Bb]`, with `b >= 0`.
   The point (or batch of points) on which this distribution is supported.

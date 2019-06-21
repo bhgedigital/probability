@@ -24,14 +24,15 @@ See Bernoulli for more details.
 
 #### Returns:
 
-  RandomVariable.
+RandomVariable.
+
 
 #### Original Docstring for Distribution
 
 Construct Bernoulli distributions.
 
-
 #### Args:
+
 
 * <b>`logits`</b>: An N-D `Tensor` representing the log-odds of a `1` event. Each
   entry in the `Tensor` parametrizes an independent Bernoulli distribution
@@ -54,5 +55,6 @@ Construct Bernoulli distributions.
 
 
 #### Raises:
+
 
 * <b>`ValueError`</b>: If p and logits are passed, or if neither are passed.

@@ -21,8 +21,8 @@ licenses(["notice"])  # Apache 2.0
 
 package(
     default_visibility = [
-        "//energy/plasma_debugger/util/tfp_internal:__subpackages__",
         "//tensorflow_probability:__subpackages__",
+#         "//tensorflow_probability/google:friends",  # DisableOnExport
     ],
 )
 
@@ -39,6 +39,29 @@ py_library(
     srcs = ["assert_util.py"],
     srcs_version = "PY2AND3",
     deps = [
+        # numpy dep,
+        # tensorflow dep,
+    ],
+)
+
+py_library(
+    name = "docstring_util",
+    srcs = [
+        "docstring_util.py",
+    ],
+    srcs_version = "PY2AND3",
+    deps = [
+        # numpy dep,
+        # tensorflow dep,
+    ],
+)
+
+py_test(
+    name = "docstring_util_test",
+    size = "small",
+    srcs = ["docstring_util_test.py"],
+    deps = [
+        ":docstring_util",
         # numpy dep,
         # tensorflow dep,
     ],
@@ -89,6 +112,7 @@ py_test(
         ":distribution_util",
         ":tensorshape_util",
         # numpy dep,
+        # scipy dep,
         # tensorflow dep,
         "//tensorflow_probability/python/distributions",
         "//tensorflow_probability/python/math:gradient",
@@ -98,6 +122,15 @@ py_test(
 py_library(
     name = "monte_carlo",
     srcs = ["monte_carlo.py"],
+    srcs_version = "PY2AND3",
+    deps = [
+        # tensorflow dep,
+    ],
+)
+
+py_library(
+    name = "name_util",
+    srcs = ["name_util.py"],
     srcs_version = "PY2AND3",
     deps = [
         # tensorflow dep,
@@ -168,8 +201,31 @@ py_test(
     deps = [
         ":special_math",
         # numpy dep,
+        # scipy dep,
         # tensorflow dep,
         "//tensorflow_probability/python/math:gradient",
+    ],
+)
+
+py_library(
+    name = "tensor_util",
+    srcs = ["tensor_util.py"],
+    srcs_version = "PY2AND3",
+    deps = [
+        # numpy dep,
+        # tensorflow dep,
+    ],
+)
+
+py_test(
+    name = "tensor_util_test",
+    size = "small",
+    srcs = ["tensor_util_test.py"],
+    deps = [
+        ":tensor_util",
+        # numpy dep,
+        # tensorflow dep,
+        "//tensorflow_probability",
     ],
 )
 

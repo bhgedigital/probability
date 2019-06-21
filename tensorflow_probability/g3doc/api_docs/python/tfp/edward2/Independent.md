@@ -24,14 +24,15 @@ See Independent for more details.
 
 #### Returns:
 
-  RandomVariable.
+RandomVariable.
+
 
 #### Original Docstring for Distribution
 
 Construct a `Independent` distribution.
 
-
 #### Args:
+
 
 * <b>`distribution`</b>: The base distribution instance to transform. Typically an
   instance of `Distribution`.
@@ -47,6 +48,7 @@ Construct a `Independent` distribution.
 
 
 #### Raises:
+
 
 * <b>`ValueError`</b>: if `reinterpreted_batch_ndims` exceeds
   `distribution.batch_ndims`

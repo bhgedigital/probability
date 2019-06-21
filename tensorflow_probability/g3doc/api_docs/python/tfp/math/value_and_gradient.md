@@ -22,7 +22,9 @@ Defined in [`python/math/gradient.py`](https://github.com/tensorflow/probability
 
 <!-- Placeholder for "Used in" -->
 
+
 #### Args:
+
 
 * <b>`f`</b>: Python `callable` to be differentiated. If `f` returns a scalar, this
   scalar will be differentiated. If `f` returns a tensor or list of tensors,
@@ -40,6 +42,7 @@ Defined in [`python/math/gradient.py`](https://github.com/tensorflow/probability
 
 
 #### Returns:
+
 
 * <b>`y`</b>: `y = f(*xs)`.
 * <b>`dydx`</b>: Gradient of `y` wrt each of `xs`.

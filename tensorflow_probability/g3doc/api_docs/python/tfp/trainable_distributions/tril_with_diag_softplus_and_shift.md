@@ -21,7 +21,9 @@ Defined in [`python/trainable_distributions/trainable_distributions_lib.py`](htt
 
 <!-- Placeholder for "Used in" -->
 
+
 #### Args:
+
 
 * <b>`x`</b>: (Batch of) `float`-like `Tensor` representing vectors which will be
   transformed into lower-triangular scale matrices with positive diagonal
@@ -35,6 +37,7 @@ Defined in [`python/trainable_distributions/trainable_distributions_lib.py`](htt
 
 
 #### Returns:
+
 
 * <b>`scale_tril`</b>: (Batch of) lower-triangular `Tensor` with `x.dtype` and
   rightmost shape `[dims, dims]` where `n = dims * (dims + 1) / 2` where

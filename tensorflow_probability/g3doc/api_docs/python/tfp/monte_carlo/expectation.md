@@ -71,6 +71,7 @@ distribution.
 #### Example Use:
 
 
+
 ```python
 # Monte-Carlo approximation of a reparameterized distribution, e.g., Normal.
 
@@ -108,7 +109,7 @@ approx_kl_bernoulli_bernoulli = tfp.monte_carlo.expectation(
 # For comparing the gradients, see `expectation_test.py`.
 ```
 
-* <b>`Note`</b>: The above example is for illustration only. To compute approximate
+Note: The above example is for illustration only. To compute approximate
 KL-divergence, the following is preferred:
 
 ```python
@@ -119,8 +120,8 @@ approx_kl_p_q = bf.monte_carlo_csiszar_f_divergence(
     num_draws=num_draws)
 ```
 
-
 #### Args:
+
 
 * <b>`f`</b>: Python callable which can return `f(samples)`.
 * <b>`samples`</b>: `Tensor` of samples used to form the Monte-Carlo approximation of
@@ -145,11 +146,13 @@ approx_kl_p_q = bf.monte_carlo_csiszar_f_divergence(
 
 #### Returns:
 
+
 * <b>`approx_expectation`</b>: `Tensor` corresponding to the Monte-Carlo approximation
   of `E_p[f(X)]`.
 
 
 #### Raises:
+
 
 * <b>`ValueError`</b>: if `f` is not a Python `callable`.
 * <b>`ValueError`</b>: if `use_reparametrization=False` and `log_prob` is not a Python

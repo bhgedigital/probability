@@ -24,19 +24,20 @@ See PoissonLogNormalQuadratureCompound for more details.
 
 #### Returns:
 
-  RandomVariable.
+RandomVariable.
+
 
 #### Original Docstring for Distribution
 
 Constructs the PoissonLogNormalQuadratureCompound`.
 
-* <b>`Note`</b>: `probs` returned by (optional) `quadrature_fn` are presumed to be
+Note: `probs` returned by (optional) `quadrature_fn` are presumed to be
 either a length-`quadrature_size` vector or a batch of vectors in 1-to-1
 correspondence with the returned `grid`. (I.e., broadcasting is only
 partially supported.)
 
-
 #### Args:
+
 
 * <b>`loc`</b>: `float`-like (batch of) scalar `Tensor`; the location parameter of
   the LogNormal prior.
@@ -61,6 +62,7 @@ partially supported.)
 
 
 #### Raises:
+
 
 * <b>`TypeError`</b>: if `quadrature_grid` and `quadrature_probs` have different base
   `dtype`.

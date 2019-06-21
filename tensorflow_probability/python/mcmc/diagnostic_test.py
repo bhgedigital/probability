@@ -20,7 +20,8 @@ from __future__ import print_function
 
 # Dependency imports
 import numpy as np
-import tensorflow as tf
+import tensorflow.compat.v1 as tf1
+import tensorflow.compat.v2 as tf
 import tensorflow_probability as tfp
 
 from tensorflow_probability.python.mcmc.diagnostic import _reduce_variance
@@ -38,19 +39,22 @@ class _EffectiveSampleSizeTest(object):
     raise NotImplementedError(
         "Subclass failed to implement `use_static_shape`.")
 
-  def _check_versus_expected_effective_sample_size(self,
-                                                   x_,
-                                                   expected_ess,
-                                                   atol=1e-2,
-                                                   rtol=1e-2,
-                                                   filter_threshold=None,
-                                                   filter_beyond_lag=None):
-    x = tf.compat.v1.placeholder_with_default(
+  def _check_versus_expected_effective_sample_size(
+      self,
+      x_,
+      expected_ess,
+      atol=1e-2,
+      rtol=1e-2,
+      filter_threshold=None,
+      filter_beyond_lag=None,
+      filter_beyond_positive_pairs=False):
+    x = tf1.placeholder_with_default(
         input=x_, shape=x_.shape if self.use_static_shape else None)
     ess = tfp.mcmc.effective_sample_size(
         x,
         filter_threshold=filter_threshold,
-        filter_beyond_lag=filter_beyond_lag)
+        filter_beyond_lag=filter_beyond_lag,
+        filter_beyond_positive_pairs=filter_beyond_positive_pairs)
     if self.use_static_shape:
       self.assertAllEqual(x.shape[1:], ess.shape)
 
@@ -88,7 +92,7 @@ class _EffectiveSampleSizeTest(object):
     # we should have a super-duper estimate of ESS, and it should be very close
     # to the full sequence length of 5000.
     # The choice of filter_beyond_lag = 0 means we cutoff as soon as the
-    # auto-corris below zero.  This should happen very quickly, due to the fact
+    # auto-corr is below zero.  This should happen very quickly, due to the fact
     # that the theoretical auto-corr is [1, 0, 0,...]
     with spectral_ops_test_util.fft_kernel_label_map():
       self._check_versus_expected_effective_sample_size(
@@ -107,6 +111,42 @@ class _EffectiveSampleSizeTest(object):
           filter_beyond_lag=None,
           filter_threshold=0.,
           rtol=0.1)
+
+  def testIidRank1NormalHasFullEssMaxLagInitialPositive(self):
+    # See similar test for ThresholdZero for background. This time this uses the
+    # initial_positive sequence criterion. In this case, initial_positive
+    # sequence might be a little more noisy than the threshold case because it
+    # will typically not drop the lag-1 auto-correlation.
+    with spectral_ops_test_util.fft_kernel_label_map():
+      self._check_versus_expected_effective_sample_size(
+          x_=rng.randn(5000).astype(np.float32),
+          expected_ess=5000,
+          filter_beyond_lag=None,
+          filter_threshold=None,
+          filter_beyond_positive_pairs=True,
+          rtol=0.2)
+
+  def testIidRank2NormalHasFullEssMaxLagInitialPositive(self):
+    # See similar test for Rank1Normal for reasoning.
+    with spectral_ops_test_util.fft_kernel_label_map():
+      self._check_versus_expected_effective_sample_size(
+          x_=rng.randn(5000, 2).astype(np.float32),
+          expected_ess=5000,
+          filter_beyond_lag=None,
+          filter_threshold=None,
+          filter_beyond_positive_pairs=True,
+          rtol=0.2)
+
+  def testIidRank1NormalHasFullEssMaxLagInitialPositiveOddLength(self):
+    # See similar test for Rank1Normal for reasoning.
+    with spectral_ops_test_util.fft_kernel_label_map():
+      self._check_versus_expected_effective_sample_size(
+          x_=rng.randn(4999).astype(np.float32),
+          expected_ess=4999,
+          filter_beyond_lag=None,
+          filter_threshold=None,
+          filter_beyond_positive_pairs=True,
+          rtol=0.2)
 
   def testLength10CorrelationHasEssOneTenthTotalLengthUsingMaxLags50(self):
     # Create x_, such that
@@ -137,6 +177,23 @@ class _EffectiveSampleSizeTest(object):
           expected_ess=50000 // 10,
           filter_beyond_lag=None,
           filter_threshold=0.,
+          rtol=0.1)
+
+  def testLength10CorrelationHasEssOneTenthTotalLengthUsingMaxLagsInitialPositive(
+      self):
+    # Create x_, such that
+    #   x_[i] = iid_x_[0], i = 0,...,9
+    #   x_[i] = iid_x_[1], i = 10,..., 19,
+    #   and so on.
+    iid_x_ = rng.randn(5000, 1).astype(np.float32)
+    x_ = (iid_x_ * np.ones((5000, 10)).astype(np.float32)).reshape((50000,))
+    with spectral_ops_test_util.fft_kernel_label_map():
+      self._check_versus_expected_effective_sample_size(
+          x_=x_,
+          expected_ess=50000 // 10,
+          filter_beyond_lag=None,
+          filter_threshold=None,
+          filter_beyond_positive_pairs=True,
           rtol=0.1)
 
   def testListArgs(self):
@@ -171,7 +228,7 @@ class _EffectiveSampleSizeTest(object):
     iid_x_ = rng.randn(500, 1).astype(np.float32)
     x_ = (iid_x_ * np.ones((500, 10)).astype(np.float32)).reshape((5000,))
     with spectral_ops_test_util.fft_kernel_label_map():
-      x = tf.compat.v1.placeholder_with_default(
+      x = tf1.placeholder_with_default(
           input=x_, shape=x_.shape if self.use_static_shape else None)
 
       ess_none_none = tfp.mcmc.effective_sample_size(
@@ -198,7 +255,7 @@ class _EffectiveSampleSizeTest(object):
     iid_x_ = rng.randn(500, 1).astype(np.float32)
     x_ = (iid_x_ * np.ones((500, 10)).astype(np.float32)).reshape((5000,))
     with spectral_ops_test_util.fft_kernel_label_map():
-      x = tf.compat.v1.placeholder_with_default(
+      x = tf1.placeholder_with_default(
           input=x_, shape=x_.shape if self.use_static_shape else None)
 
       ess_1_9 = tfp.mcmc.effective_sample_size(
@@ -214,6 +271,55 @@ class _EffectiveSampleSizeTest(object):
       # filter_threshold = 1 <==> filter_beyond_lag = 9.
       self.assertAllClose(ess_1_9_, ess_1_none_)
       self.assertAllClose(ess_1_9_, ess_none_9_)
+
+  def testInitialPositiveAndLag(self):
+    # We will use the max_lags argument to verify that initial_positive sequence
+    # argument does what it should.
+
+    # This sequence begins to have non-positive pairwise sums at lag 38
+    x_ = np.linspace(-1., 1., 100).astype(np.float32)
+    with spectral_ops_test_util.fft_kernel_label_map():
+      x = tf1.placeholder_with_default(
+          input=x_, shape=x_.shape if self.use_static_shape else None)
+
+      ess_true_37 = tfp.mcmc.effective_sample_size(
+          x,
+          filter_beyond_positive_pairs=True,
+          filter_threshold=None,
+          filter_beyond_lag=37)
+      ess_true_none = tfp.mcmc.effective_sample_size(
+          x,
+          filter_beyond_positive_pairs=True,
+          filter_threshold=None,
+          filter_beyond_lag=None)
+      ess_false_37 = tfp.mcmc.effective_sample_size(
+          x,
+          filter_beyond_positive_pairs=False,
+          filter_threshold=None,
+          filter_beyond_lag=37)
+      ess_true_37_, ess_true_none_, ess_false_37_ = self.evaluate(
+          [ess_true_37, ess_true_none, ess_false_37])
+
+      self.assertAllClose(ess_true_37_, ess_true_none_)
+      self.assertAllClose(ess_true_37_, ess_false_37_)
+
+  def testInitialPositiveSuperEfficient(self):
+    # Initial positive sequence will correctly estimate the ESS of
+    # super-efficient MCMC chains.
+
+    # This sequence has strong anti-autocorrelation, so will get ESS larger than
+    # its length.
+    x_ = ((np.arange(0, 100) % 2).astype(np.float32) -
+          0.5) * np.exp(-np.linspace(0., 10., 100))
+    with spectral_ops_test_util.fft_kernel_label_map():
+      x = tf1.placeholder_with_default(
+          input=x_, shape=x_.shape if self.use_static_shape else None)
+
+      ess = tfp.mcmc.effective_sample_size(
+          x, filter_beyond_positive_pairs=True)
+      ess_ = self.evaluate(ess)
+
+      self.assertGreater(ess_, 100.)
 
 
 @test_util.run_all_in_graph_and_eager_modes
@@ -268,14 +374,20 @@ class _PotentialScaleReductionTest(object):
     self.assertAllEqual((4,), rhat_1_.shape)
     self.assertAllEqual(np.ones_like(rhat_1_).astype(bool), rhat_1_ > 1.2)
 
-  def check_results(self, state_, independent_chain_shape, should_pass):
+  def check_results(self,
+                    state_,
+                    independent_chain_shape,
+                    should_pass,
+                    split_chains=False):
     sample_ndims = 1
     independent_chain_ndims = len(independent_chain_shape)
-    state = tf.compat.v1.placeholder_with_default(
+    state = tf1.placeholder_with_default(
         input=state_, shape=state_.shape if self.use_static_shape else None)
 
     rhat = tfp.mcmc.potential_scale_reduction(
-        state, independent_chain_ndims=independent_chain_ndims)
+        state,
+        independent_chain_ndims=independent_chain_ndims,
+        split_chains=split_chains)
 
     if self.use_static_shape:
       self.assertAllEqual(
@@ -291,6 +403,7 @@ class _PotentialScaleReductionTest(object):
                                             sample_shape,
                                             independent_chain_shape,
                                             other_shape,
+                                            split_chains=False,
                                             dtype=np.float32):
     """Check results with iid normal chains."""
 
@@ -302,7 +415,11 @@ class _PotentialScaleReductionTest(object):
     if other_shape:
       state_ *= rng.rand(*other_shape).astype(dtype)
 
-    self.check_results(state_, independent_chain_shape, should_pass=True)
+    self.check_results(
+        state_,
+        independent_chain_shape,
+        should_pass=True,
+        split_chains=split_chains)
 
   def testPassingIIDNdimsAreIndependentOneOtherZero(self):
     self.iid_normal_chains_should_pass_wrapper(
@@ -311,6 +428,21 @@ class _PotentialScaleReductionTest(object):
   def testPassingIIDNdimsAreIndependentOneOtherOne(self):
     self.iid_normal_chains_should_pass_wrapper(
         sample_shape=[10000], independent_chain_shape=[3], other_shape=[7])
+
+  def testPassingIIDNdimsAreIndependentOneOtherOneSplitChainsEvenNSamples(self):
+    self.iid_normal_chains_should_pass_wrapper(
+        sample_shape=[10000],
+        independent_chain_shape=[3],
+        other_shape=[7],
+        split_chains=True)
+
+  def testPassingIIDNdimsAreIndependentOneOtherOneSplitChainsOddNSamples(self):
+    # For odd number of samples we must remove last sample.
+    self.iid_normal_chains_should_pass_wrapper(
+        sample_shape=[10001],
+        independent_chain_shape=[3],
+        other_shape=[7],
+        split_chains=True)
 
   def testPassingIIDNdimsAreIndependentOneOtherTwo(self):
     self.iid_normal_chains_should_pass_wrapper(
@@ -342,6 +474,56 @@ class _PotentialScaleReductionTest(object):
     self.offset_normal_chains_should_fail_wrapper(
         sample_shape=[10000], independent_chain_shape=[2], other_shape=[5])
 
+  def testLinearTrendPassesIfNoSplitChains(self):
+    # A problem with non-split Rhat is that it does not catch linear trends.
+    n_samples = 1000
+    n_chains = 10
+    state_ = (
+        rng.randn(n_samples, n_chains) +
+        np.linspace(0, 1, n_samples).reshape(n_samples, 1))
+    self.check_results(
+        state_,
+        independent_chain_shape=[n_chains],
+        should_pass=True,
+        split_chains=False)
+
+  def testLinearTrendFailsIfSplitChains(self):
+    n_samples = 10000
+    n_chains = 10
+    state_ = (
+        rng.randn(n_samples, n_chains) +
+        np.linspace(0, 10, n_samples).reshape(n_samples, 1))
+    self.check_results(
+        state_,
+        independent_chain_shape=[n_chains],
+        should_pass=False,
+        split_chains=True)
+
+  def testNotEnoughSamplesNoSplitChainsFailsIfValidateArgs(self):
+    input_ = rng.rand(1, 10)
+    x = tf1.placeholder_with_default(
+        input=input_, shape=input_.shape if self.use_static_shape else None)
+    with self.assertRaisesError("Must provide at least 2 samples"):
+      self.evaluate(
+          tfp.mcmc.potential_scale_reduction(
+              # Require at least 2 samples...have only 1
+              x,
+              independent_chain_ndims=1,
+              validate_args=True))
+
+  def testNotEnoughSamplesWithSplitChainsFailsIfValidateArgs(self):
+    input_ = rng.rand(3, 10)
+    x = tf1.placeholder_with_default(
+        input=input_, shape=input_.shape if self.use_static_shape else None)
+    with self.assertRaisesError("Must provide at least 4 samples"):
+      self.evaluate(
+          tfp.mcmc.potential_scale_reduction(
+              # Require at least 4 samples...have only 3
+              x,
+              independent_chain_ndims=1,
+              split_chains=True,
+              validate_args=True))
+
 
 @test_util.run_all_in_graph_and_eager_modes
 class PotentialScaleReductionStaticTest(tf.test.TestCase,
@@ -350,6 +532,9 @@ class PotentialScaleReductionStaticTest(tf.test.TestCase,
   @property
   def use_static_shape(self):
     return True
+
+  def assertRaisesError(self, msg):
+    return self.assertRaisesRegexp(Exception, msg)
 
   def testIndependentNdimsLessThanOneRaises(self):
     with self.assertRaisesRegexp(ValueError, "independent_chain_ndims"):
@@ -365,6 +550,11 @@ class PotentialScaleReductionDynamicTest(tf.test.TestCase,
   def use_static_shape(self):
     return False
 
+  def assertRaisesError(self, msg):
+    if tf.executing_eagerly():
+      return self.assertRaisesRegexp(Exception, msg)
+    return self.assertRaisesOpError(msg)
+
 
 class _ReduceVarianceTest(object):
 
@@ -375,7 +565,7 @@ class _ReduceVarianceTest(object):
 
   def check_versus_numpy(self, x_, axis, biased, keepdims):
     x_ = np.asarray(x_)
-    x = tf.compat.v1.placeholder_with_default(
+    x = tf1.placeholder_with_default(
         input=x_, shape=x_.shape if self.use_static_shape else None)
     var = _reduce_variance(
         x, axis=axis, biased=biased, keepdims=keepdims)

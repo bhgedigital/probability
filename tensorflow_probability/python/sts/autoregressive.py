@@ -343,7 +343,7 @@ class Autoregressive(StructuralTimeSeries):
             if masked_time_series is not None else None),
            coefficients_prior,
            level_scale_prior,
-           initial_state_prior], preferred_dtype=tf.float32)
+           initial_state_prior], dtype_hint=tf.float32)
 
       if observed_time_series is not None:
         _, observed_stddev, observed_initial = sts_util.empirical_statistics(
@@ -388,7 +388,9 @@ class Autoregressive(StructuralTimeSeries):
               Parameter('coefficients',
                         coefficients_prior,
                         coefficient_constraining_bijector),
-              Parameter('level_scale', level_scale_prior, tfb.Softplus())
+              Parameter('level_scale', level_scale_prior,
+                        tfb.Chain([tfb.AffineScalar(scale=observed_stddev),
+                                   tfb.Softplus()]))
           ],
           latent_size=order,
           name=name)

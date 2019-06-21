@@ -25,6 +25,7 @@ interceptor.
 
 #### Args:
 
+
 * <b>`func`</b>: Function to wrap.
 
 

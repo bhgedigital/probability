@@ -24,7 +24,8 @@ See GammaGamma for more details.
 
 #### Returns:
 
-  RandomVariable.
+RandomVariable.
+
 
 #### Original Docstring for Distribution
 
@@ -34,8 +35,8 @@ The parameters `concentration` and `rate` must be shaped in a way that
 supports broadcasting (e.g.
 `concentration + mixing_concentration + mixing_rate` is a valid operation).
 
-
 #### Args:
+
 
 * <b>`concentration`</b>: Floating point tensor, the concentration params of the
   distribution(s). Must contain only positive values.
@@ -55,5 +56,6 @@ supports broadcasting (e.g.
 
 
 #### Raises:
+
 
 * <b>`TypeError`</b>: if `concentration` and `rate` are different dtypes.

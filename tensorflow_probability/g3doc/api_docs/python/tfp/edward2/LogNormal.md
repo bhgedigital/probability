@@ -24,7 +24,8 @@ See LogNormal for more details.
 
 #### Returns:
 
-  RandomVariable.
+RandomVariable.
+
 
 #### Original Docstring for Distribution
 
@@ -35,8 +36,8 @@ whose logarithm is normally distributed with mean `loc` and
 standard deviation `scale`. It is constructed as the exponential
 transformation of a Normal distribution.
 
-
 #### Args:
+
 
 * <b>`loc`</b>: Floating-point `Tensor`; the means of the underlying
   Normal distribution(s).

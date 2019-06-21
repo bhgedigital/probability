@@ -24,14 +24,15 @@ See VonMisesFisher for more details.
 
 #### Returns:
 
-  RandomVariable.
+RandomVariable.
+
 
 #### Original Docstring for Distribution
 
 Creates a new `VonMisesFisher` instance.
 
-
 #### Args:
+
 
 * <b>`mean_direction`</b>: Floating-point `Tensor` with shape [B1, ... Bn, D].
   A unit vector indicating the mode of the distribution, or the
@@ -56,5 +57,6 @@ Creates a new `VonMisesFisher` instance.
 
 
 #### Raises:
+
 
 * <b>`ValueError`</b>: For known-bad arguments, i.e. unsupported event dimension.

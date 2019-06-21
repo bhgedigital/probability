@@ -24,7 +24,8 @@ See MultivariateStudentTLinearOperator for more details.
 
 #### Returns:
 
-  RandomVariable.
+RandomVariable.
+
 
 #### Original Docstring for Distribution
 
@@ -38,8 +39,8 @@ The `event_shape` is given by last dimension of the matrix implied by
 
 Additional leading dimensions (if any) will index batches.
 
-
 #### Args:
+
 
 * <b>`df`</b>: A positive floating-point `Tensor`. Has shape `[B1, ..., Bb]` where `b
   >= 0`.
@@ -58,6 +59,7 @@ Additional leading dimensions (if any) will index batches.
 
 
 #### Raises:
+
 
 * <b>`TypeError`</b>: if not `scale.dtype.is_floating`.
 * <b>`ValueError`</b>: if not `scale.is_positive_definite`.

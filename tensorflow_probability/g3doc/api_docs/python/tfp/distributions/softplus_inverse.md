@@ -28,6 +28,7 @@ softplus_inverse = log(exp(x) - 1.)
 
 #### Args:
 
+
 * <b>`x`</b>: `Tensor`. Non-negative (not enforced), floating-point.
 * <b>`name`</b>: A name for the operation (optional).
 

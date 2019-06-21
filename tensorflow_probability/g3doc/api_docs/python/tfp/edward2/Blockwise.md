@@ -24,14 +24,15 @@ See Blockwise for more details.
 
 #### Returns:
 
-  RandomVariable.
+RandomVariable.
+
 
 #### Original Docstring for Distribution
 
 Construct the `Blockwise` distribution.
 
-
 #### Args:
+
 
 * <b>`distributions`</b>: Python `list` of <a href="../../tfp/distributions/Distribution.md"><code>tfp.distributions.Distribution</code></a>
   instances. All distribution instances must have the same `batch_shape`

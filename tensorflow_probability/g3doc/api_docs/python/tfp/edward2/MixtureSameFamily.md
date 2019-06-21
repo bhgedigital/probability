@@ -24,14 +24,15 @@ See MixtureSameFamily for more details.
 
 #### Returns:
 
-  RandomVariable.
+RandomVariable.
+
 
 #### Original Docstring for Distribution
 
 Construct a `MixtureSameFamily` distribution.
 
-
 #### Args:
+
 
 * <b>`mixture_distribution`</b>: <a href="../../tfp/distributions/Categorical.md"><code>tfp.distributions.Categorical</code></a>-like instance.
   Manages the probability of selecting components. The number of
@@ -66,13 +67,14 @@ Construct a `MixtureSameFamily` distribution.
 
 #### Raises:
 
-  ValueError: `if not dtype_util.is_integer(mixture_distribution.dtype)`.
-  ValueError: if mixture_distribution does not have scalar `event_shape`.
-  ValueError: if `mixture_distribution.batch_shape` and
-    `components_distribution.batch_shape[:-1]` are both fully defined and
-    the former is neither scalar nor equal to the latter.
-  ValueError: if `mixture_distribution` categories does not equal
-    `components_distribution` rightmost batch shape.
+
+* <b>`ValueError`</b>: `if not dtype_util.is_integer(mixture_distribution.dtype)`.
+* <b>`ValueError`</b>: if mixture_distribution does not have scalar `event_shape`.
+* <b>`ValueError`</b>: if `mixture_distribution.batch_shape` and
+  `components_distribution.batch_shape[:-1]` are both fully defined and
+  the former is neither scalar nor equal to the latter.
+* <b>`ValueError`</b>: if `mixture_distribution` categories does not equal
+  `components_distribution` rightmost batch shape.
 
 #### References
 

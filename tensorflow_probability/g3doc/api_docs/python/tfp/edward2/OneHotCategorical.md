@@ -24,14 +24,15 @@ See OneHotCategorical for more details.
 
 #### Returns:
 
-  RandomVariable.
+RandomVariable.
+
 
 #### Original Docstring for Distribution
 
 Initialize OneHotCategorical distributions using class log-probabilities.
 
-
 #### Args:
+
 
 * <b>`logits`</b>: An N-D `Tensor`, `N >= 1`, representing the log probabilities of a
   set of Categorical distributions. The first `N - 1` dimensions index

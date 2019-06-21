@@ -43,6 +43,7 @@ caused by taking the log of small inputs.
 #### For example:
 
 
+
 ```python
 x = tf.constant([[0., 0, 0],
                  [0, 0, 0]])
@@ -66,8 +67,8 @@ du.reduce_weighted_logsumexp(x, w, axis=[0, 1])
 # ==> log(-1+5)
 ```
 
-
 #### Args:
+
 
 * <b>`logx`</b>: The tensor to reduce. Should have numeric type.
 * <b>`w`</b>: The weight tensor. Should have numeric type identical to `logx`.
@@ -80,6 +81,7 @@ du.reduce_weighted_logsumexp(x, w, axis=[0, 1])
 
 
 #### Returns:
+
 
 * <b>`lswe`</b>: The `log(abs(sum(weight * exp(x))))` reduced tensor.
 * <b>`sign`</b>: (Optional) The sign of `sum(weight * exp(x))`.

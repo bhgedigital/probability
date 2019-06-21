@@ -27,6 +27,7 @@ from tensorflow_probability.python.internal.backend.numpy.internal import utils
 
 __all__ = [
     'dimension_value',
+    'function',
     'v1',
     'v2',
 ]
@@ -45,5 +46,11 @@ dimension_value = utils.copy_docstring(
     tf.compat.dimension_value,
     _dimension_value)
 
+
+function = utils.copy_docstring(
+    tf.function,
+    lambda func=None, input_signature=None, autograph=True,  # pylint: disable=g-long-lambda
+           experimental_autograph_options=None,
+           experimental_relax_shapes=False: func)
 
 del tf, utils

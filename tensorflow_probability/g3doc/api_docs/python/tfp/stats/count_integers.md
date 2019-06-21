@@ -38,6 +38,7 @@ value in `weights` at each index where the corresponding value in `arr` is
 
 #### Args:
 
+
 * <b>`arr`</b>: An `int32` `Tensor` of non-negative values.
 * <b>`weights`</b>: If non-None, must be the same shape as arr. For each value in
   `arr`, the bin will be incremented by the corresponding weight instead of

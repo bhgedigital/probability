@@ -122,15 +122,18 @@ def moments_of_masked_time_series(time_series_tensor, broadcast_mask):
       time_series_tensor.dtype)
 
   # Manually compute mean and variance, excluding masked entries.
-  mean = (tf.reduce_sum(input_tensor=tf.where(
-      broadcast_mask,
-      tf.zeros_like(time_series_tensor),
-      time_series_tensor), axis=-1) / num_unmasked_entries)
-  variance = (tf.reduce_sum(input_tensor=tf.where(
-      broadcast_mask,
-      tf.zeros_like(time_series_tensor),
-      (time_series_tensor - mean[..., tf.newaxis]) ** 2), axis=-1)
-              / num_unmasked_entries)
+  mean = (
+      tf.reduce_sum(
+          input_tensor=tf.compat.v1.where(broadcast_mask,
+                                          tf.zeros_like(time_series_tensor),
+                                          time_series_tensor),
+          axis=-1) / num_unmasked_entries)
+  variance = (
+      tf.reduce_sum(
+          input_tensor=tf.compat.v1.where(
+              broadcast_mask, tf.zeros_like(time_series_tensor),
+              (time_series_tensor - mean[..., tf.newaxis])**2),
+          axis=-1) / num_unmasked_entries)
   return mean, variance
 
 
@@ -157,6 +160,7 @@ def initial_value_of_masked_time_series(time_series_tensor, broadcast_mask):
         'dynamic rank.')  # `batch_gather` requires static rank
 
   # Extract the initial value for each series in the batch.
-  return tf.squeeze(tf.compat.v1.batch_gather(
+  return tf.squeeze(tf.gather(
       params=time_series_tensor,
-      indices=first_unmasked_indices[..., tf.newaxis]), axis=-1)
+      indices=first_unmasked_indices[..., tf.newaxis],
+      batch_dims=first_unmasked_indices.shape.ndims), axis=-1)

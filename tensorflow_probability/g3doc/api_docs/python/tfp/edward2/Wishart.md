@@ -24,14 +24,15 @@ See Wishart for more details.
 
 #### Returns:
 
-  RandomVariable.
+RandomVariable.
+
 
 #### Original Docstring for Distribution
 
 Construct Wishart distributions.
 
-
 #### Args:
+
 
 * <b>`df`</b>: `float` or `double` `Tensor`. Degrees of freedom, must be greater than
   or equal to dimension of the scale matrix.
@@ -63,5 +64,6 @@ Construct Wishart distributions.
 * <b>`name`</b>: Python `str` name prefixed to Ops created by this class.
 
 #### Raises:
+
 
 * <b>`ValueError`</b>: if zero or both of 'scale' and 'scale_tril' are passed in.

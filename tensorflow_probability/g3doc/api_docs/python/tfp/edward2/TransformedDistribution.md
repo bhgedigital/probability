@@ -24,14 +24,15 @@ See TransformedDistribution for more details.
 
 #### Returns:
 
-  RandomVariable.
+RandomVariable.
+
 
 #### Original Docstring for Distribution
 
 Construct a Transformed Distribution.
 
-
 #### Args:
+
 
 * <b>`distribution`</b>: The base distribution instance to transform. Typically an
   instance of `Distribution`.

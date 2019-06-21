@@ -24,14 +24,15 @@ See StudentTProcess for more details.
 
 #### Returns:
 
-  RandomVariable.
+RandomVariable.
+
 
 #### Original Docstring for Distribution
 
 Instantiate a StudentTProcess Distribution.
 
-
 #### Args:
+
 
 * <b>`df`</b>: Positive Floating-point `Tensor` representing the degrees of freedom.
   Must be greater than 2.
@@ -68,5 +69,6 @@ Instantiate a StudentTProcess Distribution.
 
 
 #### Raises:
+
 
 * <b>`ValueError`</b>: if `mean_fn` is not `None` and is not callable.

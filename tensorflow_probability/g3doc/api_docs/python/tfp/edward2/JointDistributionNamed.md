@@ -24,14 +24,15 @@ See JointDistributionNamed for more details.
 
 #### Returns:
 
-  RandomVariable.
+RandomVariable.
+
 
 #### Original Docstring for Distribution
 
 Construct the `JointDistributionNamed` distribution.
 
-
 #### Args:
+
 
 * <b>`model`</b>: Python `dict` or `namedtuple` of distribution-making functions each
   with required args corresponding only to other keys.

@@ -24,7 +24,8 @@ See StudentT for more details.
 
 #### Returns:
 
-  RandomVariable.
+RandomVariable.
+
 
 #### Original Docstring for Distribution
 
@@ -36,8 +37,8 @@ The distributions have degree of freedom `df`, mean `loc`, and scale
 The parameters `df`, `loc`, and `scale` must be shaped in a way that
 supports broadcasting (e.g. `df + loc + scale` is a valid operation).
 
-
 #### Args:
+
 
 * <b>`df`</b>: Floating-point `Tensor`. The degrees of freedom of the
   distribution(s). `df` must contain only positive values.
@@ -58,5 +59,6 @@ supports broadcasting (e.g. `df + loc + scale` is a valid operation).
 
 
 #### Raises:
+
 
 * <b>`TypeError`</b>: if loc and scale are different dtypes.

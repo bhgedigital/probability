@@ -24,14 +24,15 @@ See InverseGaussian for more details.
 
 #### Returns:
 
-  RandomVariable.
+RandomVariable.
+
 
 #### Original Docstring for Distribution
 
 Constructs inverse Gaussian distribution with `loc` and `concentration`.
 
-
 #### Args:
+
 
 * <b>`loc`</b>: Floating-point `Tensor`, the loc params. Must contain only positive
   values.

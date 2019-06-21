@@ -22,7 +22,9 @@ Defined in [`python/sts/fitting.py`](https://github.com/tensorflow/probability/t
 
 <!-- Placeholder for "Used in" -->
 
+
 #### Args:
+
 
 * <b>`parameter`</b>: `sts.Parameter` named tuple instance.
 * <b>`return_constrained`</b>: if `True`, re-applies the constraining bijector
@@ -35,6 +37,7 @@ Defined in [`python/sts/fitting.py`](https://github.com/tensorflow/probability/t
 
 
 #### Returns:
+
 
 * <b>`uniform_initializer`</b>: `Tensor` of shape `concat([init_sample_shape,
 parameter.prior.batch_shape, transformed_event_shape])`, where

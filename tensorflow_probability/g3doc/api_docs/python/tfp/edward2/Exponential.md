@@ -24,14 +24,15 @@ See Exponential for more details.
 
 #### Returns:
 
-  RandomVariable.
+RandomVariable.
+
 
 #### Original Docstring for Distribution
 
 Construct Exponential distribution with parameter `rate`.
 
-
 #### Args:
+
 
 * <b>`rate`</b>: Floating point tensor, equivalent to `1 / mean`. Must contain only
   positive values.

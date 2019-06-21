@@ -31,6 +31,7 @@ distributed. See [Gelman and Rubin (1992)][1]; [Brooks and Gelman (1998)][2].
 #### Some guidelines:
 
 
+
 * The initial state of the chains should be drawn from a distribution
   overdispersed with respect to the target.
 * If all chains converge to the target, then as `N --> infinity`, R-hat --> 1.
@@ -44,8 +45,8 @@ distributed. See [Gelman and Rubin (1992)][1]; [Brooks and Gelman (1998)][2].
   other statistics are desired, a different diagnostic should be used. See
   [Brooks and Gelman (1998)][2].
 
-
 #### Args:
+
 
 * <b>`chains_states`</b>:  `Tensor` or Python `list` of `Tensor`s representing the
   states of a Markov Chain at each result step.  The `ith` state is
@@ -68,9 +69,11 @@ the state(s).  Same `dtype` as `state`, and shape equal to
 `state.shape[1 + independent_chain_ndims:]`.
 
 
+
 #### Raises:
 
-  ValueError:  If `independent_chain_ndims < 1`.
+
+* <b>`ValueError`</b>:  If `independent_chain_ndims < 1`.
 
 #### Examples
 

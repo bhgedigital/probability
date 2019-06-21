@@ -24,7 +24,8 @@ See QuantizedDistribution for more details.
 
 #### Returns:
 
-  RandomVariable.
+RandomVariable.
+
 
 #### Original Docstring for Distribution
 
@@ -34,8 +35,8 @@ Some properties are inherited from the distribution defining `X`. Example:
 `allow_nan_stats` is determined for this `QuantizedDistribution` by reading
 the `distribution`.
 
-
 #### Args:
+
 
 * <b>`distribution`</b>:  The base distribution class to transform. Typically an
   instance of `Distribution`.
@@ -56,6 +57,7 @@ the `distribution`.
 
 
 #### Raises:
+
 
 * <b>`TypeError`</b>: If `dist_cls` is not a subclass of
     `Distribution` or continuous.

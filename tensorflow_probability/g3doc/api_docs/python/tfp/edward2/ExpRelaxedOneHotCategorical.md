@@ -24,14 +24,15 @@ See ExpRelaxedOneHotCategorical for more details.
 
 #### Returns:
 
-  RandomVariable.
+RandomVariable.
+
 
 #### Original Docstring for Distribution
 
 Initialize ExpRelaxedOneHotCategorical using class log-probabilities.
 
-
 #### Args:
+
 
 * <b>`temperature`</b>: An 0-D `Tensor`, representing the temperature
   of a set of ExpRelaxedCategorical distributions. The temperature should
