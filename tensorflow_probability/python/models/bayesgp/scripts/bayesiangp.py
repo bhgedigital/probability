@@ -244,6 +244,7 @@ class BayesianGP():
 		# 	step_size := step_size for the HMC sampler
 		# 	num_leapfrog_steps := number of leapfrog steps for the HMC sampler
 		# initial_state := list ([beta, varm, loc]) of tensors providing the initial state for the HMC sampler
+		# thinning := number of mcmc samples to skip in between before storing
 		# Outputs:
 		#	hyperpar_samples= list [loc_samples_, varm_samples, beta_samples_] of samples for the posterior
 		#									distribution of the hyperparameters

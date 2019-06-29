@@ -122,6 +122,7 @@ class BGP_model():
         # learning_rate := learning rate for optimizer if the noise variance is estimated
         # warm_up := Assuming the noise is kept fixed (i.e estimate_noise == False ), this Boolean  indicates if an adaptive step size is computed during a "warm up" phase
         # step_size := step size to use for the HMC sampler if warm_up == False
+        # thinning := number of mcmc states to skip in between storing 
         # Output:
         #       model_info = dictionary containing
         #                      1) dictionary with samples of hyperparameters as well loss function history (if noise is estimated)

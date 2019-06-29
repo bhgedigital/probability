@@ -128,7 +128,7 @@ class Calibration_model():
 
 
 
-    def run_mcmc(self, mcmc_samples,num_leapfrog_steps = 3, estimate_noise = False, em_iters = 400, learning_rate = 0.05, warm_up = True, step_size = 0.01):
+    def run_mcmc(self, mcmc_samples,num_leapfrog_steps = 3, estimate_noise = False, em_iters = 400, learning_rate = 0.05, warm_up = True, step_size = 0.01, thinning =2):
         # Inputs:
         #   mcmc_samples := number of desired samples for the hyperparameters
         # num_leap_frog_steps = number of leap frog steps for the HMC sampler
@@ -156,7 +156,7 @@ class Calibration_model():
                         warnings.warn("Estimated step size is low. (less than 1e-4)")
                     print('Sampling in progress.')
                     self.par_samples, hyperpar_samples, acceptance_rate = self.model.mcmc(mcmc_samples = mcmc_samples, num_burnin_steps =burn_in,step_size = 0.9*step_size,
-                                                                    num_leapfrog_steps = num_leapfrog_steps, initial_state = next_state)
+                                                                    num_leapfrog_steps = num_leapfrog_steps, initial_state = next_state, thinning = thinning)
                     if acceptance_rate < 0.1:
                         warnings.warn("Acceptance rate was low  (less than 0.1)")
                 except Exception as e:
@@ -167,7 +167,7 @@ class Calibration_model():
                     burn_in  = mcmc_samples
                     print('Sampling in progress.')
                     self.par_samples, hyperpar_samples, acceptance_rate = self.model.mcmc(mcmc_samples = mcmc_samples, num_burnin_steps =burn_in,step_size = 0.9*step_size,
-                                                                    num_leapfrog_steps = num_leapfrog_steps)
+                                                                    num_leapfrog_steps = num_leapfrog_steps, thinning = thinning)
                     if acceptance_rate < 0.1:
                         warnings.warn("Acceptance rate was low  (less than 0.1)")
                 except Exception as e:
@@ -315,6 +315,27 @@ class Calibration_model():
         plt.close()
         return
 
+
+    def plot_local_sensitivity(self, directory_path = None):
+        # Function used to plot the local sensitivty  boxplot
+
+        if len(self.hyperpar_samples) == 0:
+            raise Exception('Hyperparameter samples must be generated or retrieved first.')
+
+        if directory_path == None:
+            directory_path = os.getcwd()
+        if not(os.path.isdir(directory_path)):
+            raise Exception('Invalid directory path ', directory_path)
+
+        betasx_samples = self.hyperpar_samples['sim_inputs_kernel_inverse_lengthscales']
+        betaspar_samples = self.hyperpar_samples['sim_pars_kernel_inverse_lengthscales']
+        betad_samples = self.hyperpar_samples['disc_kernel_inverse_lengthscales']
+        beta_samples_list = [betasx_samples, betaspar_samples, betad_samples]
+        figpath = 'local_sensitivity.png'
+        figpath = os.path.join(directory_path, figpath)
+        sensitivity.generateBetaBoxPlots(bounds=self.Rangenorm, beta_samples_list=beta_samples_list, labels=self.labels, figpath = figpath, calibration_type=True)
+        return
+
     def predict(self, Xtest, with_point_samples = False):
         # Computes approximate values of the full posterior mean and variance of the Gaussian process
 		# by using samples of the posterior distribution of the hyperparameters
@@ -339,6 +360,9 @@ class Calibration_model():
             Xnew = Xtest
 
         Xtest_norm = (Xnew - mean_x)/std_x
+
+        if len(self.hyperpar_samples) == 0:
+            raise Exception('Hyperparameter samples must be generated or retrieved first.')
 
         mcmc_samples = len(self.hyperpar_samples['sim_kernel_variance'])
         # Limiting the number of mcmc samples used if necessary

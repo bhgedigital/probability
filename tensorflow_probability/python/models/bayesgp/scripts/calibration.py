@@ -103,7 +103,7 @@ class Calibration():
 		self.rv_loc = tfd.Normal(loc = 0.0, scale = 0.5, name = 'rv_loc')
 
 		# prior on the variance of the simulation model
-		self.rv_varsim = tfd.Gamma(concentration = 1.0, rate = 1.0,  name = 'rv_varsim')
+		self.rv_varsim = tfd.Gamma(concentration = 4.0, rate = 4.0,  name = 'rv_varsim')
 
 		#prior on the calibration parameters
 		self.rv_par = tfd.Independent(tfd.Uniform(low = lower_bounds, high = upper_bounds),
@@ -116,7 +116,7 @@ class Calibration():
                            reinterpreted_batch_ndims=1, name='rv_betad')
 
 		# prior on the variance of the Gaussian discrepancy model
-		self.rv_vard =  tfd.Gamma(concentration = 1.0, rate = 1.0,  name = 'rv_vard')
+		self.rv_vard =  tfd.Gamma(concentration = 1.0, rate = 5.0,  name = 'rv_vard')
 
 		# prior on the noise variance
 		self.rv_noise = tfd.LogNormal(loc = -6.9, scale = 1.0, name = 'rv_noise')
@@ -203,7 +203,7 @@ class Calibration():
 			betasx = 1.5*tf.ones(self.dim_input, tf.float32)
 			betaspar = 1.5*tf.ones(self.dim_par, tf.float32)
 			varsim = 0.8
-			vard = 0.8
+			vard = 0.4
 			loc = 0.0
 			par = tf.convert_to_tensor(np.zeros(self.dim_par), tf.float32)
 			betad = 1.5*tf.ones(self.dim_input, tf.float32)
@@ -296,7 +296,7 @@ class Calibration():
 
 # Continue editing starting here
 
-	def mcmc(self, mcmc_samples, num_burnin_steps, step_size, num_leapfrog_steps = 3, initial_state = None):
+	def mcmc(self, mcmc_samples, num_burnin_steps, step_size, num_leapfrog_steps = 3, initial_state = None, thinning=2):
 		# Function to perform the sampling for the posterior distributios of the hyperparameters
 		# and the calibration parameters
 		# Inputs:
@@ -306,6 +306,7 @@ class Calibration():
 		# 	num_leapfrog_steps := number of leapfrog steps for the HMC sampler
 		# 	initial_state := list [betasx, betaspar, varsim, loc, par, betad, vard] of tensors
 		#					providing the initial state for the HMC sampler.
+		#   thinning := number of mcmc samples to skip in between before storing
 		# Outputs:
 		#	par_samples := numpy array of samples for the calibration parameters
 		#	hyperpar_samples= list of samples for the posterior
@@ -316,7 +317,7 @@ class Calibration():
 			betasx = 1.5*tf.ones(self.dim_input, tf.float32)
 			betaspar = 1.5*tf.ones(self.dim_par, tf.float32)
 			varsim = 0.8
-			vard = 0.8
+			vard = 0.4
 			loc = 0.0
 			par = tf.convert_to_tensor(np.zeros(self.dim_par), tf.float32)
 			betad = 1.5*tf.ones(self.dim_input, tf.float32)
@@ -339,7 +340,7 @@ class Calibration():
 			vard_samples,
 		], kernel_results = sample_chain(num_results= mcmc_samples, num_burnin_steps= num_burnin_steps,
 																current_state=initial_state,
-																num_steps_between_results = 3,
+																num_steps_between_results = thinning,
 																kernel=TransformedTransitionKernel(
 																	inner_kernel=HamiltonianMonteCarlo(
 			    																target_log_prob_fn=unnormalized_posterior_log_prob,
