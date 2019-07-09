@@ -24,7 +24,7 @@ import math
 
 class Calibration_model():
 
-    def __init__(self, sim_inputs_pars, sim_outputs, exp_inputs, exp_outputs, model_info  = None,  kernel_type = 'RBF', noise_level = 1e-3, labels = []):
+    def __init__(self, sim_inputs_pars, sim_outputs, exp_inputs, exp_outputs, model_info  = None,  kernel_type = 'RBF', noise_level = 1e-3, labels = [], output_label = None):
         # Inputs:
         #   sim_inputs_pars := N x D numpy array of simulation inputs and calibration parameter values.
         #           The first columns must correspond to the input variables and the remaining
@@ -43,8 +43,9 @@ class Calibration_model():
         # kernel_type := string specifying the type of kernel to be used. Options are
 		#                'RBF', 'Matern12', 'Matern32', 'Matern52'
         # noise_level := variance of the Gaussian noise for the normalized data
-        #   labels:= list containing labels for the input variables and the calibration parameters. A default list is
+        # labels:= list containing labels for the input variables and the calibration parameters. A default list is
         #       generated if this is not specified
+        # output_label := label for the output variable
 
         # Checking that the Gaussian noise variance is between 0 and 1
         if model_info:
@@ -123,6 +124,11 @@ class Calibration_model():
             self.labels = labels
             self.input_labels = labels[:self.n_inputs]
             self.par_labels = labels[self.n_inputs:]
+
+        if output_label == None:
+            self.output_label = 'y'
+        else:
+            self.output_label = output_label
 
         return
 
@@ -285,8 +291,10 @@ class Calibration_model():
         df = pd.DataFrame(par_samples_right_scale, columns = self.par_labels)
         figpath = 'par_scatter.png'
         figpath = os.path.join(directory_path2, figpath)
-        plt.figure(figsize = (12,12))
-        pd.plotting.scatter_matrix(df)
+        plt.figure(figsize=(12,12))
+        axs = pd.plotting.scatter_matrix(df)
+        for i in range(len(self.par_labels)):
+            axs[i,i].set_ylabel(self.par_labels[i] + '_frequency')
         plt.savefig(figpath)
         plt.close()
 
@@ -307,6 +315,8 @@ class Calibration_model():
             raise Exception('Invalid directory path ', directory_path)
         plt.figure(figsize=(12,10))
         plt.plot(self.hyperpar_samples['loss_function_history'])
+        plt.xlabel('em_iters')
+        plt.ylabel('loss')
         title = 'loss_function'
         plt.title(title)
         figpath = title + '.png'
@@ -316,8 +326,8 @@ class Calibration_model():
         return
 
 
-    def plot_local_sensitivity(self, directory_path = None):
-        # Function used to plot the local sensitivty  boxplot
+    def plot_sensitivity_variation(self, directory_path = None):
+        # Function used to plot the sensitivity variation  boxplot
 
         if len(self.hyperpar_samples) == 0:
             raise Exception('Hyperparameter samples must be generated or retrieved first.')
@@ -331,7 +341,7 @@ class Calibration_model():
         betaspar_samples = self.hyperpar_samples['sim_pars_kernel_inverse_lengthscales']
         betad_samples = self.hyperpar_samples['disc_kernel_inverse_lengthscales']
         beta_samples_list = [betasx_samples, betaspar_samples, betad_samples]
-        figpath = 'local_sensitivity.png'
+        figpath = 'sensitivity_variation.png'
         figpath = os.path.join(directory_path, figpath)
         sensitivity.generateBetaBoxPlots(bounds=self.Rangenorm, beta_samples_list=beta_samples_list, labels=self.labels, figpath = figpath, calibration_type=True)
         return
@@ -534,14 +544,16 @@ class Calibration_model():
             if n_vars <= 6:
                 fig, axes = plt.subplots(nrows=1, ncols=n_vars, sharey=True, figsize =(20,10))
                 for i in range(n_vars):
-                    key = self.labels[i]
+                    key = used_labels[i]
                     x = main[key]['inputs']
                     y = main[key]['output_mean']
                     y_std = main[key]['output_std']
                     axes[i].plot(x,y, label= self.labels[i])
                     axes[i].fill_between(x, y-2*y_std, y + 2*y_std, alpha = 0.2, color ='orange')
                     axes[i].grid()
-                    axes[i].legend()
+                    axes[i].set_xlabel(key)
+                axes[0].set_ylabel(self.output_label)
+                    # axes[i].legend()
                 title = 'main_effects'
                 plt.title(title)
                 figpath = title + '.png'
@@ -554,14 +566,16 @@ class Calibration_model():
                 for i in range(n_vars):
                     row_idx = i//6
                     col_idx = i%6
-                    key = self.labels[i]
+                    key = used_labels[i]
                     x = main[key]['inputs']
                     y = main[key]['output_mean']
                     y_std = main[key]['output_std']
                     axes[row_idx, col_idx].plot(x,y, label= self.labels[i])
                     axes[row_idx, col_idx].fill_between(x, y-2*y_std, y + 2*y_std, alpha = 0.2, color ='orange')
                     axes[row_idx, col_idx].grid()
-                    axes[row_idx, col_idx].legend()
+                    axes[row_idx, col_idx].set_xlabel(key)
+                    axes[row_idx, 0].set_ylabel(self.output_label)
+                    # axes[row_idx, col_idx].legend()
                 title = 'main_effects'
                 plt.title(title)
                 figpath = title + '.png'
@@ -657,6 +671,7 @@ class Calibration_model():
                 ax.set_title(title)
                 ax.set_xlabel(used_labels[j2])
                 ax.set_ylabel(used_labels[j1])
+                ax.set_zlabel(self.output_label)
                 ax.set_zlim(zmin,zmax)
                 plt.gca().invert_xaxis()
                 plt.colorbar(m)
@@ -794,8 +809,9 @@ class Calibration_model():
             new_labels = [all_labels[selected[i]] for i in range(n_selected)]
             title = 'top_sobol_indices'
             plt.title(title)
-            # Create names on the x-axis
+            # Create names on the y-axis
             plt.yticks(y_pos, new_labels)
+            plt.xlabel('sobol_index')
             figpath = title + '.png'
             figpath = os.path.join(directory_path, figpath)
             plt.savefig(figpath)
@@ -897,8 +913,9 @@ class Calibration_model():
             new_labels = [used_labels[selected[i]] for i in range(n_selected)]
             title = 'top_total_sobol_indices'
             plt.title(title)
-            # Create names on the x-axis
+            # Create names on the y-axis
             plt.yticks(y_pos, new_labels)
+            plt.xlabel('total_sobol_index')
             figpath = title + '.png'
             figpath = os.path.join(directory_path, figpath)
             plt.savefig(figpath)

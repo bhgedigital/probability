@@ -281,6 +281,8 @@ def generateBetaBoxPlots(bounds, beta_samples_list, labels, figpath = None, cali
         plt.boxplot(data_to_plot,  showfliers=False)
         locs, _ = plt.xticks()
         plt.xticks(locs, labels)
+        plt.ylim((0,1))
+        plt.ylabel('sensitivity')
         plt.title('Simulator model')
 
         # Fo the inadequacy
@@ -291,9 +293,10 @@ def generateBetaBoxPlots(bounds, beta_samples_list, labels, figpath = None, cali
         plt.subplot(2,1,2)
         # Create the boxplot
         plt.boxplot(data_to_plot,  showfliers=False)
-
         plt.xticks(locs, labels[:n_inputs])
         plt.title('Inadequacy model')
+        plt.ylim((0,1))
+        plt.ylabel('sensitivity')
         if figpath:
             plt.savefig(figpath)
             plt.close()
@@ -312,7 +315,8 @@ def generateBetaBoxPlots(bounds, beta_samples_list, labels, figpath = None, cali
         plt.boxplot(data_to_plot,  showfliers=False)
         locs, _ = plt.xticks()
         plt.xticks(locs, labels)
-
+        plt.ylim((0,1))
+        plt.ylabel('sensitivity')
         if figpath:
             plt.savefig(figpath)
             plt.close()

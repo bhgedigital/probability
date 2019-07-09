@@ -105,8 +105,8 @@ class BayesianGP():
 		    if invalid:
 		        raise Exception('Incorrect type for rate or concentration for varc hyperparameter. Values must be of type float.')
 		else:
-		    concentration = 2.0
-		    rate = 2.0
+		    concentration = 3.0
+		    rate = 3.0
 		self.rv_varm = tfd.Gamma(concentration = concentration, rate = rate,  name = 'rv_varm')
 
 		# prior on the noise variance
