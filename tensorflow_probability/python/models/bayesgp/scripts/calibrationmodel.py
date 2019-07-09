@@ -326,7 +326,7 @@ class Calibration_model():
         return
 
 
-    def plot_sensitivity_variation(self, directory_path = None):
+    def plot_sensitivity_variation(self, directory_path = None, type = 'simulator'):
         # Function used to plot the sensitivity variation  boxplot
 
         if len(self.hyperpar_samples) == 0:
@@ -343,7 +343,7 @@ class Calibration_model():
         beta_samples_list = [betasx_samples, betaspar_samples, betad_samples]
         figpath = 'sensitivity_variation.png'
         figpath = os.path.join(directory_path, figpath)
-        sensitivity.generateBetaBoxPlots(bounds=self.Rangenorm, beta_samples_list=beta_samples_list, labels=self.labels, figpath = figpath, calibration_type=True)
+        sensitivity.generateBetaBoxPlots(bounds=self.Rangenorm, beta_samples_list=beta_samples_list, labels=self.labels, figpath = figpath, calibration=True, type = type)
         return
 
     def predict(self, Xtest, with_point_samples = False):
