@@ -163,7 +163,9 @@ __init__(
 
 Initializes a `SeedStream`.
 
+
 #### Args:
+
 
 * <b>`seed`</b>: Any Python object convertible to string, supplying the
   initial entropy.  If `None`, operations seeded with seeds
@@ -182,7 +184,9 @@ Initializes a `SeedStream`.
 
 
 
+
 <h3 id="salt"><code>salt</code></h3>
+
 
 
 
@@ -210,6 +214,7 @@ the given seed modulo `2**31 - 1` (see
 `tensorflow/python/framework/random_seed.py`).
 
 #### Returns:
+
 
 * <b>`seed`</b>: A fresh integer usable as a seed in downstream operations,
   or `None`.

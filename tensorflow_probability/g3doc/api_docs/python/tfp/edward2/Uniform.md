@@ -24,14 +24,15 @@ See Uniform for more details.
 
 #### Returns:
 
-  RandomVariable.
+RandomVariable.
+
 
 #### Original Docstring for Distribution
 
 Initialize a batch of Uniform distributions.
 
-
 #### Args:
+
 
 * <b>`low`</b>: Floating point tensor, lower boundary of the output interval. Must
   have `low < high`.
@@ -49,5 +50,6 @@ Initialize a batch of Uniform distributions.
 
 
 #### Raises:
+
 
 * <b>`InvalidArgumentError`</b>: if `low >= high` and `validate_args=False`.

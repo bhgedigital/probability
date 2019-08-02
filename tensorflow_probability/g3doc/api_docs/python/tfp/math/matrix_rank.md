@@ -22,7 +22,9 @@ Defined in [`python/math/linalg.py`](https://github.com/tensorflow/probability/t
 
 <!-- Placeholder for "Used in" -->
 
+
 #### Arguments:
+
 
 * <b>`a`</b>: (Batch of) `float`-like matrix-shaped `Tensor`(s) which are to be
   pseudo-inverted.
@@ -36,6 +38,7 @@ Defined in [`python/math/linalg.py`](https://github.com/tensorflow/probability/t
 
 
 #### Returns:
+
 
 * <b>`matrix_rank`</b>: (Batch of) `int32` scalars representing the number of non-zero
   singular values.

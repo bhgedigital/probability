@@ -24,14 +24,15 @@ See Chi2 for more details.
 
 #### Returns:
 
-  RandomVariable.
+RandomVariable.
+
 
 #### Original Docstring for Distribution
 
 Construct Chi2 distributions with parameter `df`.
 
-
 #### Args:
+
 
 * <b>`df`</b>: Floating point tensor, the degrees of freedom of the
   distribution(s). `df` must contain only positive values.

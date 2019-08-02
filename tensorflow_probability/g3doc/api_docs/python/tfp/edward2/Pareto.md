@@ -24,14 +24,15 @@ See Pareto for more details.
 
 #### Returns:
 
-  RandomVariable.
+RandomVariable.
+
 
 #### Original Docstring for Distribution
 
 Construct Pareto distribution with `concentration` and `scale`.
 
-
 #### Args:
+
 
 * <b>`concentration`</b>: Floating point tensor. Must contain only positive values.
 * <b>`scale`</b>: Floating point tensor, equivalent to `mode`. `scale` also

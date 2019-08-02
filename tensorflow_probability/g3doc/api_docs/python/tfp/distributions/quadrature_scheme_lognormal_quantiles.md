@@ -23,7 +23,9 @@ Defined in [`python/distributions/poisson_lognormal.py`](https://github.com/tens
 
 <!-- Placeholder for "Used in" -->
 
+
 #### Args:
+
 
 * <b>`loc`</b>: `float`-like (batch of) scalar `Tensor`; the location parameter of
   the LogNormal prior.
@@ -39,6 +41,7 @@ Defined in [`python/distributions/poisson_lognormal.py`](https://github.com/tens
 
 
 #### Returns:
+
 
 * <b>`grid`</b>: (Batch of) length-`quadrature_size` vectors representing the
   `log_rate` parameters of a `Poisson`.

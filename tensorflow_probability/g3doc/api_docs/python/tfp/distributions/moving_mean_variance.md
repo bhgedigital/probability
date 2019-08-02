@@ -38,6 +38,7 @@ variable creation.
 
 #### Args:
 
+
 * <b>`value`</b>: `float`-like `Tensor`. Same shape as `mean_var` and `variance_var`.
 * <b>`decay`</b>: A `float`-like `Tensor`. The moving mean decay. Typically close to
   `1.`, e.g., `0.999`.
@@ -45,6 +46,7 @@ variable creation.
 
 
 #### Returns:
+
 
 * <b>`mean_var`</b>: `Variable` representing the `value`-updated exponentially weighted
   moving mean.
@@ -54,8 +56,9 @@ variable creation.
 
 #### Raises:
 
-  TypeError: if `value_var` does not have float type `dtype`.
-  TypeError: if `value`, `decay` have different `base_dtype`.
+
+* <b>`TypeError`</b>: if `value_var` does not have float type `dtype`.
+* <b>`TypeError`</b>: if `value`, `decay` have different `base_dtype`.
 
 #### References
 

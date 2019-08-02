@@ -24,14 +24,15 @@ See RelaxedBernoulli for more details.
 
 #### Returns:
 
-  RandomVariable.
+RandomVariable.
+
 
 #### Original Docstring for Distribution
 
 Construct RelaxedBernoulli distributions.
 
-
 #### Args:
+
 
 * <b>`temperature`</b>: An 0-D `Tensor`, representing the temperature
   of a set of RelaxedBernoulli distributions. The temperature should be
@@ -56,5 +57,6 @@ Construct RelaxedBernoulli distributions.
 
 
 #### Raises:
+
 
 * <b>`ValueError`</b>: If both `probs` and `logits` are passed, or if neither.

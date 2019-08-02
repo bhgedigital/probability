@@ -18,6 +18,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import tensorflow.compat.v1 as tf1
 import tensorflow.compat.v2 as tf
 
 from tensorflow_probability.python.distributions import distribution
@@ -56,7 +57,7 @@ class NegativeBinomial(distribution.Distribution):
                probs=None,
                validate_args=False,
                allow_nan_stats=True,
-               name="NegativeBinomial"):
+               name='NegativeBinomial'):
     """Construct NegativeBinomial distributions.
 
     Args:
@@ -92,14 +93,14 @@ class NegativeBinomial(distribution.Distribution):
     parameters = dict(locals())
     with tf.name_scope(name) as name:
       dtype = dtype_util.common_dtype([total_count, logits, probs],
-                                      preferred_dtype=tf.float32)
+                                      dtype_hint=tf.float32)
       self._logits, self._probs = distribution_util.get_logits_and_probs(
           logits, probs, validate_args=validate_args, name=name, dtype=dtype)
       total_count = tf.convert_to_tensor(
-          value=total_count, name="total_count", dtype=dtype)
+          value=total_count, name='total_count', dtype=dtype)
       with tf.control_dependencies(
           [assert_util.assert_positive(total_count)] if validate_args else []):
-        self._total_count = tf.identity(total_count, name="total_count")
+        self._total_count = tf.identity(total_count, name='total_count')
 
     super(NegativeBinomial, self).__init__(
         dtype=self._probs.dtype,
@@ -121,12 +122,12 @@ class NegativeBinomial(distribution.Distribution):
 
   @property
   def logits(self):
-    """Log-odds of a `1` outcome (vs `0`)."""
+    """Input argument `logits`."""
     return self._logits
 
   @property
   def probs(self):
-    """Probability of a `1` outcome (vs `0`)."""
+    """Input argument `probs`."""
     return self._probs
 
   def _batch_shape_tensor(self):
@@ -147,7 +148,7 @@ class NegativeBinomial(distribution.Distribution):
     # Here we use the fact that if:
     # lam ~ Gamma(concentration=total_count, rate=(1-probs)/probs)
     # then X ~ Poisson(lam) is Negative Binomially distributed.
-    stream = seed_stream.SeedStream(seed, salt="NegativeBinomial")
+    stream = seed_stream.SeedStream(seed, salt='NegativeBinomial')
     rate = tf.random.gamma(
         shape=[n],
         alpha=self.total_count,
@@ -182,9 +183,23 @@ class NegativeBinomial(distribution.Distribution):
     return self.total_count * tf.exp(self.logits)
 
   def _mode(self):
-    adjusted_count = tf.where(1. < self.total_count, self.total_count - 1.,
-                              tf.zeros_like(self.total_count))
+    adjusted_count = tf1.where(1. < self.total_count, self.total_count - 1.,
+                               tf.zeros_like(self.total_count))
     return tf.floor(adjusted_count * tf.exp(self.logits))
 
   def _variance(self):
     return self._mean() / tf.sigmoid(-self.logits)
+
+  def logits_parameter(self, name=None):
+    """Logits computed from non-`None` input arg (`probs` or `logits`)."""
+    with self._name_and_control_scope(name or 'logits_parameter'):
+      if self.logits is None:
+        return tf.math.log(self.probs) - tf.math.log1p(-self.probs)
+      return tf.identity(self.logits)
+
+  def probs_parameter(self, name=None):
+    """Probs computed from non-`None` input arg (`probs` or `logits`)."""
+    with self._name_and_control_scope(name or 'probs_parameter'):
+      if self.logits is None:
+        return tf.identity(self.probs)
+      return tf.nn.sigmoid(self.logits)

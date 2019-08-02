@@ -31,7 +31,9 @@ Defined in [`python/glm/fisher_scoring.py`](https://github.com/tensorflow/probab
 
 <!-- Placeholder for "Used in" -->
 
+
 #### Args:
+
 
 * <b>`model_matrix`</b>: (Batch of) `float`-like, matrix-shaped `Tensor` where each row
   represents a sample's features.
@@ -88,15 +90,16 @@ Defined in [`python/glm/fisher_scoring.py`](https://github.com/tensorflow/probab
 
 #### Returns:
 
-  model_coefficients: (Batch of) vector-shaped `Tensor`; represents the
-    fitted model coefficients, one for each column in `model_matrix`.
-  predicted_linear_response: `response`-shaped `Tensor` representing linear
-    predictions based on new `model_coefficients`, i.e.,
-    `tf.linalg.matvec(model_matrix, model_coefficients) + offset`.
-  is_converged: `bool` `Tensor` indicating that the returned
-    `model_coefficients` met the `convergence_criteria_fn` criteria within the
-    `maximum_iterations` limit.
-  iter_: `int32` `Tensor` indicating the number of iterations taken.
+
+* <b>`model_coefficients`</b>: (Batch of) vector-shaped `Tensor`; represents the
+  fitted model coefficients, one for each column in `model_matrix`.
+* <b>`predicted_linear_response`</b>: `response`-shaped `Tensor` representing linear
+  predictions based on new `model_coefficients`, i.e.,
+  `tf.linalg.matvec(model_matrix, model_coefficients) + offset`.
+* <b>`is_converged`</b>: `bool` `Tensor` indicating that the returned
+  `model_coefficients` met the `convergence_criteria_fn` criteria within the
+  `maximum_iterations` limit.
+* <b>`iter_`</b>: `int32` `Tensor` indicating the number of iterations taken.
 
 #### Example
 

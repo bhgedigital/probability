@@ -34,6 +34,7 @@ Values of `x` outside of the intervals cause errors.  Consider using
 
 #### Args:
 
+
 * <b>`x`</b>:  Numeric `N-D` `Tensor` with `N > 0`.  If `axis` is not
   `None`, must have statically known number of dimensions. The
   `axis` kwarg determines which dimensions index iid samples.
@@ -58,11 +59,12 @@ Values of `x` outside of the intervals cause errors.  Consider using
 
 #### Returns:
 
-  counts: `Tensor` of type `dtype` and, with
-    `~axis = [i for i in range(arr.ndim) if i not in axis]`,
-    `counts.shape = [edges.shape[0]] + x.shape[~axis]`.
-    With `I` a multi-index into `~axis`, `counts[k][I]` is the number of times
-    event(s) fell into the `kth` interval of `edges`.
+
+* <b>`counts`</b>: `Tensor` of type `dtype` and, with
+  `~axis = [i for i in range(arr.ndim) if i not in axis]`,
+  `counts.shape = [edges.shape[0]] + x.shape[~axis]`.
+  With `I` a multi-index into `~axis`, `counts[k][I]` is the number of times
+  event(s) fell into the `kth` interval of `edges`.
 
 #### Examples
 

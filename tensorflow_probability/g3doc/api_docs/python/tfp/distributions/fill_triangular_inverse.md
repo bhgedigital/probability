@@ -30,6 +30,7 @@ If `x.shape` is `[b1, b2, ..., bB, n, n]` then the output shape is
 #### Example:
 
 
+
 ```python
 fill_triangular_inverse(
   [[4, 0, 0],
@@ -46,8 +47,8 @@ fill_triangular_inverse(
 # ==> [1, 2, 3, 4, 5, 6]
 ```
 
-
 #### Args:
+
 
 * <b>`x`</b>: `Tensor` representing lower (or upper) triangular elements.
 * <b>`upper`</b>: Python `bool` representing whether output matrix should be upper
@@ -56,6 +57,7 @@ fill_triangular_inverse(
 
 
 #### Returns:
+
 
 * <b>`flat_tril`</b>: (Batch of) vector-shaped `Tensor` representing vectorized lower
   (or upper) triangular elements from `x`.

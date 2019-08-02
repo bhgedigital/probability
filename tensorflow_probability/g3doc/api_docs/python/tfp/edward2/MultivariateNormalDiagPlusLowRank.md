@@ -24,7 +24,8 @@ See MultivariateNormalDiagPlusLowRank for more details.
 
 #### Returns:
 
-  RandomVariable.
+RandomVariable.
+
 
 #### Original Docstring for Distribution
 
@@ -43,7 +44,8 @@ scale = diag(scale_diag + scale_identity_multiplier ones(k)) +
     scale_perturb_factor @ diag(scale_perturb_diag) @ scale_perturb_factor.T
 ```
 
-* <b>`where`</b>: 
+where:
+
 * `scale_diag.shape = [k]`,
 * `scale_identity_multiplier.shape = []`,
 * `scale_perturb_factor.shape = [k, r]`, typically `k >> r`, and,
@@ -54,8 +56,8 @@ Additional leading dimensions (if any) will index batches.
 If both `scale_diag` and `scale_identity_multiplier` are `None`, then
 `scale` is the Identity matrix.
 
-
 #### Args:
+
 
 * <b>`loc`</b>: Floating-point `Tensor`. If this is set to `None`, `loc` is
   implicitly `0`. When specified, may have shape `[B1, ..., Bb, k]` where
@@ -93,5 +95,6 @@ If both `scale_diag` and `scale_identity_multiplier` are `None`, then
 
 
 #### Raises:
+
 
 * <b>`ValueError`</b>: if at most `scale_identity_multiplier` is specified.

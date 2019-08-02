@@ -42,6 +42,7 @@ Initialize self.  See help(type(self)) for accurate signature.
 
 
 
+
 ## Methods
 
 <h3 id="__eq__"><code>__eq__</code></h3>
@@ -57,12 +58,14 @@ instances, equality checks if two instances' id() values are equal.
 
 #### Args:
 
+
 * <b>`other`</b>: Object to compare against.
 
 
 #### Returns:
 
 `self is other`.
+
 
 
 

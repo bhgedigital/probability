@@ -48,6 +48,7 @@ reduced to two times in the future).
 
 #### Args:
 
+
 * <b>`num_steps`</b>: Integer number of Markov chain updates to run. More
   iterations means more expense, but smoother annealing between q
   and p, which in turn means exponentially lower variance for the
@@ -76,13 +77,14 @@ reduced to two times in the future).
 
 #### Returns:
 
-  next_state: `Tensor` or Python list of `Tensor`s representing the
-    state(s) of the Markov chain(s) at the final iteration. Has same shape as
-    input `current_state`.
-  ais_weights: Tensor with the estimated weight(s). Has shape matching
-    `target_log_prob_fn(current_state)`.
-  kernel_results: `collections.namedtuple` of internal calculations used to
-    advance the chain.
+
+* <b>`next_state`</b>: `Tensor` or Python list of `Tensor`s representing the
+  state(s) of the Markov chain(s) at the final iteration. Has same shape as
+  input `current_state`.
+* <b>`ais_weights`</b>: Tensor with the estimated weight(s). Has shape matching
+  `target_log_prob_fn(current_state)`.
+* <b>`kernel_results`</b>: `collections.namedtuple` of internal calculations used to
+  advance the chain.
 
 #### Examples
 

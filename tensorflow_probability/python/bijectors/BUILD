@@ -43,6 +43,7 @@ py_library(
         ":chain",
         ":cholesky_outer_product",
         ":cholesky_to_inv_cholesky",
+        ":correlation_cholesky",
         ":cumsum",
         ":discrete_cosine_transform",
         ":exp",
@@ -67,6 +68,7 @@ py_library(
         ":scale_tril",
         ":sigmoid",
         ":sinh_arcsinh",
+        ":softfloor",
         ":softmax_centered",
         ":softplus",
         ":softsign",
@@ -93,6 +95,7 @@ py_library(
         "//tensorflow_probability/python/internal:assert_util",
         "//tensorflow_probability/python/internal:distribution_util",
         "//tensorflow_probability/python/internal:dtype_util",
+        "//tensorflow_probability/python/internal:name_util",
         "//tensorflow_probability/python/internal:tensorshape_util",
     ],
 )
@@ -115,6 +118,7 @@ py_library(
         ":bijector",
         # tensorflow dep,
         "//tensorflow_probability/python/internal:dtype_util",
+        "//tensorflow_probability/python/internal:tensor_util",
     ],
 )
 
@@ -127,6 +131,7 @@ py_library(
         "//tensorflow_probability/python/internal:assert_util",
         "//tensorflow_probability/python/internal:distribution_util",
         "//tensorflow_probability/python/internal:dtype_util",
+        "//tensorflow_probability/python/internal:tensor_util",
     ],
 )
 
@@ -212,6 +217,17 @@ py_library(
 )
 
 py_library(
+    name = "softfloor",
+    srcs = ["softfloor.py"],
+    deps = [
+        ":bijector",
+        # tensorflow dep,
+        "//tensorflow_probability/python/internal:assert_util",
+        "//tensorflow_probability/python/internal:dtype_util",
+    ],
+)
+
+py_library(
     name = "matveclu",
     srcs = ["matveclu.py"],
     deps = [
@@ -269,6 +285,7 @@ py_library(
         "//tensorflow_probability/python/internal:assert_util",
         "//tensorflow_probability/python/internal:distribution_util",
         "//tensorflow_probability/python/internal:dtype_util",
+        "//tensorflow_probability/python/internal:tensor_util",
     ],
 )
 
@@ -284,7 +301,10 @@ py_library(
 py_library(
     name = "inline",
     srcs = ["inline.py"],
-    deps = [":bijector"],
+    deps = [
+        ":bijector",
+        # tensorflow dep,
+    ],
 )
 
 py_library(
@@ -301,6 +321,18 @@ py_library(
         # tensorflow dep,
         "//tensorflow_probability/python/internal:assert_util",
         "//tensorflow_probability/python/internal:distribution_util",
+        "//tensorflow_probability/python/internal:dtype_util",
+        "//tensorflow_probability/python/internal:tensor_util",
+    ],
+)
+
+py_library(
+    name = "correlation_cholesky",
+    srcs = ["correlation_cholesky.py"],
+    deps = [
+        ":bijector",
+        # tensorflow dep,
+        "//tensorflow_probability/python/internal:prefer_static",
     ],
 )
 
@@ -442,8 +474,8 @@ py_library(
         # numpy dep,
         # tensorflow dep,
         "//tensorflow_probability/python/internal:assert_util",
-        "//tensorflow_probability/python/internal:distribution_util",
         "//tensorflow_probability/python/internal:dtype_util",
+        "//tensorflow_probability/python/internal:tensor_util",
     ],
 )
 
@@ -556,6 +588,7 @@ py_library(
     deps = [
         ":reshape",
         # numpy dep,
+        # scipy dep,
         # tensorflow dep,
         "//tensorflow_probability/python/distributions:uniform",
         "//tensorflow_probability/python/internal:dtype_util",
@@ -583,6 +616,10 @@ py_library(
     deps = [
         ":bijector",
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:assert_util",
+        "//tensorflow_probability/python/internal:dtype_util",
+        "//tensorflow_probability/python/internal:prefer_static",
+        "//tensorflow_probability/python/internal:tensor_util",
     ],
 )
 
@@ -593,8 +630,10 @@ py_test(
     deps = [
         # mock dep,
         # numpy dep,
+        # scipy dep,
         # tensorflow dep,
         "//tensorflow_probability",
+        "//tensorflow_probability/python/internal:test_case",
     ],
 )
 
@@ -641,6 +680,7 @@ py_test(
         # numpy dep,
         # tensorflow dep,
         "//tensorflow_probability",
+        "//tensorflow_probability/python/internal:test_case",
     ],
 )
 
@@ -845,6 +885,20 @@ py_test(
         ":bijectors",
         # numpy dep,
         # tensorflow dep,
+        "//tensorflow_probability/python/internal:test_case",
+    ],
+)
+
+py_test(
+    name = "correlation_cholesky_test",
+    size = "medium",
+    srcs = ["correlation_cholesky_test.py"],
+    deps = [
+        ":bijector_test_util",
+        ":bijectors",
+        # numpy dep,
+        # tensorflow dep,
+        "//tensorflow_probability/python/distributions:lkj",
     ],
 )
 
@@ -1058,6 +1112,18 @@ py_test(
         # numpy dep,
         # tensorflow dep,
         "//tensorflow_probability/python/internal:tensorshape_util",
+    ],
+)
+
+py_test(
+    name = "softfloor_test",
+    size = "small",
+    srcs = ["softfloor_test.py"],
+    deps = [
+        ":bijector_test_util",
+        ":bijectors",
+        # numpy dep,
+        # tensorflow dep,
     ],
 )
 

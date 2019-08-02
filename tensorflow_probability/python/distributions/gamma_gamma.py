@@ -21,6 +21,7 @@ from __future__ import print_function
 import functools
 # Dependency imports
 import numpy as np
+import tensorflow.compat.v1 as tf1
 import tensorflow.compat.v2 as tf
 
 from tensorflow_probability.python.distributions import distribution
@@ -122,7 +123,7 @@ class GammaGamma(distribution.Distribution):
     with tf.name_scope(name):
       dtype = dtype_util.common_dtype(
           [concentration, mixing_concentration, mixing_rate],
-          preferred_dtype=tf.float32)
+          dtype_hint=tf.float32)
       concentration = tf.convert_to_tensor(
           value=concentration, name="concentration", dtype=dtype)
       mixing_concentration = tf.convert_to_tensor(
@@ -235,7 +236,7 @@ class GammaGamma(distribution.Distribution):
           self.batch_shape_tensor(),
           dtype_util.as_numpy_dtype(self.dtype)(np.nan),
           name="nan")
-      return tf.where(self.mixing_concentration > 1., mean, nan)
+      return tf1.where(self.mixing_concentration > 1., mean, nan)
     else:
       return distribution_util.with_dependencies([
           assert_util.assert_less(
@@ -259,7 +260,7 @@ class GammaGamma(distribution.Distribution):
           self.batch_shape_tensor(),
           dtype_util.as_numpy_dtype(self.dtype)(np.nan),
           name="nan")
-      return tf.where(self.mixing_concentration > 2., variance, nan)
+      return tf1.where(self.mixing_concentration > 2., variance, nan)
     else:
       return distribution_util.with_dependencies([
           assert_util.assert_less(

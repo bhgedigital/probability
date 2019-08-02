@@ -20,6 +20,7 @@ from __future__ import print_function
 
 # Dependency imports
 import numpy as np
+import tensorflow.compat.v1 as tf1
 import tensorflow.compat.v2 as tf
 from tensorflow_probability.python.distributions import distribution
 from tensorflow_probability.python.distributions import seed_stream
@@ -102,7 +103,7 @@ class InverseGaussian(distribution.Distribution):
     parameters = dict(locals())
     with tf.name_scope(name):
       dtype = dtype_util.common_dtype([loc, concentration],
-                                      preferred_dtype=tf.float32)
+                                      dtype_hint=tf.float32)
       loc = tf.convert_to_tensor(value=loc, name="loc", dtype=dtype)
       concentration = tf.convert_to_tensor(
           value=concentration, name="concentration", dtype=dtype)
@@ -161,10 +162,8 @@ class InverseGaussian(distribution.Distribution):
         self.loc / (2. * self.concentration) *
         (4. * self.loc * self.concentration * sampled_chi2 +
          (self.loc * sampled_chi2) ** 2) ** 0.5)
-    return tf.where(
-        sampled_uniform <= self.loc / (self.loc + sampled),
-        sampled,
-        self.loc ** 2 / sampled)
+    return tf1.where(sampled_uniform <= self.loc / (self.loc + sampled),
+                     sampled, self.loc**2 / sampled)
 
   def _log_prob(self, x):
     with tf.control_dependencies([

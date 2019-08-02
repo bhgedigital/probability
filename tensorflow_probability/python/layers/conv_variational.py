@@ -21,11 +21,11 @@ from __future__ import print_function
 import tensorflow as tf
 
 from tensorflow_probability.python import distributions as tfd
+from tensorflow_probability.python.internal import docstring_util
 from tensorflow_probability.python.layers import util as tfp_layers_util
 from tensorflow_probability.python.math import random_rademacher
-from tensorflow_probability.python.util import docstring as docstring_util
-from tensorflow.python.layers import utils as tf_layers_util
-from tensorflow.python.ops import nn_ops
+from tensorflow.python.layers import utils as tf_layers_util  # pylint: disable=g-direct-tensorflow-import
+from tensorflow.python.ops import nn_ops  # pylint: disable=g-direct-tensorflow-import
 
 
 __all__ = [
@@ -408,7 +408,7 @@ class _ConvVariational(tf.keras.layers.Layer):
     divergence = tf.identity(
         divergence_fn(posterior, prior, posterior_tensor),
         name=name)
-    self.add_loss(lambda: divergence)
+    self.add_loss(divergence)
 
 
 class _ConvReparameterization(_ConvVariational):

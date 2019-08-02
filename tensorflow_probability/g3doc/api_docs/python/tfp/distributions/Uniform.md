@@ -8,9 +8,13 @@
 <meta itemprop="property" content="high"/>
 <meta itemprop="property" content="low"/>
 <meta itemprop="property" content="name"/>
+<meta itemprop="property" content="name_scope"/>
 <meta itemprop="property" content="parameters"/>
 <meta itemprop="property" content="reparameterization_type"/>
+<meta itemprop="property" content="submodules"/>
+<meta itemprop="property" content="trainable_variables"/>
 <meta itemprop="property" content="validate_args"/>
+<meta itemprop="property" content="variables"/>
 <meta itemprop="property" content="__getitem__"/>
 <meta itemprop="property" content="__init__"/>
 <meta itemprop="property" content="__iter__"/>
@@ -38,6 +42,7 @@
 <meta itemprop="property" content="stddev"/>
 <meta itemprop="property" content="survival_function"/>
 <meta itemprop="property" content="variance"/>
+<meta itemprop="property" content="with_name_scope"/>
 </div>
 
 # tfp.distributions.Uniform
@@ -106,7 +111,9 @@ __init__(
 
 Initialize a batch of Uniform distributions.
 
+
 #### Args:
+
 
 * <b>`low`</b>: Floating point tensor, lower boundary of the output interval. Must
   have `low < high`.
@@ -124,6 +131,7 @@ Initialize a batch of Uniform distributions.
 
 
 #### Raises:
+
 
 * <b>`InvalidArgumentError`</b>: if `low >= high` and `validate_args=False`.
 
@@ -145,6 +153,7 @@ infinity), so the variance = E[(X - mean)**2] is also undefined.
 
 #### Returns:
 
+
 * <b>`allow_nan_stats`</b>: Python `bool`.
 
 <h3 id="batch_shape"><code>batch_shape</code></h3>
@@ -158,11 +167,13 @@ parameterizations of this distribution.
 
 #### Returns:
 
+
 * <b>`batch_shape`</b>: `TensorShape`, possibly unknown.
 
 <h3 id="dtype"><code>dtype</code></h3>
 
 The `DType` of `Tensor`s handled by this `Distribution`.
+
 
 <h3 id="event_shape"><code>event_shape</code></h3>
 
@@ -172,23 +183,33 @@ May be partially defined or unknown.
 
 #### Returns:
 
+
 * <b>`event_shape`</b>: `TensorShape`, possibly unknown.
 
 <h3 id="high"><code>high</code></h3>
 
 Upper boundary of the output interval.
 
+
 <h3 id="low"><code>low</code></h3>
 
 Lower boundary of the output interval.
+
 
 <h3 id="name"><code>name</code></h3>
 
 Name prepended to all ops created by this `Distribution`.
 
+
+<h3 id="name_scope"><code>name_scope</code></h3>
+
+Returns a `tf.name_scope` instance for this class.
+
+
 <h3 id="parameters"><code>parameters</code></h3>
 
 Dictionary of parameters used to instantiate this `Distribution`.
+
 
 <h3 id="reparameterization_type"><code>reparameterization_type</code></h3>
 
@@ -201,9 +222,64 @@ Currently this is one of the static instances
 
 An instance of `ReparameterizationType`.
 
+
+<h3 id="submodules"><code>submodules</code></h3>
+
+Sequence of all sub-modules.
+
+Submodules are modules which are properties of this module, or found as
+properties of modules which are properties of this module (and so on).
+
+```
+a = tf.Module()
+b = tf.Module()
+c = tf.Module()
+a.b = b
+b.c = c
+assert list(a.submodules) == [b, c]
+assert list(b.submodules) == [c]
+assert list(c.submodules) == []
+```
+
+#### Returns:
+
+A sequence of all submodules.
+
+
+<h3 id="trainable_variables"><code>trainable_variables</code></h3>
+
+Sequence of variables owned by this module and it's submodules.
+
+Note: this method uses reflection to find variables on the current instance
+and submodules. For performance reasons you may wish to cache the result
+of calling this method if you don't expect the return value to change.
+
+#### Returns:
+
+A sequence of variables for the current module (sorted by attribute
+name) followed by variables from all submodules recursively (breadth
+first).
+
+
 <h3 id="validate_args"><code>validate_args</code></h3>
 
 Python `bool` indicating possibly expensive checks are enabled.
+
+
+<h3 id="variables"><code>variables</code></h3>
+
+Sequence of variables owned by this module and it's submodules.
+
+Note: this method uses reflection to find variables on the current instance
+and submodules. For performance reasons you may wish to cache the result
+of calling this method if you don't expect the return value to change.
+
+#### Returns:
+
+A sequence of variables for the current module (sorted by attribute
+name) followed by variables from all submodules recursively (breadth
+first).
+
 
 
 
@@ -237,10 +313,12 @@ mvn2.event_shape  # => [2]
 
 #### Args:
 
+
 * <b>`slices`</b>: slices from the [] operator
 
 
 #### Returns:
+
 
 * <b>`dist`</b>: A new `tfd.Distribution` instance with sliced parameters.
 
@@ -249,6 +327,7 @@ mvn2.event_shape  # => [2]
 ``` python
 __iter__()
 ```
+
 
 
 
@@ -265,10 +344,12 @@ parameterizations of this distribution.
 
 #### Args:
 
+
 * <b>`name`</b>: name to give to the op
 
 
 #### Returns:
+
 
 * <b>`batch_shape`</b>: `Tensor`.
 
@@ -292,12 +373,14 @@ cdf(x) := P[X <= x]
 
 #### Args:
 
+
 * <b>`value`</b>: `float` or `double` `Tensor`.
 * <b>`name`</b>: Python `str` prepended to names of ops created by this function.
 * <b>`**kwargs`</b>: Named arguments forwarded to subclass implementation.
 
 
 #### Returns:
+
 
 * <b>`cdf`</b>: a `Tensor` of shape `sample_shape(x) + self.batch_shape` with
   values of type `self.dtype`.
@@ -315,11 +398,13 @@ initialization arguments.
 
 #### Args:
 
+
 * <b>`**override_parameters_kwargs`</b>: String/value dictionary of initialization
   arguments to override with new values.
 
 
 #### Returns:
+
 
 * <b>`distribution`</b>: A new instance of `type(self)` initialized from the union
   of self.parameters and override_parameters_kwargs, i.e.,
@@ -363,11 +448,13 @@ length-`k'` vector.
 
 #### Args:
 
+
 * <b>`name`</b>: Python `str` prepended to names of ops created by this function.
 * <b>`**kwargs`</b>: Named arguments forwarded to subclass implementation.
 
 
 #### Returns:
+
 
 * <b>`covariance`</b>: Floating-point `Tensor` with shape `[B1, ..., Bn, k', k']`
   where the first `n` dimensions are batch coordinates and
@@ -399,11 +486,13 @@ where `F` denotes the support of the random variable `X ~ P`.
 
 #### Args:
 
+
 * <b>`other`</b>: <a href="../../tfp/distributions/Distribution.md"><code>tfp.distributions.Distribution</code></a> instance.
 * <b>`name`</b>: Python `str` prepended to names of ops created by this function.
 
 
 #### Returns:
+
 
 * <b>`cross_entropy`</b>: `self.dtype` `Tensor` with shape `[B1, ..., Bn]`
   representing `n` different calculations of (Shannon) cross entropy.
@@ -419,6 +508,7 @@ entropy(
 
 Shannon entropy in nats.
 
+
 <h3 id="event_shape_tensor"><code>event_shape_tensor</code></h3>
 
 ``` python
@@ -427,12 +517,15 @@ event_shape_tensor(name='event_shape_tensor')
 
 Shape of a single sample from a single batch as a 1-D int32 `Tensor`.
 
+
 #### Args:
+
 
 * <b>`name`</b>: name to give to the op
 
 
 #### Returns:
+
 
 * <b>`event_shape`</b>: `Tensor`.
 
@@ -444,12 +537,15 @@ is_scalar_batch(name='is_scalar_batch')
 
 Indicates that `batch_shape == []`.
 
+
 #### Args:
+
 
 * <b>`name`</b>: Python `str` prepended to names of ops created by this function.
 
 
 #### Returns:
+
 
 * <b>`is_scalar_batch`</b>: `bool` scalar `Tensor`.
 
@@ -461,12 +557,15 @@ is_scalar_event(name='is_scalar_event')
 
 Indicates that `event_shape == []`.
 
+
 #### Args:
+
 
 * <b>`name`</b>: Python `str` prepended to names of ops created by this function.
 
 
 #### Returns:
+
 
 * <b>`is_scalar_event`</b>: `bool` scalar `Tensor`.
 
@@ -498,11 +597,13 @@ denotes (Shannon) cross entropy, and `H[.]` denotes (Shannon) entropy.
 
 #### Args:
 
+
 * <b>`other`</b>: <a href="../../tfp/distributions/Distribution.md"><code>tfp.distributions.Distribution</code></a> instance.
 * <b>`name`</b>: Python `str` prepended to names of ops created by this function.
 
 
 #### Returns:
+
 
 * <b>`kl_divergence`</b>: `self.dtype` `Tensor` with shape `[B1, ..., Bn]`
   representing `n` different calculations of the Kullback-Leibler
@@ -532,12 +633,14 @@ a more accurate answer than simply taking the logarithm of the `cdf` when
 
 #### Args:
 
+
 * <b>`value`</b>: `float` or `double` `Tensor`.
 * <b>`name`</b>: Python `str` prepended to names of ops created by this function.
 * <b>`**kwargs`</b>: Named arguments forwarded to subclass implementation.
 
 
 #### Returns:
+
 
 * <b>`logcdf`</b>: a `Tensor` of shape `sample_shape(x) + self.batch_shape` with
   values of type `self.dtype`.
@@ -554,7 +657,9 @@ log_prob(
 
 Log probability density/mass function.
 
+
 #### Args:
+
 
 * <b>`value`</b>: `float` or `double` `Tensor`.
 * <b>`name`</b>: Python `str` prepended to names of ops created by this function.
@@ -562,6 +667,7 @@ Log probability density/mass function.
 
 
 #### Returns:
+
 
 * <b>`log_prob`</b>: a `Tensor` of shape `sample_shape(x) + self.batch_shape` with
   values of type `self.dtype`.
@@ -591,6 +697,7 @@ survival function, which are more accurate than `1 - cdf(x)` when `x >> 1`.
 
 #### Args:
 
+
 * <b>`value`</b>: `float` or `double` `Tensor`.
 * <b>`name`</b>: Python `str` prepended to names of ops created by this function.
 * <b>`**kwargs`</b>: Named arguments forwarded to subclass implementation.
@@ -600,6 +707,7 @@ survival function, which are more accurate than `1 - cdf(x)` when `x >> 1`.
 
 `Tensor` of shape `sample_shape(x) + self.batch_shape` with values of type
   `self.dtype`.
+
 
 <h3 id="mean"><code>mean</code></h3>
 
@@ -612,6 +720,7 @@ mean(
 
 Mean.
 
+
 <h3 id="mode"><code>mode</code></h3>
 
 ``` python
@@ -622,6 +731,7 @@ mode(
 ```
 
 Mode.
+
 
 <h3 id="param_shapes"><code>param_shapes</code></h3>
 
@@ -643,6 +753,7 @@ Subclasses should override class method `_param_shapes`.
 
 #### Args:
 
+
 * <b>`sample_shape`</b>: `Tensor` or python list/tuple. Desired shape of a call to
   `sample()`.
 * <b>`name`</b>: name to prepend ops with.
@@ -651,6 +762,7 @@ Subclasses should override class method `_param_shapes`.
 #### Returns:
 
 `dict` of parameter name to `Tensor` shapes.
+
 
 <h3 id="param_static_shapes"><code>param_static_shapes</code></h3>
 
@@ -673,6 +785,7 @@ constant-valued tensors when constant values are fed.
 
 #### Args:
 
+
 * <b>`sample_shape`</b>: `TensorShape` or python list/tuple. Desired shape of a call
   to `sample()`.
 
@@ -682,7 +795,9 @@ constant-valued tensors when constant values are fed.
 `dict` of parameter name to `TensorShape`.
 
 
+
 #### Raises:
+
 
 * <b>`ValueError`</b>: if `sample_shape` is a `TensorShape` and is not fully defined.
 
@@ -698,7 +813,9 @@ prob(
 
 Probability density/mass function.
 
+
 #### Args:
+
 
 * <b>`value`</b>: `float` or `double` `Tensor`.
 * <b>`name`</b>: Python `str` prepended to names of ops created by this function.
@@ -706,6 +823,7 @@ Probability density/mass function.
 
 
 #### Returns:
+
 
 * <b>`prob`</b>: a `Tensor` of shape `sample_shape(x) + self.batch_shape` with
   values of type `self.dtype`.
@@ -730,12 +848,14 @@ quantile(p) := x such that P[X <= x] == p
 
 #### Args:
 
+
 * <b>`value`</b>: `float` or `double` `Tensor`.
 * <b>`name`</b>: Python `str` prepended to names of ops created by this function.
 * <b>`**kwargs`</b>: Named arguments forwarded to subclass implementation.
 
 
 #### Returns:
+
 
 * <b>`quantile`</b>: a `Tensor` of shape `sample_shape(x) + self.batch_shape` with
   values of type `self.dtype`.
@@ -747,6 +867,7 @@ range(name='range')
 ```
 
 `high - low`.
+
 
 <h3 id="sample"><code>sample</code></h3>
 
@@ -766,6 +887,7 @@ sample.
 
 #### Args:
 
+
 * <b>`sample_shape`</b>: 0D or 1D `int32` `Tensor`. Shape of the generated samples.
 * <b>`seed`</b>: Python integer seed for RNG
 * <b>`name`</b>: name to give to the op.
@@ -773,6 +895,7 @@ sample.
 
 
 #### Returns:
+
 
 * <b>`samples`</b>: a `Tensor` with prepended dimensions `sample_shape`.
 
@@ -798,11 +921,13 @@ denotes expectation, and `stddev.shape = batch_shape + event_shape`.
 
 #### Args:
 
+
 * <b>`name`</b>: Python `str` prepended to names of ops created by this function.
 * <b>`**kwargs`</b>: Named arguments forwarded to subclass implementation.
 
 
 #### Returns:
+
 
 * <b>`stddev`</b>: Floating-point `Tensor` with shape identical to
   `batch_shape + event_shape`, i.e., the same shape as `self.mean()`.
@@ -829,6 +954,7 @@ survival_function(x) = P[X > x]
 
 #### Args:
 
+
 * <b>`value`</b>: `float` or `double` `Tensor`.
 * <b>`name`</b>: Python `str` prepended to names of ops created by this function.
 * <b>`**kwargs`</b>: Named arguments forwarded to subclass implementation.
@@ -838,6 +964,7 @@ survival_function(x) = P[X > x]
 
 `Tensor` of shape `sample_shape(x) + self.batch_shape` with values of type
   `self.dtype`.
+
 
 <h3 id="variance"><code>variance</code></h3>
 
@@ -861,14 +988,58 @@ denotes expectation, and `Var.shape = batch_shape + event_shape`.
 
 #### Args:
 
+
 * <b>`name`</b>: Python `str` prepended to names of ops created by this function.
 * <b>`**kwargs`</b>: Named arguments forwarded to subclass implementation.
 
 
 #### Returns:
 
+
 * <b>`variance`</b>: Floating-point `Tensor` with shape identical to
   `batch_shape + event_shape`, i.e., the same shape as `self.mean()`.
+
+<h3 id="with_name_scope"><code>with_name_scope</code></h3>
+
+``` python
+with_name_scope(
+    cls,
+    method
+)
+```
+
+Decorator to automatically enter the module name scope.
+
+```
+class MyModule(tf.Module):
+  @tf.Module.with_name_scope
+  def __call__(self, x):
+    if not hasattr(self, 'w'):
+      self.w = tf.Variable(tf.random.normal([x.shape[1], 64]))
+    return tf.matmul(x, self.w)
+```
+
+Using the above module would produce `tf.Variable`s and `tf.Tensor`s whose
+names included the module name:
+
+```
+mod = MyModule()
+mod(tf.ones([8, 32]))
+# ==> <tf.Tensor: ...>
+mod.w
+# ==> <tf.Variable ...'my_module/w:0'>
+```
+
+#### Args:
+
+
+* <b>`method`</b>: The method to wrap.
+
+
+#### Returns:
+
+The original method wrapped such that it enters the module's name scope.
+
 
 
 

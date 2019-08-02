@@ -57,6 +57,7 @@ contains a slight bias, which goes to zero as `len(x) - m --> infinity`.
 
 #### Args:
 
+
 * <b>`x`</b>:  `float32` or `complex64` `Tensor`.
 * <b>`axis`</b>:  Python `int`. The axis number along which to compute correlation.
   Other dimensions index different batch members.
@@ -76,6 +77,8 @@ contains a slight bias, which goes to zero as `len(x) - m --> infinity`.
   `i != axis`, and `rxx.shape[axis] = max_lags + 1`.
 
 
+
 #### Raises:
+
 
 * <b>`TypeError`</b>:  If `x` is not a supported type.

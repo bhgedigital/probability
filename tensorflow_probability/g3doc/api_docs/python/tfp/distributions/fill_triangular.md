@@ -34,6 +34,7 @@ If `x.shape` is `[b1, b2, ..., bB, d]` then the output shape is
 #### Example:
 
 
+
 ```python
 fill_triangular([1, 2, 3, 4, 5, 6])
 # ==> [[4, 0, 0],
@@ -93,8 +94,8 @@ contains all the entries of x, as desired. The rest is details:
 For additional comparisons, a pure numpy version of this function can be found
 in `distribution_util_test.py`, function `_fill_triangular`.
 
-
 #### Args:
+
 
 * <b>`x`</b>: `Tensor` representing lower (or upper) triangular elements.
 * <b>`upper`</b>: Python `bool` representing whether output matrix should be upper
@@ -104,9 +105,11 @@ in `distribution_util_test.py`, function `_fill_triangular`.
 
 #### Returns:
 
+
 * <b>`tril`</b>: `Tensor` with lower (or upper) triangular elements filled from `x`.
 
 
 #### Raises:
+
 
 * <b>`ValueError`</b>: if `x` cannot be mapped to a triangular matrix.

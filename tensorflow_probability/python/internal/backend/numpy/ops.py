@@ -31,6 +31,7 @@ __all__ = [
     'broadcast_static_shape',
     'broadcast_to',
     'cast',
+    'clip_by_value',
     'constant',
     'control_dependencies',
     'convert_to_tensor',
@@ -44,6 +45,7 @@ __all__ = [
     'newaxis',
     'stop_gradient',
     'GradientTape',
+    'Module',
     'TensorShape',
     'Variable',
     # 'gradients',
@@ -70,7 +72,7 @@ def _broadcast_static_shape(shape_x, shape_y):
 
 
 def _constant(value, dtype=None, shape=None, name='Const'):  # pylint: disable=unused-argument
-  x = np.array(value, dtype=utils.numpy_dtype(dtype or np.float))
+  x = np.array(value, dtype=None if dtype is None else utils.numpy_dtype(dtype))
   if shape is None:
     return x
   return np.reshape(x, shape)
@@ -85,7 +87,7 @@ def _control_dependencies(control_inputs):
 
 
 def _convert_to_tensor(value, dtype=None, dtype_hint=None, name=None):  # pylint: disable=unused-argument
-  assert not tf.is_tensor(value)
+  assert not tf.is_tensor(value), value
   return np.array(value, dtype=utils.numpy_dtype(dtype or dtype_hint))
 
 
@@ -126,7 +128,12 @@ broadcast_to = utils.copy_docstring(
 
 cast = utils.copy_docstring(
     tf.cast,
-    lambda x, dtype, name=None: np.array(x, dtype=utils.numpy_dtype(dtype)))
+    lambda x, dtype, name=None: np.array(x).astype(utils.numpy_dtype(dtype)))
+
+clip_by_value = utils.copy_docstring(
+    tf.clip_by_value,
+    lambda t, clip_value_min, clip_value_max, name=None:  # pylint: disable=g-long-lambda
+    np.clip(t, clip_value_min, clip_value_max))
 
 constant = utils.copy_docstring(
     tf.constant,
@@ -198,6 +205,8 @@ class name_scope(object):  # pylint: disable=invalid-name
   def __init__(self, name, *args, **kwargs):
     del args, kwargs
     self._name = name
+    if self._name is not None and not self._name.endswith('/'):
+      self._name += '/'
 
   def __enter__(self):
     return self._name
@@ -220,3 +229,14 @@ def Variable(initial_value=None, trainable=True, validate_shape=True,  # pylint:
              import_scope=None, constraint=None):  # pylint: disable=unused-argument
   assert constraint is None
   return np.array(initial_value, dtype=dtype or np.float32)
+
+
+class Module(object):
+
+  _TF_MODULE_IGNORED_PROPERTIES = frozenset()
+
+  def __init__(self, name):
+    self._name = name
+
+  def _no_dependency(self, x):
+    return x

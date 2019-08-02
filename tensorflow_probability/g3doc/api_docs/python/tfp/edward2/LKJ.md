@@ -24,14 +24,15 @@ See LKJ for more details.
 
 #### Returns:
 
-  RandomVariable.
+RandomVariable.
+
 
 #### Original Docstring for Distribution
 
 Construct LKJ distributions.
 
-
 #### Args:
+
 
 * <b>`dimension`</b>: Python `int`. The dimension of the correlation matrices
   to sample.
@@ -60,5 +61,6 @@ Construct LKJ distributions.
 
 
 #### Raises:
+
 
 * <b>`ValueError`</b>: If `dimension` is negative.

@@ -4,7 +4,6 @@
 <meta itemprop="property" content="iterations"/>
 <meta itemprop="property" content="variable_scope"/>
 <meta itemprop="property" content="weights"/>
-<meta itemprop="property" content="__getattribute__"/>
 <meta itemprop="property" content="__init__"/>
 <meta itemprop="property" content="add_slot"/>
 <meta itemprop="property" content="add_weight"/>
@@ -109,37 +108,36 @@ with tf.Session(graph=tf.Graph()) as sess:
   sample_mean = np.mean(samples_, 0)
   print('sample mean', sample_mean)
 ```
-#### Args:
-
-* <b>`learning_rate`</b>: Scalar `float`-like `Tensor`. The base learning rate for the
-  optimizer. Must be tuned to the specific function being minimized.
-* <b>`preconditioner_decay_rate`</b>: Scalar `float`-like `Tensor`. The exponential
-  decay rate of the rescaling of the preconditioner (RMSprop). (This is
-  "alpha" in Li et al. (2016)). Should be smaller than but nearly `1` to
-  approximate sampling from the posterior. (Default: `0.95`)
-* <b>`data_size`</b>: Scalar `int`-like `Tensor`. The effective number of
-  points in the data set. Assumes that the loss is taken as the mean over a
-  minibatch. Otherwise if the sum was taken, divide this number by the
-  batch size. If a prior is included in the loss function, it should be
-  normalized by `data_size`. Default value: `1`.
-* <b>`burnin`</b>: Scalar `int`-like `Tensor`. The number of iterations to collect
-  gradient statistics to update the preconditioner before starting to draw
-  noisy samples. (Default: `25`)
-* <b>`diagonal_bias`</b>: Scalar `float`-like `Tensor`. Term added to the diagonal of
-  the preconditioner to prevent the preconditioner from degenerating.
-  (Default: `1e-8`)
-* <b>`name`</b>: Python `str` describing ops managed by this function.
-  (Default: `"StochasticGradientLangevinDynamics"`)
-* <b>`parallel_iterations`</b>: the number of coordinates for which the gradients of
-    the preconditioning matrix can be computed in parallel. Must be a
-    positive integer.
-
+Args:
+  learning_rate: Scalar `float`-like `Tensor`. The base learning rate for the
+    optimizer. Must be tuned to the specific function being minimized.
+  preconditioner_decay_rate: Scalar `float`-like `Tensor`. The exponential
+    decay rate of the rescaling of the preconditioner (RMSprop). (This is
+    "alpha" in Li et al. (2016)). Should be smaller than but nearly `1` to
+    approximate sampling from the posterior. (Default: `0.95`)
+  data_size: Scalar `int`-like `Tensor`. The effective number of
+    points in the data set. Assumes that the loss is taken as the mean over a
+    minibatch. Otherwise if the sum was taken, divide this number by the
+    batch size. If a prior is included in the loss function, it should be
+    normalized by `data_size`. Default value: `1`.
+  burnin: Scalar `int`-like `Tensor`. The number of iterations to collect
+    gradient statistics to update the preconditioner before starting to draw
+    noisy samples. (Default: `25`)
+  diagonal_bias: Scalar `float`-like `Tensor`. Term added to the diagonal of
+    the preconditioner to prevent the preconditioner from degenerating.
+    (Default: `1e-8`)
+  name: Python `str` describing ops managed by this function.
+    (Default: `"StochasticGradientLangevinDynamics"`)
+  parallel_iterations: the number of coordinates for which the gradients of
+      the preconditioning matrix can be computed in parallel. Must be a
+      positive integer.
 
 #### Raises:
 
-  InvalidArgumentError: If preconditioner_decay_rate is a `Tensor` not in
-    `(0,1]`.
-  NotImplementedError: If eager execution is enabled.
+
+* <b>`InvalidArgumentError`</b>: If preconditioner_decay_rate is a `Tensor` not in
+  `(0,1]`.
+* <b>`NotImplementedError`</b>: If eager execution is enabled.
 
 #### References
 
@@ -174,6 +172,7 @@ This class in stateful and thread-compatible.
 
 #### Args:
 
+
 * <b>`name`</b>: A non-empty string.  The name to use for accumulators created
   for the optimizer.
 * <b>`**kwargs`</b>: keyword arguments. Allowed to be {`clipnorm`, `clipvalue`, `lr`,
@@ -184,6 +183,7 @@ This class in stateful and thread-compatible.
 
 
 #### Raises:
+
 
 * <b>`ValueError`</b>: If name is malformed.
 * <b>`RuntimeError`</b>: If _create_slots has been overridden instead of
@@ -197,9 +197,11 @@ This class in stateful and thread-compatible.
 
 Variable. The number of training steps this Optimizer has run.
 
+
 <h3 id="variable_scope"><code>variable_scope</code></h3>
 
 Variable scope of all calls to `tf.get_variable`.
+
 
 <h3 id="weights"><code>weights</code></h3>
 
@@ -207,15 +209,8 @@ Returns variables of this Optimizer based on the order created.
 
 
 
+
 ## Methods
-
-<h3 id="__getattribute__"><code>__getattribute__</code></h3>
-
-``` python
-__getattribute__(name)
-```
-
-Overridden to support hyperparameter access.
 
 <h3 id="add_slot"><code>add_slot</code></h3>
 
@@ -228,6 +223,7 @@ add_slot(
 ```
 
 Add a new slot variable for `var`.
+
 
 <h3 id="add_weight"><code>add_weight</code></h3>
 
@@ -242,6 +238,7 @@ add_weight(
     aggregation=tf_variables.VariableAggregation.NONE
 )
 ```
+
 
 
 
@@ -261,6 +258,7 @@ applies gradients.
 
 #### Args:
 
+
 * <b>`grads_and_vars`</b>: List of (gradient, variable) pairs.
 * <b>`name`</b>: Optional name for the returned operation.  Default to the name
   passed to the `Optimizer` constructor.
@@ -272,7 +270,9 @@ An `Operation` that applies the specified gradients. If `global_step`
 was not None, that operation also increments `global_step`.
 
 
+
 #### Raises:
+
 
 * <b>`TypeError`</b>: If `grads_and_vars` is malformed.
 * <b>`ValueError`</b>: If none of the variables have gradients.
@@ -295,6 +295,7 @@ dictionary.
 
 #### Arguments:
 
+
 * <b>`config`</b>: A Python dictionary, typically the output of get_config.
 * <b>`custom_objects`</b>: A Python dictionary mapping names to additional Python
   objects used to create this optimizer, such as a function used for a
@@ -304,6 +305,7 @@ dictionary.
 #### Returns:
 
 An optimizer instance.
+
 
 <h3 id="get_config"><code>get_config</code></h3>
 
@@ -322,6 +324,7 @@ The same optimizer can be reinstantiated later
 
 Python dictionary.
 
+
 <h3 id="get_gradients"><code>get_gradients</code></h3>
 
 ``` python
@@ -333,7 +336,9 @@ get_gradients(
 
 Returns gradients of `loss` with respect to `params`.
 
+
 #### Arguments:
+
 
 * <b>`loss`</b>: Loss tensor.
 * <b>`params`</b>: List of variables.
@@ -344,7 +349,9 @@ Returns gradients of `loss` with respect to `params`.
 List of gradient tensors.
 
 
+
 #### Raises:
+
 
 * <b>`ValueError`</b>: In case any gradient cannot be computed (e.g. if gradient
   function not implemented).
@@ -360,6 +367,7 @@ get_slot(
 
 
 
+
 <h3 id="get_slot_names"><code>get_slot_names</code></h3>
 
 ``` python
@@ -367,6 +375,7 @@ get_slot_names()
 ```
 
 A list of names for this optimizer's slots.
+
 
 <h3 id="get_updates"><code>get_updates</code></h3>
 
@@ -379,11 +388,13 @@ get_updates(
 
 
 
+
 <h3 id="get_weights"><code>get_weights</code></h3>
 
 ``` python
 get_weights()
 ```
+
 
 
 
@@ -407,6 +418,7 @@ of using this function.
 
 #### Args:
 
+
 * <b>`loss`</b>: A callable taking no arguments which returns the value to minimize.
 * <b>`var_list`</b>: list or tuple of `Variable` objects to update to minimize
   `loss`, or a callable returning the list or tuple of `Variable` objects.
@@ -423,7 +435,9 @@ An Operation that updates the variables in `var_list`.  If `global_step`
 was not `None`, that operation also increments `global_step`.
 
 
+
 #### Raises:
+
 
 * <b>`ValueError`</b>: If some of the variables are not `Variable` objects.
 
@@ -435,6 +449,7 @@ set_weights(weights)
 
 
 
+
 <h3 id="variables"><code>variables</code></h3>
 
 ``` python
@@ -442,6 +457,7 @@ variables()
 ```
 
 Returns variables of this Optimizer based on the order created.
+
 
 
 

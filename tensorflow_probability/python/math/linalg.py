@@ -119,7 +119,7 @@ def cholesky_concat(chol, cols, name=None):
       ```
   """
   with tf.compat.v2.name_scope(name or 'cholesky_extend'):
-    dtype = dtype_util.common_dtype([chol, cols], preferred_dtype=tf.float32)
+    dtype = dtype_util.common_dtype([chol, cols], dtype_hint=tf.float32)
     chol = tf.convert_to_tensor(value=chol, name='chol', dtype=dtype)
     cols = tf.convert_to_tensor(value=cols, name='cols', dtype=dtype)
     n = prefer_static.shape(chol)[-1]
@@ -163,7 +163,7 @@ def _swap_m_with_i(vecs, m, i):
                prefer_static.shape(vecs, out_type=tf.int64)[-1]),
       prefer_static.shape(vecs[..., m + 1:]))
   shp = prefer_static.shape(trailing_elts)
-  trailing_elts = tf.where(
+  trailing_elts = tf.compat.v1.where(
       tf.equal(trailing_elts, tf.broadcast_to(i, shp)),
       tf.broadcast_to(tf.gather(vecs, [m], axis=-1), shp),
       tf.broadcast_to(vecs[..., m + 1:], shp))
@@ -224,7 +224,7 @@ def pivoted_cholesky(matrix, max_rank, diag_rtol=1e-3, name=None):
   """
   with tf.compat.v2.name_scope(name or 'pivoted_cholesky'):
     dtype = dtype_util.common_dtype([matrix, diag_rtol],
-                                    preferred_dtype=tf.float32)
+                                    dtype_hint=tf.float32)
     matrix = tf.convert_to_tensor(value=matrix, name='matrix', dtype=dtype)
     if tensorshape_util.rank(matrix.shape) is None:
       raise NotImplementedError('Rank of `matrix` must be known statically')
@@ -427,7 +427,7 @@ def pinv(a, rcond=None, validate_args=False, name=None):
     # Saturate small singular values to inf. This has the effect of make
     # `1. / s = 0.` while not resulting in `NaN` gradients.
     cutoff = rcond * tf.reduce_max(input_tensor=singular_values, axis=-1)
-    singular_values = tf.where(
+    singular_values = tf.compat.v1.where(
         singular_values > cutoff[..., tf.newaxis], singular_values,
         tf.fill(tf.shape(input=singular_values), np.array(np.inf, dtype)))
 
@@ -548,7 +548,7 @@ def lu_matrix_inverse(lower_upper, perm, validate_args=False, name=None):
 
   This op is conceptually identical to,
 
-  ````python
+  ```python
   inv_X = tf.lu_matrix_inverse(*tf.linalg.lu(X))
   tf.assert_near(tf.matrix_inverse(X), inv_X)
   # ==> True

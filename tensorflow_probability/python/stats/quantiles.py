@@ -228,8 +228,7 @@ def find_bins(x,
   #    for all 5 events, so the index of the bin should not be in the event dim.
   with tf.compat.v1.name_scope(
       name, default_name='find_bins', values=[x, edges]):
-    in_type = dtype_util.common_dtype([x, edges],
-                                      preferred_dtype=tf.float32)
+    in_type = dtype_util.common_dtype([x, edges], dtype_hint=tf.float32)
     edges = tf.convert_to_tensor(value=edges, name='edges', dtype=in_type)
     x = tf.convert_to_tensor(value=x, name='x', dtype=in_type)
 
@@ -274,14 +273,15 @@ def find_bins(x,
 
     if not extend_lower_interval:
       low_fill = np.nan if dtype.is_floating else -1
-      bins = tf.where(x < tf.expand_dims(edges[0], 0),
-                      tf.fill(tf.shape(input=x), tf.cast(low_fill, dtype)),
-                      bins)
+      bins = tf.compat.v1.where(
+          x < tf.expand_dims(edges[0], 0),
+          tf.fill(tf.shape(input=x), tf.cast(low_fill, dtype)), bins)
 
     if not extend_upper_interval:
       up_fill = np.nan if dtype.is_floating else tf.shape(input=edges)[0] - 1
-      bins = tf.where(x > tf.expand_dims(edges[-1], 0),
-                      tf.fill(tf.shape(input=x), tf.cast(up_fill, dtype)), bins)
+      bins = tf.compat.v1.where(
+          x > tf.expand_dims(edges[-1], 0),
+          tf.fill(tf.shape(input=x), tf.cast(up_fill, dtype)), bins)
 
     if flattening_x:
       bins = tf.reshape(bins, x_orig_shape)
@@ -356,7 +356,7 @@ def histogram(x,
   with tf.compat.v1.name_scope(name, 'histogram', values=[x, edges, axis]):
 
     # Tensor conversions.
-    in_dtype = dtype_util.common_dtype([x, edges], preferred_dtype=tf.float32)
+    in_dtype = dtype_util.common_dtype([x, edges], dtype_hint=tf.float32)
 
     x = tf.convert_to_tensor(value=x, name='x', dtype=in_dtype)
     edges = tf.convert_to_tensor(value=edges, name='edges', dtype=in_dtype)
@@ -602,10 +602,9 @@ def percentile(x,
           nan_batch_members, shape=right_rank_matched_shape)
       shape_gathered_y = tf.shape(input=gathered_y)
       nan = np.array(np.nan, gathered_y.dtype.as_numpy_dtype)
-      gathered_y = tf.where(
+      gathered_y = tf.compat.v1.where(
           tf.broadcast_to(nan_batch_members, shape_gathered_y),
-          tf.fill(shape_gathered_y, nan),
-          gathered_y)
+          tf.fill(shape_gathered_y, nan), gathered_y)
 
     # Expand dimensions if requested
     if keep_dims:

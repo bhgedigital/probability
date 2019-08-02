@@ -22,7 +22,9 @@ Defined in [`python/internal/distribution_util.py`](https://github.com/tensorflo
 
 <!-- Placeholder for "Used in" -->
 
+
 #### Example:
+
 
 
 ```python
@@ -35,10 +37,10 @@ tridiag(below=[1., 2., 3.],
 #            [  0.,   0.,   3.,   7.]], dtype=float32)
 ```
 
-* <b>`Warning`</b>: This Op is intended for convenience, not efficiency.
-
+Warning: This Op is intended for convenience, not efficiency.
 
 #### Args:
+
 
 * <b>`below`</b>: `Tensor` of shape `[B1, ..., Bb, d-1]` corresponding to the below
   diagonal part. `None` is logically equivalent to `below = 0`.
@@ -51,9 +53,11 @@ tridiag(below=[1., 2., 3.],
 
 #### Returns:
 
+
 * <b>`tridiag`</b>: `Tensor` with values set above, below and on the diagonal.
 
 
 #### Raises:
+
 
 * <b>`ValueError`</b>: if all inputs are `None`.

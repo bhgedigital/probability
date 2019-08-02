@@ -24,14 +24,15 @@ See JointDistributionCoroutine for more details.
 
 #### Returns:
 
-  RandomVariable.
+RandomVariable.
+
 
 #### Original Docstring for Distribution
 
 Construct the `JointDistributionCoroutine` distribution.
 
-
 #### Args:
+
 
 * <b>`model`</b>: A generator that yields a sequence of `tfd.Distribution`-like
   instances.

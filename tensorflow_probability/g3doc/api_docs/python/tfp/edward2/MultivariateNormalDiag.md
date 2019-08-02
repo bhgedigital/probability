@@ -24,7 +24,8 @@ See MultivariateNormalDiag for more details.
 
 #### Returns:
 
-  RandomVariable.
+RandomVariable.
+
 
 #### Original Docstring for Distribution
 
@@ -42,7 +43,8 @@ Recall that `covariance = scale @ scale.T`. A (non-batch) `scale` matrix is:
 scale = diag(scale_diag + scale_identity_multiplier * ones(k))
 ```
 
-* <b>`where`</b>: 
+where:
+
 * `scale_diag.shape = [k]`, and,
 * `scale_identity_multiplier.shape = []`.
 
@@ -51,8 +53,8 @@ Additional leading dimensions (if any) will index batches.
 If both `scale_diag` and `scale_identity_multiplier` are `None`, then
 `scale` is the Identity matrix.
 
-
 #### Args:
+
 
 * <b>`loc`</b>: Floating-point `Tensor`. If this is set to `None`, `loc` is
   implicitly `0`. When specified, may have shape `[B1, ..., Bb, k]` where
@@ -80,5 +82,6 @@ If both `scale_diag` and `scale_identity_multiplier` are `None`, then
 
 
 #### Raises:
+
 
 * <b>`ValueError`</b>: if at most `scale_identity_multiplier` is specified.

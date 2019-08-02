@@ -25,10 +25,10 @@ from tensorflow_probability.python import bijectors as tfb
 from tensorflow_probability.python import distributions as tfd
 
 from tensorflow_probability.python.internal import distribution_util as dist_util
+from tensorflow_probability.python.internal import docstring_util
 from tensorflow_probability.python.sts.internal import util as sts_util
 from tensorflow_probability.python.sts.structural_time_series import Parameter
 from tensorflow_probability.python.sts.structural_time_series import StructuralTimeSeries
-from tensorflow_probability.python.util import docstring as docstring_util
 
 
 seasonal_init_args = """
@@ -876,7 +876,9 @@ class Seasonal(StructuralTimeSeries):
 
       super(Seasonal, self).__init__(
           parameters=[
-              Parameter('drift_scale', drift_scale_prior, tfb.Softplus()),
+              Parameter('drift_scale', drift_scale_prior,
+                        tfb.Chain([tfb.AffineScalar(scale=observed_stddev),
+                                   tfb.Softplus()])),
           ],
           latent_size=(num_seasons - 1
                        if self.constrain_mean_effect_to_zero else num_seasons),

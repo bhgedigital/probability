@@ -24,14 +24,15 @@ See Multinomial for more details.
 
 #### Returns:
 
-  RandomVariable.
+RandomVariable.
+
 
 #### Original Docstring for Distribution
 
 Initialize a batch of Multinomial distributions.
 
-
 #### Args:
+
 
 * <b>`total_count`</b>: Non-negative floating point tensor with shape broadcastable
   to `[N1,..., Nm]` with `m >= 0`. Defines this as a batch of

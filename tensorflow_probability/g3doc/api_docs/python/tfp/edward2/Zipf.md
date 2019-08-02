@@ -24,14 +24,15 @@ See Zipf for more details.
 
 #### Returns:
 
-  RandomVariable.
+RandomVariable.
+
 
 #### Original Docstring for Distribution
 
 Initialize a batch of Zipf distributions.
 
-
 #### Args:
+
 
 * <b>`power`</b>: `Float` like `Tensor` representing the power parameter. Must be
   strictly greater than `1`.
@@ -64,5 +65,6 @@ Initialize a batch of Zipf distributions.
 
 
 #### Raises:
+
 
 * <b>`TypeError`</b>: if `power` is not `float` like.

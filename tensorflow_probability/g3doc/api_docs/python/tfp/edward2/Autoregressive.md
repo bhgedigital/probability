@@ -24,14 +24,15 @@ See Autoregressive for more details.
 
 #### Returns:
 
-  RandomVariable.
+RandomVariable.
+
 
 #### Original Docstring for Distribution
 
 Construct an `Autoregressive` distribution.
 
-
 #### Args:
+
 
 * <b>`distribution_fn`</b>: Python `callable` which constructs a
   `tfd.Distribution`-like instance from a `Tensor` (e.g.,
@@ -57,6 +58,7 @@ Construct an `Autoregressive` distribution.
 
 
 #### Raises:
+
 
 * <b>`ValueError`</b>: if `num_steps` and
   `num_elements(distribution_fn(sample0).event_shape)` are both `None`.

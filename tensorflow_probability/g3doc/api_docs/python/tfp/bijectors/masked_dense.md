@@ -31,6 +31,7 @@ See [Germain et al. (2015)][1] for detailed explanation.
 
 #### Arguments:
 
+
 * <b>`inputs`</b>: Tensor input.
 * <b>`units`</b>: Python `int` scalar representing the dimensionality of the output
   space.
@@ -53,10 +54,12 @@ See [Germain et al. (2015)][1] for detailed explanation.
 Output tensor.
 
 
+
 #### Raises:
 
-  NotImplementedError: if rightmost dimension of `inputs` is unknown prior to
-    graph execution.
+
+* <b>`NotImplementedError`</b>: if rightmost dimension of `inputs` is unknown prior to
+  graph execution.
 
 #### References
 

@@ -38,6 +38,7 @@ cheaply done via the Woodbury matrix identity, as implemented by
 
 #### Args:
 
+
 * <b>`matrix`</b>: Floating point `Tensor` batch of symmetric, positive definite
   matrices.
 * <b>`max_rank`</b>: Scalar `int` `Tensor`, the rank at which to truncate the
@@ -50,7 +51,8 @@ cheaply done via the Woodbury matrix identity, as implemented by
 
 #### Returns:
 
-  lr: Low rank pivoted Cholesky approximation of `matrix`.
+
+* <b>`lr`</b>: Low rank pivoted Cholesky approximation of `matrix`.
 
 #### References
 

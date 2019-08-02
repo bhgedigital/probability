@@ -24,14 +24,15 @@ See HalfCauchy for more details.
 
 #### Returns:
 
-  RandomVariable.
+RandomVariable.
+
 
 #### Original Docstring for Distribution
 
 Construct a half-Cauchy distribution with `loc` and `scale`.
 
-
 #### Args:
+
 
 * <b>`loc`</b>: Floating-point `Tensor`; the location(s) of the distribution(s).
 * <b>`scale`</b>: Floating-point `Tensor`; the scale(s) of the distribution(s).
@@ -50,5 +51,6 @@ Construct a half-Cauchy distribution with `loc` and `scale`.
 
 
 #### Raises:
+
 
 * <b>`TypeError`</b>: if `loc` and `scale` have different `dtype`.

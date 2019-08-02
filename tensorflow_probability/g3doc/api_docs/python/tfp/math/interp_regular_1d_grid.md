@@ -54,6 +54,7 @@ These shape semantics are equivalent to `scipy.interpolate.interp1d`.
 
 #### Args:
 
+
 * <b>`x`</b>: Numeric `Tensor` The x-coordinates of the interpolated output values.
 * <b>`x_ref_min`</b>:  Scalar `Tensor` of same `dtype` as `x`.  The minimum value of
   the (implicitly defined) reference `x_ref`.
@@ -81,6 +82,7 @@ These shape semantics are equivalent to `scipy.interpolate.interp1d`.
 
 #### Returns:
 
+
 * <b>`y_interp`</b>:  Interpolation between members of `y_ref`, at points `x`.
   `Tensor` of same `dtype` as `x`, and shape
   `y.shape[:axis] + x.shape + y.shape[axis + 1:]`
@@ -88,8 +90,9 @@ These shape semantics are equivalent to `scipy.interpolate.interp1d`.
 
 #### Raises:
 
-  ValueError:  If `fill_value` is not an allowed string.
-  ValueError:  If `axis` is not a scalar.
+
+* <b>`ValueError`</b>:  If `fill_value` is not an allowed string.
+* <b>`ValueError`</b>:  If `axis` is not a scalar.
 
 #### Examples
 

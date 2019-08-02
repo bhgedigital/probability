@@ -44,7 +44,7 @@ class MatrixInverseTriLBijectorTest(tf.test.TestCase):
 
   def testComputesCorrectValues(self):
     inv = tfb.MatrixInverseTriL(validate_args=True)
-    self.assertEqual("matrix_inverse_tril", inv.name)
+    self.assertStartsWith(inv.name, "matrix_inverse_tril")
     x_ = np.array([[0.7, 0., 0.],
                    [0.1, -1., 0.],
                    [0.3, 0.25, 0.5]], dtype=np.float32)
@@ -172,7 +172,7 @@ class MatrixInverseTriLBijectorTest(tf.test.TestCase):
     for ndims in range(2, 5):
       x_ = np.tril(
           np.random.uniform(
-              -1., 1., size=[batch_size, ndims, ndims]).astype(np.float32))
+              -1., 1., size=[batch_size, ndims, ndims]).astype(np.float64))
       fldj = bijector.forward_log_det_jacobian(x_, event_ndims=2)
       fldj_theoretical = bijector_test_util.get_fldj_theoretical(
           bijector, x_, event_ndims=2,

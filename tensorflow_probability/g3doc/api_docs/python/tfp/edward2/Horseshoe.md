@@ -24,14 +24,15 @@ See Horseshoe for more details.
 
 #### Returns:
 
-  RandomVariable.
+RandomVariable.
+
 
 #### Original Docstring for Distribution
 
 Construct a Horseshoe distribution with `scale`.
 
-
 #### Args:
+
 
 * <b>`scale`</b>: Floating point tensor; the scales of the distribution(s).
   Must contain only positive values.

@@ -158,39 +158,43 @@ class Chain(bijector.Bijector):
     Raises:
       ValueError: if bijectors have different dtypes.
     """
-    if bijectors is None:
-      bijectors = ()
-    self._bijectors = bijectors
+    if name is None:
+      name = ("identity" if not bijectors else
+              "_of_".join(["chain"] + [b.name for b in bijectors]))
+      name = name.replace("/", "")
+    with tf.name_scope(name) as name:
+      if bijectors is None:
+        bijectors = ()
+      self._bijectors = bijectors
 
-    for a_bijector in bijectors:
-      if not a_bijector._is_injective:  # pylint: disable=protected-access
-        raise NotImplementedError(
-            "Invert is not implemented for non-injective bijector ({})".format(
-                a_bijector.name))
+      for a_bijector in bijectors:
+        if not a_bijector._is_injective:  # pylint: disable=protected-access
+          raise NotImplementedError(
+              "Invert is not implemented for non-injective bijector "
+              "({})".format(a_bijector.name))
 
-    dtype = list(set([b.dtype for b in bijectors if b.dtype is not None]))
-    if len(dtype) > 1:
-      raise ValueError("incompatible dtypes: %s" % dtype)
-    elif len(dtype) == 1:
-      dtype = dtype[0]
-    else:
-      dtype = None
+      dtype = list(set([b.dtype for b in bijectors if b.dtype is not None]))
+      if len(dtype) > 1:
+        raise ValueError("incompatible dtypes: %s" % dtype)
+      elif len(dtype) == 1:
+        dtype = dtype[0]
+      else:
+        dtype = None
 
-    inverse_min_event_ndims = _compute_min_event_ndims(
-        bijectors, compute_forward=False)
-    forward_min_event_ndims = _compute_min_event_ndims(
-        bijectors, compute_forward=True)
+      inverse_min_event_ndims = _compute_min_event_ndims(
+          bijectors, compute_forward=False)
+      forward_min_event_ndims = _compute_min_event_ndims(
+          bijectors, compute_forward=True)
 
-    super(Chain, self).__init__(
-        graph_parents=list(itertools.chain.from_iterable(
-            b.graph_parents for b in bijectors)),
-        forward_min_event_ndims=forward_min_event_ndims,
-        inverse_min_event_ndims=inverse_min_event_ndims,
-        is_constant_jacobian=all(b.is_constant_jacobian for b in bijectors),
-        validate_args=validate_args,
-        dtype=dtype,
-        name=name or ("identity" if not bijectors else
-                      "_of_".join(["chain"] + [b.name for b in bijectors])))
+      super(Chain, self).__init__(
+          graph_parents=list(itertools.chain.from_iterable(
+              b.graph_parents for b in bijectors)),
+          forward_min_event_ndims=forward_min_event_ndims,
+          inverse_min_event_ndims=inverse_min_event_ndims,
+          is_constant_jacobian=all(b.is_constant_jacobian for b in bijectors),
+          validate_args=validate_args,
+          dtype=dtype,
+          name=name)
 
   @property
   def bijectors(self):
@@ -244,7 +248,7 @@ class Chain(bijector.Bijector):
 
     # TODO(b/129973548): Document and simplify.
     for b in self.bijectors:
-      ildj += b.inverse_log_det_jacobian(
+      ildj = ildj + b.inverse_log_det_jacobian(
           y, event_ndims=event_ndims, **kwargs.get(b.name, {}))
 
       if _use_static_shape(y, event_ndims):
@@ -287,7 +291,7 @@ class Chain(bijector.Bijector):
 
     # TODO(b/129973548): Document and simplify.
     for b in reversed(self.bijectors):
-      fldj += b.forward_log_det_jacobian(
+      fldj = fldj + b.forward_log_det_jacobian(
           x, event_ndims=event_ndims, **kwargs.get(b.name, {}))
       if _use_static_shape(x, event_ndims):
         event_shape = b.forward_event_shape(event_shape)

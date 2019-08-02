@@ -24,14 +24,15 @@ See RelaxedOneHotCategorical for more details.
 
 #### Returns:
 
-  RandomVariable.
+RandomVariable.
+
 
 #### Original Docstring for Distribution
 
 Initialize RelaxedOneHotCategorical using class log-probabilities.
 
-
 #### Args:
+
 
 * <b>`temperature`</b>: An 0-D `Tensor`, representing the temperature
   of a set of RelaxedOneHotCategorical distributions. The temperature

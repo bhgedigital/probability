@@ -25,6 +25,7 @@ probabilities (see examples below).
 
 #### Args:
 
+
 * <b>`**model_kwargs`</b>: dict of str to Tensor. Keys are the names of random
   variables in the model to which this interceptor is being applied. Values
   are Tensors to set their value to. Variables not included in this dict
@@ -34,7 +35,8 @@ probabilities (see examples below).
 
 #### Returns:
 
-  set_values: function that sets the value of intercepted ops.
+
+* <b>`set_values`</b>: function that sets the value of intercepted ops.
 
 #### Examples
 

@@ -24,7 +24,7 @@ Defined in [`python/math/linalg.py`](https://github.com/tensorflow/probability/t
 
 This op is conceptually identical to,
 
-````python
+```python
 inv_X = tf.lu_matrix_inverse(*tf.linalg.lu(X))
 tf.assert_near(tf.matrix_inverse(X), inv_X)
 # ==> True
@@ -34,6 +34,7 @@ Note: this function does not verify the implied matrix is actually invertible
 nor is this condition checked even when `validate_args=True`.
 
 #### Args:
+
 
 * <b>`lower_upper`</b>: `lu` as returned by `tf.linalg.lu`, i.e., if
   `matmul(P, matmul(L, U)) = X` then `lower_upper = L + U - eye`.
@@ -49,8 +50,9 @@ nor is this condition checked even when `validate_args=True`.
 
 #### Returns:
 
-  inv_x: The matrix_inv, i.e.,
-    `tf.matrix_inverse(tfp.math.lu_reconstruct(lu, perm))`.
+
+* <b>`inv_x`</b>: The matrix_inv, i.e.,
+  `tf.matrix_inverse(tfp.math.lu_reconstruct(lu, perm))`.
 
 #### Examples
 

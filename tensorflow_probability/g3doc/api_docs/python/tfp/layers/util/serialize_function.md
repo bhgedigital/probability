@@ -27,6 +27,7 @@ This serialization mimicks the implementation in `tf.keras.layers.Lambda`.
 
 #### Args:
 
+
 * <b>`func`</b>: Python function to serialize.
 
 

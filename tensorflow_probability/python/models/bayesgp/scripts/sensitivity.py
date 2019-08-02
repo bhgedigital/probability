@@ -260,43 +260,49 @@ def compute_remaining_effect(model, bounds, selected_vars, nx_samples, hyperpar_
 
 
 
-def generateBetaBoxPlots(bounds, beta_samples_list, labels, figpath = None, calibration_type = False):
+def generateBetaBoxPlots(bounds, beta_samples_list, labels, figpath = None, calibration= False, type = 'simulator'):
 	# Generate Box plots for a metric defined in terms of the inverse lengthscale
-    if calibration_type:
+    if calibration:
         betasx_samples, betaspar_samples, betad_samples = beta_samples_list
-    	# For the simulator
+        # For the simulator
         Range = (bounds[:,1] - bounds[:,0])[:,None]
         n_inputs = betasx_samples.shape[1]
         n_pars = betaspar_samples.shape[1]
-        metric_x = 1 - np.exp(-np.square(betasx_samples*(Range[:n_inputs,0]))/8.0)
-        metric_par = 1 - np.exp(-np.square(betaspar_samples*(Range[n_inputs:,0]))/8.0)
-        data_to_plot = []
-        for i in range(n_inputs):
-            data_to_plot.append(metric_x[:,i])
-        for i in range(n_pars):
-    	    data_to_plot.append(metric_par[:,i])
-        plt.figure(figsize=(20, 10))
-        plt.subplot(2,1,1)
-        # Create the boxplot
-        plt.boxplot(data_to_plot,  showfliers=False)
-        locs, _ = plt.xticks()
-        plt.xticks(locs, labels)
-        plt.title('Simulator model')
-
-        # Fo the inadequacy
-        metric_x = 1 - np.exp(-np.square(betad_samples*(Range[:n_inputs,0]))/8.0)
-        data_to_plot = []
-        for i in range(n_inputs):
-            data_to_plot.append(metric_x[:,i])
-        plt.subplot(2,1,2)
-        # Create the boxplot
-        plt.boxplot(data_to_plot,  showfliers=False)
-
-        plt.xticks(locs, labels[:n_inputs])
-        plt.title('Inadequacy model')
-        if figpath:
-            plt.savefig(figpath)
-            plt.close()
+        if type == 'simulator':
+            metric_x = 1 - np.exp(-np.square(betasx_samples*(Range[:n_inputs,0]))/8.0)
+            metric_par = 1 - np.exp(-np.square(betaspar_samples*(Range[n_inputs:,0]))/8.0)
+            data_to_plot = []
+            for i in range(n_inputs):
+                data_to_plot.append(metric_x[:,i])
+            for i in range(n_pars):
+        	    data_to_plot.append(metric_par[:,i])
+            plt.figure(figsize=(20, 10))
+            # Create the boxplot
+            plt.boxplot(data_to_plot,  showfliers=False)
+            locs, _ = plt.xticks()
+            plt.xticks(locs, labels)
+            plt.ylim((0,1))
+            plt.ylabel('sensitivity')
+            plt.title('Simulator model')
+            if figpath:
+                plt.savefig(figpath)
+                plt.close()
+        if type == 'discrepancy':
+            # For the discrepancy
+            metric_x = 1 - np.exp(-np.square(betad_samples*(Range[:n_inputs,0]))/8.0)
+            data_to_plot = []
+            for i in range(n_inputs):
+                data_to_plot.append(metric_x[:,i])
+            plt.figure(figsize=(20, 10))
+            # Create the boxplot
+            plt.boxplot(data_to_plot,  showfliers=False)
+            plt.xticks(locs, labels[:n_inputs])
+            plt.title('Discrepancy model')
+            plt.ylim((0,1))
+            plt.ylabel('sensitivity')
+            if figpath:
+                plt.savefig(figpath)
+                plt.close()
     else:
         beta_samples = beta_samples_list[0]
         Range = (bounds[:,1] - bounds[:,0])[:,None]
@@ -307,12 +313,12 @@ def generateBetaBoxPlots(bounds, beta_samples_list, labels, figpath = None, cali
             data_to_plot.append(metric_x[:,i])
 
         plt.figure(figsize=(20, 10))
-        plt.subplot(1,1,1)
         # Create the boxplot
         plt.boxplot(data_to_plot,  showfliers=False)
         locs, _ = plt.xticks()
         plt.xticks(locs, labels)
-
+        plt.ylim((0,1))
+        plt.ylabel('sensitivity')
         if figpath:
             plt.savefig(figpath)
             plt.close()

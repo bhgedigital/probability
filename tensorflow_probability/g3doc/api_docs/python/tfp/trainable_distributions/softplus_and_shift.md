@@ -21,7 +21,9 @@ Defined in [`python/trainable_distributions/trainable_distributions_lib.py`](htt
 
 <!-- Placeholder for "Used in" -->
 
+
 #### Args:
+
 
 * <b>`x`</b>: (Batch of) `float`-like `Tensor` representing scalars which will be
   transformed into positive elements.
@@ -32,5 +34,6 @@ Defined in [`python/trainable_distributions/trainable_distributions_lib.py`](htt
 
 
 #### Returns:
+
 
 * <b>`scale`</b>: (Batch of) scalars`with `x.dtype` and `x.shape`.

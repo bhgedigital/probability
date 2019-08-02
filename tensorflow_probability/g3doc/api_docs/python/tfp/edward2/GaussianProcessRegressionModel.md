@@ -24,14 +24,15 @@ See GaussianProcessRegressionModel for more details.
 
 #### Returns:
 
-  RandomVariable.
+RandomVariable.
+
 
 #### Original Docstring for Distribution
 
 Construct a GaussianProcessRegressionModel instance.
 
-
 #### Args:
+
 
 * <b>`kernel`</b>: `PositiveSemidefiniteKernel`-like instance representing the
   GP's covariance function.
@@ -101,6 +102,7 @@ Construct a GaussianProcessRegressionModel instance.
 
 
 #### Raises:
+
 
 * <b>`ValueError`</b>: if either
   - only one of `observations` and `observation_index_points` is given, or

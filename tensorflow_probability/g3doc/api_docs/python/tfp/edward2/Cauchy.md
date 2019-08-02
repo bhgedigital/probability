@@ -24,7 +24,8 @@ See Cauchy for more details.
 
 #### Returns:
 
-  RandomVariable.
+RandomVariable.
+
 
 #### Original Docstring for Distribution
 
@@ -33,8 +34,8 @@ Construct Cauchy distributions.
 The parameters `loc` and `scale` must be shaped in a way that supports
 broadcasting (e.g. `loc + scale` is a valid operation).
 
-
 #### Args:
+
 
 * <b>`loc`</b>: Floating point tensor; the modes of the distribution(s).
 * <b>`scale`</b>: Floating point tensor; the locations of the distribution(s).
@@ -51,5 +52,6 @@ broadcasting (e.g. `loc + scale` is a valid operation).
 
 
 #### Raises:
+
 
 * <b>`TypeError`</b>: if `loc` and `scale` have different `dtype`.

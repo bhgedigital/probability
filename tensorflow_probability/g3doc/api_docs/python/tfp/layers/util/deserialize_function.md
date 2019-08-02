@@ -33,13 +33,15 @@ This serialization mimicks the implementation in `tf.keras.layers.Lambda`.
 
 #### Args:
 
+
 * <b>`serial`</b>: Serialized Keras object: typically a dict, string, or bytecode.
 * <b>`function_type`</b>: Python string denoting 'function' or 'lambda'.
 
 
 #### Returns:
 
-  function: Function the serialized Keras object represents.
+
+* <b>`function`</b>: Function the serialized Keras object represents.
 
 #### Examples
 

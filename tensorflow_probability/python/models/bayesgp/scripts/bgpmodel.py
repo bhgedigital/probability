@@ -36,7 +36,7 @@ import math
 
 class BGP_model():
 
-    def __init__(self, inputs, outputs, model_info = None, kernel_type = 'RBF', noise_level = 1e-3, labels = [], hyp_priors = {}):
+    def __init__(self, inputs, outputs, model_info = None, kernel_type = 'RBF', noise_level = 1e-3, labels = [], output_label = None, hyp_priors = {}):
         # Inputs:
         #   inputs := N x D numpy array of inputs
         #   outputs := N-dimensional numpy vector of outputs
@@ -51,6 +51,7 @@ class BGP_model():
         #   noise_level := variance of the Gaussian noise for the normalized data
         #   labels:= list containing labels for the input variables. A default list is
         #           generated if this is not specified
+        #  output_label := label for the output variable
         # hyp_priors := dictionary containing information about the prior distribution of the hyperparamters
 
 
@@ -111,6 +112,11 @@ class BGP_model():
         else:
             self.labels = labels
 
+        if output_label == None:
+            self.output_label = 'y'
+        else:
+            self.output_label = output_label
+
         return
 
     def run_mcmc(self, mcmc_samples,num_leapfrog_steps = 3, estimate_noise = False, em_iters = 400, learning_rate = 0.01, warm_up = True, step_size = 0.01, thinning = 2):
@@ -122,6 +128,7 @@ class BGP_model():
         # learning_rate := learning rate for optimizer if the noise variance is estimated
         # warm_up := Assuming the noise is kept fixed (i.e estimate_noise == False ), this Boolean  indicates if an adaptive step size is computed during a "warm up" phase
         # step_size := step size to use for the HMC sampler if warm_up == False
+        # thinning := number of mcmc states to skip in between storing
         # Output:
         #       model_info = dictionary containing
         #                      1) dictionary with samples of hyperparameters as well loss function history (if noise is estimated)
@@ -229,6 +236,8 @@ class BGP_model():
             raise Exception('Invalid directory path ', directory_path)
         plt.figure(figsize=(12,10))
         plt.plot(self.hyperpar_samples['loss_function_history'])
+        plt.xlabel('em_iters')
+        plt.ylabel('loss')
         title = 'loss_function'
         plt.title(title)
         figpath = title + '.png'
@@ -237,8 +246,8 @@ class BGP_model():
         plt.close()
         return
 
-    def plot_local_sensitivity(self, directory_path = None):
-        # Function used to plot the local sensitivty  boxplot
+    def plot_sensitivity_variation(self, directory_path = None):
+        # Function used to plot the sensitivty  varaiation boxplot
 
         if self.n_inputs == 1:
             print('Not enough variables to perform sensitivity analysis.')
@@ -251,7 +260,7 @@ class BGP_model():
             raise Exception('Invalid directory path ', directory_path)
 
         beta_samples = self.hyperpar_samples['kernel_inverse_lengthscales']
-        figpath = 'local_sensitivity.png'
+        figpath = 'sensitivity_variation.png'
         figpath = os.path.join(directory_path, figpath)
         sensitivity.generateBetaBoxPlots(bounds=self.Rangenorm, beta_samples_list=[beta_samples], labels=self.labels, figpath = figpath)
         return
@@ -402,7 +411,9 @@ class BGP_model():
                     axes[i].plot(x,y, label= self.labels[i])
                     axes[i].fill_between(x, y-2*y_std, y + 2*y_std, alpha = 0.2, color ='orange')
                     axes[i].grid()
-                    axes[i].legend()
+                    axes[i].set_xlabel(key)
+                axes[0].set_ylabel(self.output_label)
+                    # axes[i].legend()
                 title = 'main_effects'
                 plt.title(title)
                 figpath = title + '.png'
@@ -422,7 +433,9 @@ class BGP_model():
                     axes[row_idx, col_idx].plot(x,y, label= self.labels[i])
                     axes[row_idx, col_idx].fill_between(x, y-2*y_std, y + 2*y_std, alpha = 0.2, color ='orange')
                     axes[row_idx, col_idx].grid()
-                    axes[row_idx, col_idx].legend()
+                    # axes[row_idx, col_idx].legend()
+                    axes[row_idx, col_idx].set_xlabel(key)
+                    axes[row_idx, 0].set_ylabel(self.output_label)
                 title = 'main_effects'
                 plt.title(title)
                 figpath = title + '.png'
@@ -518,6 +531,7 @@ class BGP_model():
                 ax.set_title(title)
                 ax.set_xlabel(self.labels[j2])
                 ax.set_ylabel(self.labels[j1])
+                ax.set_zlabel(self.output_label)
                 ax.set_zlim(zmin,zmax)
                 plt.gca().invert_xaxis()
                 plt.colorbar(m)
@@ -632,8 +646,9 @@ class BGP_model():
             new_labels = [all_labels[selected[i]] for i in range(n_selected)]
             title = 'top_sobol_indices'
             plt.title(title)
-            # Create names on the x-axis
+            # Create names on the y-axis
             plt.yticks(y_pos, new_labels)
+            plt.xlabel('sobol_index')
             figpath = title + '.png'
             figpath = os.path.join(directory_path, figpath)
             plt.savefig(figpath)
@@ -712,8 +727,9 @@ class BGP_model():
             new_labels = [self.labels[selected[i]] for i in range(n_selected)]
             title = 'top_total_sobol_indices'
             plt.title(title)
-            # Create names on the x-axis
+            # Create names on the y-axis
             plt.yticks(y_pos, new_labels)
+            plt.xlabel('total_sobol_index')
             figpath = title + '.png'
             figpath = os.path.join(directory_path, figpath)
             plt.savefig(figpath)
@@ -852,8 +868,9 @@ class BGP_model():
             new_labels = [all_labels[selected[i]] for i in range(n_selected)]
             title = 'top_group_sobol_indices'
             plt.title(title)
-            # Create names on the x-axis
+            # Create names on the y-axis
             plt.yticks(y_pos, new_labels)
+            plt.xlabel('sobol_index')
             figpath = title + '.png'
             figpath = os.path.join(directory_path, figpath)
             plt.savefig(figpath)

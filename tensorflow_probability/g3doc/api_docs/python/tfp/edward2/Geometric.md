@@ -24,14 +24,15 @@ See Geometric for more details.
 
 #### Returns:
 
-  RandomVariable.
+RandomVariable.
+
 
 #### Original Docstring for Distribution
 
 Construct Geometric distributions.
 
-
 #### Args:
+
 
 * <b>`logits`</b>: Floating-point `Tensor` with shape `[B1, ..., Bb]` where `b >= 0`
   indicates the number of batch dimensions. Each entry represents logits

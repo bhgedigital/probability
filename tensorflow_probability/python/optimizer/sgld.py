@@ -168,7 +168,7 @@ class StochasticGradientLangevinDynamics(tf.compat.v2.optimizers.Optimizer):
       self._burnin = tf.convert_to_tensor(
           value=burnin,
           name='burnin',
-          dtype=dtype_util.common_dtype([burnin], preferred_dtype=tf.int64))
+          dtype=dtype_util.common_dtype([burnin], dtype_hint=tf.int64))
       self._diagonal_bias = tf.convert_to_tensor(
           value=diagonal_bias, name='diagonal_bias')
       # TODO(b/124800185): Consider migrating `learning_rate` to be a
@@ -261,7 +261,7 @@ class StochasticGradientLangevinDynamics(tf.compat.v2.optimizers.Optimizer):
   def _apply_noisy_update(self, mom, grad, var, indices=None):
     # Compute and apply the gradient update following
     # preconditioned Langevin dynamics
-    stddev = tf.where(
+    stddev = tf.compat.v1.where(
         tf.squeeze(self.iterations > tf.cast(self._burnin, tf.int64)),
         tf.cast(tf.math.rsqrt(self._learning_rate), grad.dtype),
         tf.zeros([], grad.dtype))

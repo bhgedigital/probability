@@ -29,7 +29,9 @@ Defined in [`python/glm/fisher_scoring.py`](https://github.com/tensorflow/probab
 
 <!-- Placeholder for "Used in" -->
 
+
 #### Args:
+
 
 * <b>`model_matrix`</b>: (Batch of) `float`-like, matrix-shaped `Tensor` where each row
   represents a sample's features.
@@ -72,6 +74,7 @@ Defined in [`python/glm/fisher_scoring.py`](https://github.com/tensorflow/probab
 
 
 #### Returns:
+
 
 * <b>`model_coefficients`</b>: (Batch of) vector-shaped `Tensor`; represents the
   next estimate of the model coefficients, one for each column in

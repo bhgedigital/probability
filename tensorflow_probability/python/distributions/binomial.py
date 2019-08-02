@@ -17,6 +17,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import tensorflow.compat.v1 as tf1
 import tensorflow.compat.v2 as tf
 from tensorflow_probability.python.distributions import distribution
 from tensorflow_probability.python.distributions import multinomial
@@ -57,9 +58,9 @@ def _bdtr(k, n, p):
   #   where(unsafe, safe_output, betainc(where(unsafe, safe_input, input)))
   ones = tf.ones_like(n - k)
   k_eq_n = tf.equal(k, n)
-  safe_dn = tf.where(k_eq_n, ones, n - k)
+  safe_dn = tf1.where(k_eq_n, ones, n - k)
   dk = tf.math.betainc(a=safe_dn, b=k + 1, x=1 - p)
-  return tf.where(k_eq_n, ones, dk)
+  return tf1.where(k_eq_n, ones, dk)
 
 
 class Binomial(distribution.Distribution):
@@ -134,7 +135,7 @@ class Binomial(distribution.Distribution):
                probs=None,
                validate_args=False,
                allow_nan_stats=True,
-               name="Binomial"):
+               name='Binomial'):
     """Initialize a batch of Binomial distributions.
 
     Args:
@@ -166,7 +167,7 @@ class Binomial(distribution.Distribution):
       dtype = dtype_util.common_dtype([total_count, logits, probs], tf.float32)
       self._total_count = self._maybe_assert_valid_total_count(
           tf.convert_to_tensor(
-              value=total_count, name="total_count", dtype=dtype),
+              value=total_count, name='total_count', dtype=dtype),
           validate_args)
       self._logits, self._probs = distribution_util.get_logits_and_probs(
           logits=logits,
@@ -194,12 +195,12 @@ class Binomial(distribution.Distribution):
 
   @property
   def logits(self):
-    """Log-odds of drawing a `1`."""
+    """Input argument `logits`."""
     return self._logits
 
   @property
   def probs(self):
-    """Probability of drawing a `1`."""
+    """Input argument `probs`."""
     return self._probs
 
   def _batch_shape_tensor(self):
@@ -285,15 +286,29 @@ class Binomial(distribution.Distribution):
   def _mode(self):
     return tf.floor((1. + self.total_count) * self.probs)
 
+  def logits_parameter(self, name=None):
+    """Logits computed from non-`None` input arg (`probs` or `logits`)."""
+    with self._name_and_control_scope(name or 'logits_parameter'):
+      if self.logits is None:
+        return tf.math.log(self.probs) - tf.math.log1p(-self.probs)
+      return tf.identity(self.logits)
+
+  def probs_parameter(self, name=None):
+    """Probs computed from non-`None` input arg (`probs` or `logits`)."""
+    with self._name_and_control_scope(name or 'probs_parameter'):
+      if self.logits is None:
+        return tf.identity(self.probs)
+      return tf.nn.sigmoid(self.logits)
+
   def _maybe_assert_valid_total_count(self, total_count, validate_args):
     if not validate_args:
       return total_count
     return distribution_util.with_dependencies([
         assert_util.assert_non_negative(
-            total_count, message="total_count must be non-negative."),
+            total_count, message='total_count must be non-negative.'),
         distribution_util.assert_integer_form(
             total_count,
-            message="total_count cannot contain fractional components."),
+            message='total_count cannot contain fractional components.'),
     ], total_count)
 
   def _maybe_assert_valid_sample(self, counts):
@@ -305,5 +320,5 @@ class Binomial(distribution.Distribution):
         assert_util.assert_less_equal(
             counts,
             self.total_count,
-            message="counts are not less than or equal to n."),
+            message='counts are not less than or equal to n.'),
     ], counts)

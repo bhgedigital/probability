@@ -24,14 +24,15 @@ See HalfNormal for more details.
 
 #### Returns:
 
-  RandomVariable.
+RandomVariable.
+
 
 #### Original Docstring for Distribution
 
 Construct HalfNormals with scale `scale`.
 
-
 #### Args:
+
 
 * <b>`scale`</b>: Floating point tensor; the scales of the distribution(s).
   Must contain only positive values.

@@ -24,14 +24,15 @@ See Poisson for more details.
 
 #### Returns:
 
-  RandomVariable.
+RandomVariable.
+
 
 #### Original Docstring for Distribution
 
 Initialize a batch of Poisson distributions.
 
-
 #### Args:
+
 
 * <b>`rate`</b>: Floating point tensor, the rate parameter. `rate` must be positive.
   Must specify exactly one of `rate` and `log_rate`.
@@ -58,6 +59,7 @@ Initialize a batch of Poisson distributions.
 
 
 #### Raises:
+
 
 * <b>`ValueError`</b>: if none or both of `rate`, `log_rate` are specified.
 * <b>`TypeError`</b>: if `rate` is not a float-type.

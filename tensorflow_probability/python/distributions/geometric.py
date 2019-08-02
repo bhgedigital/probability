@@ -19,6 +19,7 @@ from __future__ import print_function
 
 # Dependency imports
 import numpy as np
+import tensorflow.compat.v1 as tf1
 import tensorflow.compat.v2 as tf
 
 from tensorflow_probability.python.distributions import distribution
@@ -55,7 +56,7 @@ class Geometric(distribution.Distribution):
                probs=None,
                validate_args=False,
                allow_nan_stats=True,
-               name="Geometric"):
+               name='Geometric'):
     """Construct Geometric distributions.
 
     Args:
@@ -87,7 +88,7 @@ class Geometric(distribution.Distribution):
 
       with tf.control_dependencies(
           [assert_util.assert_positive(self._probs)] if validate_args else []):
-        self._probs = tf.identity(self._probs, name="probs")
+        self._probs = tf.identity(self._probs, name='probs')
 
     super(Geometric, self).__init__(
         dtype=self._probs.dtype,
@@ -104,12 +105,12 @@ class Geometric(distribution.Distribution):
 
   @property
   def logits(self):
-    """Log-odds of a `1` outcome (vs `0`)."""
+    """Input argument `logits`."""
     return self._logits
 
   @property
   def probs(self):
-    """Probability of a `1` outcome (vs `0`)."""
+    """Input argument `probs`."""
     return self._probs
 
   def _batch_shape_tensor(self):
@@ -128,7 +129,7 @@ class Geometric(distribution.Distribution):
     # Uniform variates must be sampled from the open-interval `(0, 1)` rather
     # than `[0, 1)`. To do so, we use
     # `np.finfo(dtype_util.as_numpy_dtype(self.dtype)).tiny`
-    # because it is the smallest, positive, "normal" number. A "normal" number
+    # because it is the smallest, positive, 'normal' number. A 'normal' number
     # is such that the mantissa has an implicit leading 1. Normal, positive
     # numbers x, y have the reasonable property that, `x + y >= max(x, y)`. In
     # this case, a subnormal number (i.e., np.nextafter) can cause us to sample
@@ -150,7 +151,7 @@ class Geometric(distribution.Distribution):
       # However, scipy takes the floor, so we do too.
       x = tf.floor(x)
     x *= tf.ones_like(self.probs)
-    return tf.where(x < 0., tf.zeros_like(x), -tf.math.expm1(
+    return tf1.where(x < 0., tf.zeros_like(x), -tf.math.expm1(
         (1. + x) * tf.math.log1p(-self.probs)))
 
   def _log_prob(self, x):
@@ -161,7 +162,7 @@ class Geometric(distribution.Distribution):
       x = tf.floor(x)
     x *= tf.ones_like(self.probs)
     probs = self.probs * tf.ones_like(x)
-    safe_domain = tf.where(tf.equal(x, 0.), tf.zeros_like(probs), probs)
+    safe_domain = tf1.where(tf.equal(x, 0.), tf.zeros_like(probs), probs)
     return x * tf.math.log1p(-safe_domain) + tf.math.log(probs)
 
   def _entropy(self):
@@ -171,7 +172,7 @@ class Geometric(distribution.Distribution):
           assert_util.assert_less(
               probs,
               tf.constant(1., probs.dtype),
-              message="Entropy is undefined when logits = inf or probs = 1.")
+              message='Entropy is undefined when logits = inf or probs = 1.')
       ], probs)
     # Claim: entropy(p) = softplus(s)/p - s
     # where s=logits and p=probs.
@@ -202,3 +203,17 @@ class Geometric(distribution.Distribution):
 
   def _mode(self):
     return tf.zeros(self.batch_shape_tensor(), dtype=self.dtype)
+
+  def logits_parameter(self, name=None):
+    """Logits computed from non-`None` input arg (`probs` or `logits`)."""
+    with self._name_and_control_scope(name or 'logits_parameter'):
+      if self.logits is None:
+        return tf.math.log(self.probs) - tf.math.log1p(-self.probs)
+      return tf.identity(self.logits)
+
+  def probs_parameter(self, name=None):
+    """Probs computed from non-`None` input arg (`probs` or `logits`)."""
+    with self._name_and_control_scope(name or 'probs_parameter'):
+      if self.logits is None:
+        return tf.identity(self.probs)
+      return tf.nn.sigmoid(self.logits)

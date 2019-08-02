@@ -14,11 +14,12 @@
 # ============================================================================
 # Notify docs team for any file changes here
 presubmit: {
-  review_notify: "tf-docs+reviews"
+  auto_reviewers: "tf-docs+reviews"
 }
 
 # DevSite config files
 presubmit: {
   path_regexp: ".*\\.yaml"
   review_notify: "tf-docs+config-reviews"
+  auto_reviewers: "tf-docs+reviews"
 }

@@ -21,6 +21,7 @@ from __future__ import print_function
 import functools
 import hashlib
 import numpy as np
+import tensorflow.compat.v1 as tf1
 import tensorflow.compat.v2 as tf
 
 from tensorflow_probability.python.internal import assert_util
@@ -142,7 +143,7 @@ def make_tril_scale(loc=None,
 
     dtype = dtype_util.common_dtype(
         [loc, scale_tril, scale_diag, scale_identity_multiplier],
-        preferred_dtype=tf.float32)
+        dtype_hint=tf.float32)
     loc = _convert_to_tensor(loc, name="loc", dtype=dtype)
     scale_tril = _convert_to_tensor(scale_tril, name="scale_tril", dtype=dtype)
     scale_diag = _convert_to_tensor(scale_diag, name="scale_diag", dtype=dtype)
@@ -155,9 +156,9 @@ def make_tril_scale(loc=None,
     scale_tril = tf.linalg.band_part(scale_tril, -1, 0)  # Zero out TriU.
     tril_diag = tf.linalg.diag_part(scale_tril)
     if scale_diag is not None:
-      tril_diag += scale_diag
+      tril_diag = tril_diag + scale_diag
     if scale_identity_multiplier is not None:
-      tril_diag += scale_identity_multiplier[..., tf.newaxis]
+      tril_diag = tril_diag + scale_identity_multiplier[..., tf.newaxis]
 
     scale_tril = tf.linalg.set_diag(scale_tril, tril_diag)
 
@@ -233,7 +234,7 @@ def make_diag_scale(loc=None,
     if dtype is None:
       dtype = dtype_util.common_dtype(
           [loc, scale_diag, scale_identity_multiplier],
-          preferred_dtype=tf.float32)
+          dtype_hint=tf.float32)
     loc = _convert_to_tensor(loc, name="loc", dtype=dtype)
     scale_diag = _convert_to_tensor(scale_diag, name="scale_diag", dtype=dtype)
     scale_identity_multiplier = _convert_to_tensor(
@@ -243,7 +244,7 @@ def make_diag_scale(loc=None,
 
     if scale_diag is not None:
       if scale_identity_multiplier is not None:
-        scale_diag += scale_identity_multiplier[..., tf.newaxis]
+        scale_diag = scale_diag + scale_identity_multiplier[..., tf.newaxis]
       return tf.linalg.LinearOperatorDiag(
           diag=_maybe_attach_assertion(scale_diag),
           is_non_singular=True,
@@ -488,8 +489,8 @@ def pad_mixture_dimensions(x, mixture_distribution, categorical_distribution,
 
     dist_batch_ndims = _get_ndims(mixture_distribution)
     cat_batch_ndims = _get_ndims(categorical_distribution)
-    pad_ndims = tf.where(categorical_distribution.is_scalar_batch(),
-                         dist_batch_ndims, dist_batch_ndims - cat_batch_ndims)
+    pad_ndims = tf1.where(categorical_distribution.is_scalar_batch(),
+                          dist_batch_ndims, dist_batch_ndims - cat_batch_ndims)
     s = tf.shape(input=x)
     x = tf.reshape(
         x,
@@ -506,11 +507,11 @@ def pad_mixture_dimensions(x, mixture_distribution, categorical_distribution,
 def pick_scalar_condition(pred, true_value, false_value, name=None):
   """Convenience function that chooses one of two values based on the predicate.
 
-  This utility is equivalent to a version of `tf.where` that accepts only a
+  This utility is equivalent to a version of `tf1.where` that accepts only a
   scalar predicate and computes its result statically when possible. It may also
   be used in place of `tf.cond` when both branches yield a `Tensor` of the same
   shape; the operational difference is that `tf.cond` uses control flow to
-  evaluate only the branch that's needed, while `tf.where` (and thus
+  evaluate only the branch that's needed, while `tf1.where` (and thus
   this method) may evaluate both branches before the predicate's truth is known.
   This means that `tf.cond` is preferred when one of the branches is expensive
   to evaluate (like performing a large matmul), while this method is preferred
@@ -538,7 +539,7 @@ def pick_scalar_condition(pred, true_value, false_value, name=None):
     false_value = tf.convert_to_tensor(value=false_value, name="false_value")
     pred_ = tf.get_static_value(pred)
     if pred_ is None:
-      return tf.where(pred, true_value, false_value)
+      return tf1.where(pred, true_value, false_value)
     return true_value if pred_ else false_value
 
 
@@ -565,8 +566,8 @@ def make_non_negative_axis(axis, rank):
     return tf.convert_to_tensor(value=positive_axis, dtype=axis.dtype)
 
   # Dynamic case.
-  # Unfortunately static values are lost by this tf.where.
-  return tf.where(axis < 0, rank + axis, axis)
+  # Unfortunately static values are lost by this tf1.where.
+  return tf1.where(axis < 0, rank + axis, axis)
 
 
 def move_dimension(x, source_idx, dest_idx):
@@ -597,7 +598,7 @@ def move_dimension(x, source_idx, dest_idx):
   """
   ndims = prefer_static_rank(x)
   dtype = dtype_util.common_dtype([source_idx, dest_idx],
-                                  preferred_dtype=tf.int32)
+                                  dtype_hint=tf.int32)
   source_idx = tf.convert_to_tensor(value=source_idx, dtype=dtype)
   dest_idx = tf.convert_to_tensor(value=dest_idx, dtype=dtype)
 
@@ -689,7 +690,7 @@ def assert_symmetric(matrix):
       [assert_util.assert_near(matrix, matrix_t)], matrix)
 
 
-def embed_check_nonnegative_integer_form(
+def assert_nonnegative_integer_form(
     x, name="embed_check_nonnegative_integer_form"):
   """Assert x is a non-negative tensor, and optionally of integers."""
   with tf.name_scope(name):
@@ -704,7 +705,15 @@ def embed_check_nonnegative_integer_form(
               x,
               message="'{}' cannot contain fractional components.".format(x)),
       ]
-    return with_dependencies(assertions, x)
+    return assertions
+
+
+def embed_check_nonnegative_integer_form(
+    x, name="embed_check_nonnegative_integer_form"):
+  """Assert x is a non-negative tensor, and optionally of integers."""
+  with tf.name_scope(name):
+    x = tf.convert_to_tensor(value=x, name="x")
+    return with_dependencies(assert_nonnegative_integer_form(x), x)
 
 
 def same_dynamic_shape(a, b):
@@ -792,7 +801,7 @@ def get_logits_and_probs(logits=None,
     ValueError: if neither `probs` nor `logits` were passed in, or both were.
   """
   if dtype is None:
-    dtype = dtype_util.common_dtype([probs, logits], preferred_dtype=tf.float32)
+    dtype = dtype_util.common_dtype([probs, logits], dtype_hint=tf.float32)
   with tf.name_scope(name):
     if (probs is None) == (logits is None):
       raise ValueError("Must pass probs or logits, but not both.")
@@ -902,6 +911,103 @@ def _is_integer_like_by_dtype(dt):
   return dt.is_integer or dt.base_dtype == tf.bool
 
 
+def assert_categorical_event_shape(
+    categorical_param, name="embed_check_categorical_event_shape"):
+  """Embeds checks that categorical distributions don't have too many classes.
+
+  A categorical-type distribution is one which, e.g., returns the class label
+  rather than a one-hot encoding.  E.g., `Categorical(probs)`.
+
+  Since distributions output samples in the same dtype as the parameters, we
+  must ensure that casting doesn't lose precision. That is, the
+  `parameter.dtype` implies a maximum number of classes. However, since shape is
+  `int32` and categorical variables are presumed to be indexes into a `Tensor`,
+  we must also ensure that the number of classes is no larger than the largest
+  possible `int32` index, i.e., `2**31-1`.
+
+  In other words the number of classes, `K`, must satisfy the following
+  condition:
+
+  ```python
+  K <= min(
+      int(2**31 - 1),  # Largest float as an index.
+      {
+          tf.float16: int(2**11),   # Largest int as a float16.
+          tf.float32: int(2**24),
+          tf.float64: int(2**53),
+      }.get(dtype_util.base_dtype(categorical_param.dtype), 0))
+  ```
+
+  Args:
+    categorical_param: Floating-point `Tensor` representing parameters of
+      distribution over categories. The rightmost shape is presumed to be the
+      number of categories.
+    name: A name for this operation (optional).
+
+  Returns:
+    assertions: Python `list` of assertions.
+
+  Raises:
+    TypeError: if `categorical_param` has an unknown `dtype`.
+    ValueError: if we can statically identify `categorical_param` as being too
+      large (for being closed under int32/float casting).
+  """
+  with tf.name_scope(name):
+    x = tf.convert_to_tensor(value=categorical_param, name="categorical_param")
+    # The size must not exceed both of:
+    # - The largest possible int32 (since categorical values are presumed to be
+    #   indexes into a Tensor).
+    # - The largest possible integer exactly representable under the given
+    #   floating-point dtype (since we need to cast to/from).
+    #
+    # The chosen floating-point thresholds are 2**(1 + mantissa_bits).
+    # For more details, see:
+    # https://en.wikipedia.org/wiki/Floating-point_arithmetic#Internal_representation
+    x_dtype = dtype_util.base_dtype(x.dtype)
+    max_event_size = (
+        _largest_integer_by_dtype(x_dtype)
+        if dtype_util.is_floating(x_dtype) else 0)
+    if max_event_size == 0:
+      raise TypeError("Unable to validate size of unrecognized dtype "
+                      "({}).".format(dtype_util.name(x_dtype)))
+    try:
+      x_shape_static = tensorshape_util.with_rank_at_least(x.shape, 1)
+    except ValueError:
+      raise ValueError("A categorical-distribution parameter must have "
+                       "at least 1 dimension.")
+    event_size = tf.compat.dimension_value(x_shape_static[-1])
+    if event_size is not None:
+      if event_size < 2:
+        raise ValueError("A categorical-distribution parameter must have at "
+                         "least 2 events.")
+      if event_size > max_event_size:
+        raise ValueError("Number of classes exceeds `dtype` precision, i.e., "
+                         "{} implies shape ({}) cannot exceed {}.".format(
+                             dtype_util.name(x_dtype), event_size,
+                             max_event_size))
+      return []
+
+    event_size = tf.shape(input=x, out_type=tf.int64, name="x_shape")[-1]
+    return [
+        assert_util.assert_rank_at_least(
+            x,
+            1,
+            message=("A categorical-distribution parameter must have "
+                     "at least 1 dimension.")),
+        assert_util.assert_greater_equal(
+            tf.shape(input=x)[-1],
+            2,
+            message=("A categorical-distribution parameter must have at "
+                     "least 2 events.")),
+        assert_util.assert_less_equal(
+            event_size,
+            tf.convert_to_tensor(max_event_size, dtype=tf.int64),
+            message="Number of classes exceeds `dtype` precision, "
+            "i.e., {} dtype cannot exceed {} shape.".format(
+                dtype_util.name(x_dtype), max_event_size)),
+    ]
+
+
 def embed_check_categorical_event_shape(
     categorical_param, name="embed_check_categorical_event_shape"):
   """Embeds checks that categorical distributions don't have too many classes.
@@ -945,58 +1051,10 @@ def embed_check_categorical_event_shape(
   """
   with tf.name_scope(name):
     x = tf.convert_to_tensor(value=categorical_param, name="categorical_param")
-    # The size must not exceed both of:
-    # - The largest possible int32 (since categorical values are presumed to be
-    #   indexes into a Tensor).
-    # - The largest possible integer exactly representable under the given
-    #   floating-point dtype (since we need to cast to/from).
-    #
-    # The chosen floating-point thresholds are 2**(1 + mantissa_bits).
-    # For more details, see:
-    # https://en.wikipedia.org/wiki/Floating-point_arithmetic#Internal_representation
-    x_dtype = dtype_util.base_dtype(x.dtype)
-    max_event_size = (
-        _largest_integer_by_dtype(x_dtype)
-        if dtype_util.is_floating(x_dtype) else 0)
-    if max_event_size is 0:
-      raise TypeError("Unable to validate size of unrecognized dtype "
-                      "({}).".format(dtype_util.name(x_dtype)))
-    try:
-      x_shape_static = tensorshape_util.with_rank_at_least(x.shape, 1)
-    except ValueError:
-      raise ValueError("A categorical-distribution parameter must have "
-                       "at least 1 dimension.")
-    event_size = tf.compat.dimension_value(x_shape_static[-1])
-    if event_size is not None:
-      if event_size < 2:
-        raise ValueError("A categorical-distribution parameter must have at "
-                         "least 2 events.")
-      if event_size > max_event_size:
-        raise ValueError("Number of classes exceeds `dtype` precision, i.e., "
-                         "{} implies shape ({}) cannot exceed {}.".format(
-                             dtype_util.name(x_dtype), event_size,
-                             max_event_size))
+    assertions = assert_categorical_event_shape(x)
+    if not assertions:
       return x
-    else:
-      event_size = tf.shape(input=x, out_type=tf.int64, name="x_shape")[-1]
-      return with_dependencies([
-          assert_util.assert_rank_at_least(
-              x,
-              1,
-              message=("A categorical-distribution parameter must have "
-                       "at least 1 dimension.")),
-          assert_util.assert_greater_equal(
-              tf.shape(input=x)[-1],
-              2,
-              message=("A categorical-distribution parameter must have at "
-                       "least 2 events.")),
-          assert_util.assert_less_equal(
-              event_size,
-              tf.convert_to_tensor(max_event_size, dtype=tf.int64),
-              message="Number of classes exceeds `dtype` precision, "
-              "i.e., {} dtype cannot exceed {} shape.".format(
-                  dtype_util.name(x_dtype), max_event_size)),
-      ], x)
+    return with_dependencies(assertions, x)
 
 
 def embed_check_integer_casting_closed(x,
@@ -1262,9 +1320,8 @@ def rotate_transpose(x, shift, name="rotate_transpose"):
       # Finally, we transform shift by modulo length so it can be specified
       # independently from the array upon which it operates (like python).
       ndims = tf.rank(x)
-      shift = tf.where(
-          tf.less(shift, 0), -shift % ndims,
-          ndims - shift % ndims)
+      shift = tf1.where(
+          tf.less(shift, 0), -shift % ndims, ndims - shift % ndims)
       first = tf.range(0, shift)
       last = tf.range(shift, ndims)
       perm = tf.concat([last, first], 0)
@@ -1316,8 +1373,8 @@ def pick_vector(cond, true_vector, false_vector, name="pick_vector"):
       return true_vector if cond_value_static else false_vector
     n = tf.shape(input=true_vector)[0]
     return tf.slice(
-        tf.concat([true_vector, false_vector], 0), [tf.where(cond, 0, n)],
-        [tf.where(cond, n, -1)])
+        tf.concat([true_vector, false_vector], 0), [tf1.where(cond, 0, n)],
+        [tf1.where(cond, n, -1)])
 
 
 def prefer_static_broadcast_shape(shape1,
@@ -1511,7 +1568,7 @@ def fill_triangular(x, upper=False, name=None):
         raise ValueError("Input right-most shape ({}) does not "
                          "correspond to a triangular matrix.".format(m))
       n = np.int32(n)
-      static_final_shape = x.shape[:-1].concatenate([n, n])
+      static_final_shape = tensorshape_util.concatenate(x.shape[:-1], [n, n])
     else:
       m = tf.shape(input=x)[-1]
       # For derivation, see above. Casting automatically lops off the 0.5, so we
@@ -1519,8 +1576,8 @@ def fill_triangular(x, upper=False, name=None):
       # graph-execution cost; an error will be thrown from the reshape, below.
       n = tf.cast(
           tf.sqrt(0.25 + tf.cast(2 * m, dtype=tf.float32)), dtype=tf.int32)
-      static_final_shape = tensorshape_util.with_rank_at_least(
-          x.shape, 1)[:-1].concatenate([None, None])
+      static_final_shape = tensorshape_util.concatenate(
+          tensorshape_util.with_rank_at_least(x.shape, 1)[:-1], [None, None])
 
     # Try it out in numpy:
     #  n = 3
@@ -1606,12 +1663,12 @@ def fill_triangular_inverse(x, upper=False, name=None):
     if n is not None:
       n = np.int32(n)
       m = np.int32((n * (n + 1)) // 2)
-      static_final_shape = x.shape[:-2].concatenate([m])
+      static_final_shape = tensorshape_util.concatenate(x.shape[:-2], [m])
     else:
       n = tf.shape(input=x)[-1]
       m = (n * (n + 1)) // 2
-      static_final_shape = tensorshape_util.with_rank_at_least(
-          x.shape, 2)[:-2].concatenate([None])
+      static_final_shape = tensorshape_util.concatenate(
+          tensorshape_util.with_rank_at_least(x.shape, 2)[:-2], [None])
     ndims = prefer_static_rank(x)
     if upper:
       initial_elements = x[..., 0, :]
@@ -1678,7 +1735,7 @@ def tridiag(below=None, diag=None, above=None, name=None):
       elif s is None:
         s = y
       else:
-        s += y
+        s = s + y
     if s is None:
       raise ValueError("Must specify at least one of `below`, `diag`, `above`.")
     return s
@@ -1778,7 +1835,7 @@ def reduce_weighted_logsumexp(logx,
     # off the max. We do this because otherwise we'd get `inf - inf = NaN`. That
     # this is ok follows from the fact that we're actually free to subtract any
     # value we like, so long as we add it back after taking the `log(sum(...))`.
-    max_log_absw_x = tf.where(
+    max_log_absw_x = tf1.where(
         tf.math.is_inf(max_log_absw_x), tf.zeros_like(max_log_absw_x),
         max_log_absw_x)
     wx_over_max_absw_x = (tf.sign(w) * tf.exp(log_absw_x - max_log_absw_x))
@@ -1843,10 +1900,10 @@ def softplus_inverse(x, name=None):
     too_large_value = x
     # This `where` will ultimately be a NOP because we won't select this
     # codepath whenever we used the surrogate `ones_like`.
-    x = tf.where(tf.logical_or(is_too_small, is_too_large), tf.ones_like(x), x)
+    x = tf1.where(tf.logical_or(is_too_small, is_too_large), tf.ones_like(x), x)
     y = x + tf.math.log(-tf.math.expm1(-x))  # == log(expm1(x))
-    return tf.where(is_too_small, too_small_value,
-                    tf.where(is_too_large, too_large_value, y))
+    return tf1.where(is_too_small, too_small_value,
+                     tf1.where(is_too_large, too_large_value, y))
 
 
 # TODO(b/35290280): Add unit-tests.
@@ -1982,11 +2039,12 @@ def pad(x, axis, front=False, back=False, value=0, count=1, name=None):
         else:
           middle = tf.TensorShape(mid_dim_value + count_ * (front + back))
         tail = x.shape[axis + 1:]
-        final_shape = head.concatenate(middle.concatenate(tail))
+        final_shape = tensorshape_util.concatenate(
+            head, tensorshape_util.concatenate(middle, tail))
       else:
         final_shape = None
     else:
-      axis = tf.where(axis < 0, ndims + axis, axis)
+      axis = tf1.where(axis < 0, ndims + axis, axis)
       final_shape = None
     x = tf.pad(
         tensor=x,
